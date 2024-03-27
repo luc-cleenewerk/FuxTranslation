@@ -17,6 +17,8 @@
 #include "gecode/minimodel.hh"
 #include "gecode/set.hh"
 
+#include "../../GiL_Library/c++/space_wrapper.cpp"
+
 using namespace Gecode;
 using namespace Gecode::Search;
 using namespace std;

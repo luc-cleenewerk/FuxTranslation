@@ -1,5 +1,6 @@
 #include "../headers/1st-ctp.hpp"
 #include "../headers/Utilities.hpp"
+#include "../../GiL_Library/c++/space_wrapper.cpp"
 
 FirstSpecies::FirstSpecies(int s, int l, int u, int species=1) {
     string message = "WSpace object created. ";
@@ -12,13 +13,20 @@ FirstSpecies::FirstSpecies(int s, int l, int u, int species=1) {
     // variable initialization
     hintervals = IntVarArray(*this, size, 0, 11);
 
-    add_h_cons_cst(*this, s, 0, hintervals);
+    //add_h_cons_cst(this, s, 0, hintervals);
 
     //constraints
     distinct(*this, hintervals);
 
+    //ALL HARMONIC INTERVALS MUST BE CONSONANCES
+    for(int i = 0; i < sizeof(hintervals); i++){
+        for(int j = hintervals[i].min(); j <= hintervals[i].max(); j++){
+            set_member(this, sizeof(ALL_CONS), ALL_CONS, j);
+        }
+    }
+
     //branching
-    branch(*this, hintervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    //branch(*this, hintervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 }
 
 FirstSpecies::FirstSpecies(FirstSpecies& s): Space(s){
