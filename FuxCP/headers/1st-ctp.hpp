@@ -38,7 +38,7 @@ protected:
     int upper_bound_domain;
 
 public:
-    FirstSpecies(int size, int l, int u, int species = 1);
+    FirstSpecies(vector<int> counterpoint, int species);
 
     FirstSpecies(FirstSpecies &s);
 

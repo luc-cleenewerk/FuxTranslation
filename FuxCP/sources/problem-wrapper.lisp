@@ -4,13 +4,15 @@
 
 (in-package :gil)
 
-(cffi::defcfun ("fux_cp_1st" fux-cp-1st) :void
-    (counterpoint :pointer)
-    (species :int)
+(defun fux-cp-1st (counterpoint &optional (species 1))
+    (let (
+      (x (cffi::foreign-alloc :int :initial-contents counterpoint))
+    )
+    (1st-sp x species)
+    )
 )
 
-(cffi::defcfun ("create_h_intervals" create-h-intervals) :void
-    (cp :pointer)
-    (lowest :pointer)
-    (h-intervals :pointer)
+(cffi::defcfun ("create_new_first_problem" 1st-sp) :pointer
+    (counterpoint :pointer :int)
+    (species :int)
 )
