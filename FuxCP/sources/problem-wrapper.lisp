@@ -1,5 +1,4 @@
-(defpackage :prob
-(:use common-lisp :cl-user :cl :cffi))
+(in-package :fuxcp)
 
 (defun fux-cp-1st (counterpoint &optional (species 1))
     (let (

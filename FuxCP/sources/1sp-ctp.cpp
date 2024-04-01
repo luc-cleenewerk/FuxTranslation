@@ -19,7 +19,6 @@ FirstSpecies::FirstSpecies(FirstSpecies& s): Space(s){
     size = s.size;
     lower_bound_domain = s.lower_bound_domain;
     upper_bound_domain = s.upper_bound_domain;
-    hintervals.update(*this, s.hintervals);
 }
 
 Space* FirstSpecies::copy(void) {
