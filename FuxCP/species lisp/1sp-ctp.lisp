@@ -68,13 +68,90 @@
 
     
     ;============================================ HARMONIC CONSTRAINTS ============================
-    
+    (print "Posting constraints...")
+
+    ; for all intervals between the cantus firmus and the counterpoint, the interval must be a consonance
+    (print "Harmonic consonances...")
+    (case species
+        ((1 3v-1sp) (add-h-cons-cst *cf-len *cf-penult-index (first (h-intervals counterpoint))))
+        ((2 3v-2sp) (add-h-cons-cst *cf-len *cf-penult-index (first (h-intervals counterpoint)) PENULT_THESIS_VAR))
+        ((3 3v-3sp) (add-h-cons-cst *cf-len *cf-penult-index (first (h-intervals counterpoint)) PENULT_1Q_VAR))
+    )
+
+    ; no unison between the cantus firmus and the counterpoint unless it is the first note or the last note
+    (print "No unison...")
+    (add-no-unison-cst (first (notes counterpoint)) *cf)
+
+    (case species ((1 2) 
+        ; then
+        (progn
+        ; must start with a perfect consonance
+        (print "Perfect consonance at the beginning...")
+        (add-p-cons-start-cst (first (h-intervals counterpoint)))
+
+        ; must end with a perfect consonance
+        (print "Perfect consonance at the end...")
+        (add-p-cons-end-cst (first (h-intervals counterpoint)))
+        )
+    ))
+
+    ; if penultimate measure, a major sixth or a minor third must be used
+    ; depending if the cantus firmus is at the bass or on the top part
+    (print "Penultimate measure...")
+    (case species
+        ((1) (add-penult-cons-1sp-and-cf-cst (penult (is-not-lowest counterpoint)) (penult (first (h-intervals counterpoint))) 1))
+        ((3v-1sp) (gil::g-member *sp* PENULT_CONS_3P_VAR (penult (first (h-intervals counterpoint)))))
+    )
     ;============================================ MELODIC CONSTRAINTS =============================
-    
+    ; NOTE: with the degree iii in penultimate *cf measure -> no solution bc there is a *tritone between I#(minor third) and V.
+    (print "Melodic constraints...")
+    (case species ((1 3v-1sp)
+        ; then
+        (progn
+            ; no more than minor sixth melodic interval
+            (print "No more than minor sixth...")
+            (add-no-m-jump-cst (first (m-intervals counterpoint)))
+
+            ; no chromatic motion between three consecutive notes
+            (print "No chromatic motion...")
+            (add-no-chromatic-m-cst (first (m-intervals-brut counterpoint)) (m2-intervals-brut counterpoint))
+
+            ;==================================== MOTION CONSTRAINTS ============================
+            (print "Motion constraints...")
+            (if (eq species 1) ; for the 3v-1st species, it isn't a constraint but a cost
+            ; no direct motion to reach a perfect consonance
+                (progn
+                    (print "No direct motion to reach a perfect consonance...")
+                    (add-no-direct-move-to-p-cons-cst (first (motions counterpoint)) (is-p-cons-arr counterpoint) (is-not-lowest counterpoint))
+                )
+            )
+            ; no battuta kind of motion
+            ; i.e. contrary motion to an *octave, lower voice up, higher voice down, counterpoint melodic interval < -4
+            (print "No battuta kind of motion...")
+            (add-no-battuta-cst (first (motions counterpoint)) (first (h-intervals counterpoint)) (first (m-intervals-brut counterpoint)) (is-not-lowest counterpoint))
+         )
+    ))
+
     ;============================================ COST FACTORS ====================================
     (print "Cost function...")
 
-    
+    (case species ((1 3v-1st)
+        ; then
+        (progn
+            (setf (m-all-intervals counterpoint) (first (m-intervals counterpoint)))
+            ; 1, 2) imperfect consonances are preferred to perfect consonances
+            (print "Imperfect consonances are preferred to perfect consonances...")
+            (add-p-cons-cost-cst (h-intervals counterpoint) (is-not-lowest counterpoint))
+
+            ; 3, 4) add off-key cost, m-degrees cost and tritons cost
+            (print "add off-key cost, m-degrees cost and tritons cost")
+            (set-general-costs-cst counterpoint *cf-len)
+
+            ; 5) motion costs
+            (print "add motion costs")
+            (add-cost-to-factors (first (motions-cost counterpoint)) 'motions-cost)    
+        )
+    ))
 
     (setf (solution-array counterpoint) (first (notes counterpoint)))
     (setf (solution-len counterpoint) *cf-len)

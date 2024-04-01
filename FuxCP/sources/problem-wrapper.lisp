@@ -1,18 +1,15 @@
-(cl:defpackage "gil"
-  (:nicknames "GIL")
-  (:use common-lisp :cl-user :cl :cffi))
-
-(in-package :gil)
+(defpackage :prob
+(:use common-lisp :cl-user :cl :cffi))
 
 (defun fux-cp-1st (counterpoint &optional (species 1))
     (let (
-      (x (cffi::foreign-alloc :int :initial-contents counterpoint))
-    )
-    (1st-sp x species)
+        (x (cffi::foreign-alloc :int :initial-contents counterpoint))
+        )
+        (first-sp x species)
     )
 )
 
-(cffi::defcfun ("create_new_first_problem" 1st-sp) :pointer
+(cffi::defcfun ("first_sp" first-sp) :pointer
     (counterpoint :pointer :int)
     (species :int)
 )
