@@ -69,7 +69,7 @@
     
     ;============================================ HARMONIC CONSTRAINTS ============================
     
-    (fux-cp-1st counterpoint species)
+    (first::first-species counterpoint species)
 
     ;============================================ MELODIC CONSTRAINTS =============================
     

@@ -1,14 +1,10 @@
-(in-package :fuxcp)
+(in-package :first)
 
-(defun fux-cp-1st (counterpoint &optional (species 1))
-    (let (
-        (x (cffi::foreign-alloc :int :initial-contents counterpoint))
-        )
-        (first-sp x species)
-    )
+(defun first-species (counterpoint &optional (species 1))
+    (first-sp counterpoint species)
 )
 
 (cffi::defcfun ("first_sp" first-sp) :pointer
-    (counterpoint :pointer :int)
+    (counterpoint :int)
     (species :int)
 )

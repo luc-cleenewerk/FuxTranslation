@@ -14,8 +14,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "../../GiL_Library/c++/gecode_wrapper.cpp"
-#include "../../GiL_Library/c++/space_wrapper.cpp"
 
 using namespace std;
 using namespace Gecode;

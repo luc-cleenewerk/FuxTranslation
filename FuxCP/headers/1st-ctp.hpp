@@ -17,8 +17,6 @@
 #include "gecode/minimodel.hh"
 #include "gecode/set.hh"
 
-#include "../../GiL_Library/c++/space_wrapper.cpp"
-
 using namespace Gecode;
 using namespace Gecode::Search;
 using namespace std;
@@ -38,7 +36,7 @@ protected:
     int upper_bound_domain;
 
 public:
-    FirstSpecies(vector<int> counterpoint, int species);
+    FirstSpecies(int counterpoint, int species);
 
     FirstSpecies(FirstSpecies &s);
 

@@ -5,7 +5,7 @@
 (require-library "GIL")
 
 (defpackage :fuxcp
-(:use "COMMON-LISP" "OM" "CL-USER" "CFFI"))
+(:use "COMMON-LISP" "OM" "CL-USER"))
 
-(defpackage :prob
-(:use common-lisp :cl-user :cl :cffi))
+(defpackage :first
+(:use "COMMON-LISP" "OM" "CL-USER" "CFFI"))

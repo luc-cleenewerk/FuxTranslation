@@ -1,15 +1,15 @@
 #include "../headers/1st-ctp.hpp"
 #include "../headers/Utilities.hpp"
-#include "../../GiL_Library/c++/space_wrapper.cpp"
 #include <vector>
+#include <iostream>
 
 /// @brief 
 /// @param counterpoint 
 /// @param species 
-FirstSpecies::FirstSpecies(vector<int> counterpoint, int species) {
+FirstSpecies::FirstSpecies(int counterpoint, int species) {
     string message = "WSpace object created. ";
     
-
+    std::cout << message;
     //branching
     //branch(*this, hintervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 }
