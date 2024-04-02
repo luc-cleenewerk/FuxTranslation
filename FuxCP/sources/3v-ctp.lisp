@@ -225,5 +225,5 @@
     ;================================================================================;
     ;                                    RETURN                                      ;
     ;================================================================================;
-    (append (fux-search-engine solution-array species-list) (list species-list))
+    ;;(append (fux-search-engine solution-array species-list) (list species-list))
 )

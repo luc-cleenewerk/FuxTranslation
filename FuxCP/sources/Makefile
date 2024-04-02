@@ -1,4 +1,4 @@
-PROBLEM_FILES = 1sp-ctp.cpp
+PROBLEM_FILES = 1sp-ctp.cpp main.cpp
 
 LIBRARIES = -lgecodedriver -lgecodeflatzinc -lgecodefloat -lgecodeint -lgecodekernel -lgecodeminimodel \
 			-lgecodesearch -lgecodeset -lgecodesupport
@@ -8,4 +8,7 @@ so:
 		-ffast-math
 
 compile:
-	g++ -std=c++11 -F/Library/Frameworks -framework gecode -o ../out/Main $(PROBLEM_FILES) Main.cpp
+	g++ -std=c++11 -F/Library/Frameworks -c -o main main.cpp
+	
+compilegc:
+	g++ -std=c++11 -I ../../../gecode-release-6.2.0/gecode main.cpp -o launch 1sp-ctp.cpp -L ../../../gecode-release-6.2.0 -lgecodekernel -lgecodesearch -lgecodeint -lgecodesupport
