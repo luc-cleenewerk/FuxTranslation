@@ -23,8 +23,6 @@ FirstSpecies* get_next_solution(Search::Base<FirstSpecies>* solver){
 
 int main(int argc, char* argv[]) {
 
-    auto *pb = new FirstSpecies();
-
     vector<int> cp_range = {-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12};
     vector<int> cp_r = {sizeof(cp_range), -6, 12};
     vector<int> cp_domain = {2,1,2};
@@ -52,12 +50,16 @@ int main(int argc, char* argv[]) {
 
     int nb_sol = 0;
 
-    while(FirstSpecies * pb = get_next_solution(e)){
+    FirstSpecies * pb = get_next_solution(e);
+    pb->print_solution();
+    delete pb;
+
+    /*while(FirstSpecies * pb = get_next_solution(e)){
         nb_sol++;
         cout << "Solution " << nb_sol << ": " << endl;
         pb->print_solution();
         delete pb;
-    }
+    }*/
     cout << "No (more) solutions." << endl;
 
     return 0;
