@@ -468,63 +468,62 @@
 )
 
 (defun fux-search-engine (the-cp &optional (species '(1)) (voice-type 0))
-    ;(let (se tstop sopts)
-    ;    (print (list "Starting fux-search-engine with species = " species))
+    (let (se tstop sopts)
+        (print (list "Starting fux-search-engine with species = " species))
         ;; COST
-    ;    (reorder-costs)
-    ;    (gil::g-cost *sp* *cost-factors) ; set the cost function
+        (reorder-costs)
+        (gil::g-cost *sp* *cost-factors) ; set the cost function
 
         ;; SPECIFY SOLUTION VARIABLES
         ; (print "Specifying solution variables...")
-    ;    (gil::g-specify-sol-variables *sp* the-cp)
-    ;    (gil::g-specify-percent-diff *sp* 0)
+        (gil::g-specify-sol-variables *sp* the-cp)
+        (gil::g-specify-percent-diff *sp* 0)
         
         ;; BRANCHING
         ; (print "Branching...")
-    ;    (setq var-branch-type gil::INT_VAR_DEGREE_MAX)
-    ;    (setq val-branch-type gil::INT_VAL_SPLIT_MIN)
+        (setq var-branch-type gil::INT_VAR_DEGREE_MAX)
+        (setq val-branch-type gil::INT_VAL_SPLIT_MIN)
 
-    ;    (gil::g-branch *sp* (first (notes *lowest)) gil::INT_VAR_DEGREE_MAX gil::INT_VAL_SPLIT_MIN)
-    ;    (dotimes (i *N-COUNTERPOINTS) (progn
+        (gil::g-branch *sp* (first (notes *lowest)) gil::INT_VAR_DEGREE_MAX gil::INT_VAL_SPLIT_MIN)
+        (dotimes (i *N-COUNTERPOINTS) (progn
             ; 5th species specific
-    ;        (if (eq (nth i species) 5) ; otherwise there is no species array
-    ;            (gil::g-branch *sp* (species-arr (nth i counterpoints)) var-branch-type gil::INT_VAL_RND)
-    ;        )
+            (if (eq (nth i species) 5) ; otherwise there is no species array
+                (gil::g-branch *sp* (species-arr (nth i counterpoints)) var-branch-type gil::INT_VAL_RND)
+            )
 
             ; 5th species specific
-    ;        (if (eq (nth i species) 5) (progn ; otherwise there is no species array
-    ;            (gil::g-branch *sp* (no-syncope-cost (nth i counterpoints)) var-branch-type val-branch-type)
-    ;            (gil::g-branch *sp* (not-cambiata-cost (nth i counterpoints)) var-branch-type val-branch-type)
-    ;        ))
+            (if (eq (nth i species) 5) (progn ; otherwise there is no species array
+                (gil::g-branch *sp* (no-syncope-cost (nth i counterpoints)) var-branch-type val-branch-type)
+                (gil::g-branch *sp* (not-cambiata-cost (nth i counterpoints)) var-branch-type val-branch-type)
+            ))
 
-    ;;        (if (eq (nth i species) 4) 
-    ;;            (gil::g-branch *sp* (no-syncope-cost (nth i counterpoints)) var-branch-type gil::INT_VAL_MIN)
-    ;;        )
-    ;;  ))
+            (if (eq (nth i species) 4) 
+                (gil::g-branch *sp* (no-syncope-cost (nth i counterpoints)) var-branch-type gil::INT_VAL_MIN)
+            )
+        ))
 
         ;; Solution variables branching
-    ;;    (gil::g-branch *sp* the-cp gil::INT_VAR_DEGREE_MAX gil::INT_VAL_RND) ; the-cp is all the solution arrays merged together 
+        (gil::g-branch *sp* the-cp gil::INT_VAR_DEGREE_MAX gil::INT_VAL_RND) ; the-cp is all the solution arrays merged together 
 
         ; time stop
-    ;;    (setq tstop (gil::t-stop)); create the time stop object
-    ;;    (setq timeout 5)
-    ;;    (gil::time-stop-init tstop (* timeout 1000)); initialize it (time is expressed in ms)
+        (setq tstop (gil::t-stop)); create the time stop object
+        (setq timeout 5)
+        (gil::time-stop-init tstop (* timeout 1000)); initialize it (time is expressed in ms)
 
         ; search options
-    ;;    (setq sopts (gil::search-opts)); create the search options object
-    ;;    (gil::init-search-opts sopts); initialize it
+        (setq sopts (gil::search-opts)); create the search options object
+        (gil::init-search-opts sopts); initialize it
         ; (gil::set-n-threads sopts 1)
-    ;;    (gil::set-time-stop sopts tstop); set the timestop object to stop the search if it takes too long
+        (gil::set-time-stop sopts tstop); set the timestop object to stop the search if it takes too long
 
         ;; SEARCH ENGINE
-    ;;    (print "Search engine...")
-    ;;    (setq se (gil::search-engine *sp* (gil::opts sopts) gil::BAB));
-    ;;    (print se)
+        (print "Search engine...")
+        (setq se (gil::search-engine *sp* (gil::opts sopts) gil::BAB));
+        (print se)
 
-    ;;    (print "CSP constructed")
-    ;;    (list se the-cp tstop sopts)
-    ;;)
-    (first::solver)
+        (print "CSP constructed")
+        (list se the-cp tstop sopts)
+    )
 )
 
 
@@ -534,7 +533,64 @@
 ; this function finds the next solution of the CSP using the search engine given as an argument
 (defun search-next-fux-cp (l)
     (print "Searching next solution...")
-    (first::next-sol)
+    (let (
+        (se (first l))
+        (the-cp (second l))
+        (tstop (third l))
+        (sopts (fourth l))
+        (species-list (fifth l))
+        (check t)
+        sol sol-pitches sol-species
+        )
+
+        (time (om::while check :do
+            ; reset the tstop timer before launching the search
+            (gil::time-stop-reset tstop)
+            ; try to find a solution
+            (time (setq sol (try-find-solution se)))
+            (if (null sol)
+                ; then check if there are solutions left and if the user wishes to continue searching
+                (stopped-or-ended (gil::stopped se) (getparam 'is-stopped))
+                ; else we have found a solution so break fthe loop
+                (setf check nil)
+            )
+        ))
+
+        ; print the solution from GiL
+        (print "Solution: ")
+        (handler-case
+            (progn 
+                (print (list "*cost-factors" (gil::g-values sol *cost-factors)))
+                (print (list "sum of all costs = " (reduce #'+ (gil::g-values sol *cost-factors) :initial-value 0)))
+            ) 
+            (error (c)
+                (dotimes (i *N-COST-FACTORS)
+                    (handler-case (gil::g-values sol (nth i *cost-factors)) (error (c) (print (list "Cost" i "had a problem."))))
+                )
+                (error "All costs are not set correctly. Correct this problem before trying to find a solution.")
+            )
+        )
+        
+        (print (list "species = " species-list))
+        
+        (print "The solution can now be retrieved by evaluating the third output of cp-params.")
+        (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
+        (let (
+            (basic-rythmics (get-basic-rythmics species-list *cf-len sol-pitches counterpoints sol))
+            (sol-voices (make-list *N-COUNTERPOINTS :initial-element nil))
+            )
+
+            (loop for i from 0 below *N-COUNTERPOINTS do (progn
+                (setq rythmic+pitches (nth i basic-rythmics)) ; get the rythmic correpsonding to the species
+                (setq rythmic-om (first rythmic+pitches))
+                (setq pitches-om (second rythmic+pitches))
+            )
+
+                (setf (nth i sol-voices) (make-instance 'voice :chords (to-midicent pitches-om) :tree (om::mktree rythmic-om '(4 4)) :tempo *cf-tempo))
+            )
+            (make-instance 'poly :voices sol-voices)
+        )
+    )
 )
 
 ; try to find a solution, catch errors from GiL and Gecode and restart the search

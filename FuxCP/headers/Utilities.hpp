@@ -17,17 +17,51 @@
 
 using namespace std;
 using namespace Gecode;
+using namespace Gecode::Search;
 
-int *PENULT_CONS_VAR = new int[0]; //check this again
-int *P_CONS = new int[0,7];
-int *IMP_CONS = new int[3,4,8,9];
-int *ALL_CONS = new int[0,3,4,7,8,9];
-bool PENULT_RULE_CHECK = true;
+class PartClass: public Space{
+    protected:
 
-void* add_h_cons_cst(void* sp, int len, int penult_index, IntVarArray h_intervals, int *penult_dom_var = PENULT_CONS_VAR);
+        int species; //0 for cf, 1 for 1st, 2 for 2nd, 3 for 3rd, 4 for 4th, 5 for 5th
+        IntVarArray solution_array;
+        int solution_len;
 
-void* add_penult_dom_cst(void* sp, int h_interval, int *penult_dom_var);
+        //voice variables
+        vector<int> cp_range;
+        vector<int> cp_domain;
+        vector<int> chromatic_cp_domain;
+        vector<int> extended_cp_domain;
+        vector<int> off_domain;
+        int voice_type;
 
-void* create_h_intervals(void* sp, IntVarArray cp, IntVarArray cf, IntVarArray h_intervals);
+        //1st species variables
+        vector<IntVarArray> notes;
+        vector<IntVarArray> h_intervals;
+        vector<IntVarArray> m_intervals_brut;
+        vector<int> m_intervals;
+        vector<int> motions;
+        vector<int> motions_cost;
+        vector<bool> is_cf_lower_arr;
+        vector<int> m2_intervals_brut;
+        vector<int> m2_intervals;
+        //some variables still not there, they'll come when we extend the code
+
+        //3 voices variables
+    
+    public:
+        PartClass(int cf_len);
+
+        void* init_m_intervals_brut(int cf_len);
+
+        void* create_h_intervals(int cf_len, PartClass *lowest);
+
+        vector<IntVarArray> get_notes();
+};
+
+Base<PartClass> *make_solver(PartClass *pb);
+
+PartClass* get_next_solution(Search::Base<PartClass>* solver);
+
+
 
 #endif

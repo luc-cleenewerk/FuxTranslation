@@ -4,25 +4,6 @@
 #include <iostream>
 
 /*
-To initialise a counterpoint, we need:
-
--cp-range (tone-pitch-cf, which is the first note of the cantus firmus) -> this is a range (duh)
--cp-domain
--chromatic-cp-domain
--extended-cp-domain
--off-domain
--voice-type
--species
-
---> RANGE IN LISP CAN BE REPRESENTED WITH AN INTVAR!!!
-
-IntVar cp_range, IntVar cp_dom, IntVar chrom_cp_dom, IntVar ext_cp_dom, IntVar off_dom, int voice_type, int species
-
-These are probably the best ways to cast a counterpoint structure into C++
-
-
-*/
-
 /// @brief 
 /// @param counterpoint 
 /// @param species 
@@ -44,15 +25,7 @@ FirstSpecies::FirstSpecies(int species, vector<int> notes) {
 
 FirstSpecies::FirstSpecies(vector<int> cpr, vector<int> cpd, vector<int> ccpd, vector<int> ecpd, 
         vector<int> o, int v, int s){
-/*
-    Counterpoint.cp_range = cp_range;
-    Counterpoint.cp_dom = cp_dom;
-    Counterpoint.chrom_cp_dom = chrom_cp_dom;
-    Counterpoint.ext_cp_dom = ext_cp_dom;
-    Counterpoint.off_dom = off_dom;
-    Counterpoint.voice_type = voice_type;
-    Counterpoint.species = species;
-*/
+
     cp_range = IntVarArray(*this, cpr[0], cpr[1], cpr[2]);
     cp_dom = IntVarArray(*this, cpd[0], cpd[1], cpd[2]);
     chrom_cp_dom = IntVarArray(*this, ccpd[0], ccpd[1], ccpd[2]);;
@@ -136,19 +109,4 @@ void FirstSpecies::print_solution(){
     }
     cout << endl;
 }
-
-Base<FirstSpecies> *make_solver(FirstSpecies *pb) {
-    
-    Gecode::Search::Options opts;
-
-    return new BAB<FirstSpecies>(pb, opts);
-}
-
-FirstSpecies* get_next_solution(Search::Base<FirstSpecies>* solver){
-    FirstSpecies* next = solver->next();
-    if(next==nullptr){
-        std::cout << "SOLUTION POINTING TO NULL";
-        return nullptr;
-    }
-    return next;
-}
+*/
