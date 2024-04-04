@@ -22,7 +22,7 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
             for(IntVar i : h_int){
                 Gecode::IntVar diff = Gecode::expr(*this, abs(p-q)); //here segfault if notes don't have fixed int value
                 Gecode::IntVar mod = Gecode::expr(*this, diff%12);
-                std::cout << mod.max();
+                std::cout << i.min();
                 std::cout << endl;
                 Gecode::rel(*this, i==mod);
             }
