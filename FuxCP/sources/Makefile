@@ -1,4 +1,4 @@
-PROBLEM_FILES = 1sp-ctp.cpp main.cpp
+PROBLEM_FILES = 1sp-ctp.cpp main.cpp Utils.cpp
 
 LIBRARIES = -lgecodedriver -lgecodeflatzinc -lgecodefloat -lgecodeint -lgecodekernel -lgecodeminimodel \
 			-lgecodesearch -lgecodeset -lgecodesupport
@@ -12,3 +12,6 @@ compile:
 	
 compilegc:
 	g++ -std=c++11 -I ../../../gecode-release-6.2.0/gecode main.cpp -o launch 1sp-ctp.cpp -L ../../../gecode-release-6.2.0 -lgecodekernel -lgecodesearch -lgecodeint -lgecodesupport
+	
+compiletmp:
+	g++ -std=c++11 -I ../../../gecode-release-6.2.0/gecode main.cpp -o launch Utilities.cpp 1sp-ctp.cpp -L ../../../gecode-release-6.2.0 -lgecodekernel -lgecodesearch -lgecodeint -lgecodedriver -lgecodeminimodel -lgecodesupport

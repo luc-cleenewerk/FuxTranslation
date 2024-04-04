@@ -3,27 +3,16 @@
 PartClass::PartClass(int cf_len){
 
     init_m_intervals_brut(cf_len);
-    h_intervals={};
 
 }
 
-void* PartClass::init_m_intervals_brut(int cf_len){
+Space* PartClass::copy(void){
+    return new PartClass(*this);
+};
+
+void PartClass::init_m_intervals_brut(int cf_len){
     IntVarArray array_temp = IntVarArray(*this, cf_len-1, -12, 12);
     m_intervals_brut = {array_temp, array_temp, array_temp, array_temp};
-}
-
-void* PartClass::create_h_intervals(int cf_len, PartClass *lowest){
-    h_intervals[0] = IntVarArray(*this, cf_len-1, 0, 11); //corresponds to line 22 in original 1st-ctp.lisp
-    IntVarArray note = notes[0];
-    IntVarArray h_int = h_intervals[0];
-    IntVarArray low = lowest->get_notes()[0];
-    for(IntVar p : note){
-        for(IntVar q : low){
-            for(IntVar i : h_int){
-                
-            }
-        }
-    }
 }
 
 vector<IntVarArray> PartClass::get_notes(){
@@ -44,4 +33,38 @@ PartClass* get_next_solution(Search::Base<PartClass>* solver){
         return nullptr;
     }
     return next;
+}
+
+void PartClass::set_notes(int n){ //setting them to the value of 1 for the sake of testing
+    notes = {IntVarArray(*this, 16, 0, 120),
+    IntVarArray(*this, 16, 0, 120),
+    IntVarArray(*this, 16, 0, 120),
+    IntVarArray(*this, 16, 0, 120)};
+
+    for(int i = 0; i < notes.size(); i++){
+        for(int j = 0; j < 16; j++){
+            Gecode::rel(*this, notes[i][j] == n);
+        }
+    }
+}
+
+string intVar_to_string(const IntVar &var, bool absolute) {
+    if (var.assigned()){
+        if(absolute)
+            return to_string(abs(var.val()));
+        return to_string(var.val());
+    }
+    return "<not assigned>";
+}
+
+string intVarArray_to_string(IntVarArray vars){
+    int s = vars.size();
+    string res = "{";
+    for(int i = 0; i < s; i++){
+        res += intVar_to_string(vars[i], false);
+        if(i != s - 1)
+            res += ", ";
+    }
+    res += "}";
+    return res;
 }

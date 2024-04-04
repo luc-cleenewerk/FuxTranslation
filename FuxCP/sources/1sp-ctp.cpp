@@ -1,7 +1,45 @@
 #include "../headers/1st-ctp.hpp"
-#include "../headers/Utilities.hpp"
 #include <vector>
 #include <iostream>
+
+FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest) : PartClass(cf_len){
+
+    create_h_intervals(cf_len, lowest);
+
+}
+
+void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
+
+    IntVarArray hint = IntVarArray(*this, cf_len-1, 0, 11);
+    h_intervals = {hint}; //corresponds to line 22 in original 1st-ctp.lisp
+    set_notes(13); //if they aren't set -> segfault...
+    IntVarArray note = notes[0];
+    IntVarArray h_int = h_intervals[0];
+    IntVarArray low = lowest->get_notes()[0];
+    
+    for(IntVar p : note){
+        for(IntVar q : low){
+            for(IntVar i : h_int){
+                Gecode::IntVar diff = Gecode::expr(*this, abs(p-q)); //here segfault if notes don't have fixed int value
+                Gecode::IntVar mod = Gecode::expr(*this, diff%12);
+                std::cout << mod.max();
+                std::cout << endl;
+                Gecode::rel(*this, i==mod);
+            }
+        }
+    }
+
+    for(int i = 0; i < h_intervals.size(); i++){
+        std::cout << "Notes : " + intVarArray_to_string(note);
+        std::cout << endl;
+        std::cout << "Harmonic Intervals : " + intVarArray_to_string(h_int);
+        std::cout << endl;
+        std::cout << "Lower Stratum notes : " + intVarArray_to_string(low);
+        std::cout << endl;
+        std::cout << intVarArray_to_string(h_intervals[i]);
+        std::cout << endl;
+    }
+}
 
 /*
 /// @brief 

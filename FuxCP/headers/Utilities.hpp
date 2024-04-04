@@ -10,9 +10,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <map>
-#include <iostream>
-#include <fstream>
 
 
 using namespace std;
@@ -51,17 +48,21 @@ class PartClass: public Space{
     public:
         PartClass(int cf_len);
 
-        void* init_m_intervals_brut(int cf_len);
-
-        void* create_h_intervals(int cf_len, PartClass *lowest);
+        void init_m_intervals_brut(int cf_len);
 
         vector<IntVarArray> get_notes();
+
+        virtual Space *copy(void);
+
+        void set_notes(int n);
 };
 
 Base<PartClass> *make_solver(PartClass *pb);
 
 PartClass* get_next_solution(Search::Base<PartClass>* solver);
 
+string intVar_to_string(const IntVar &var, bool absolute);
 
+string intVarArray_to_string(IntVarArray vars);
 
 #endif

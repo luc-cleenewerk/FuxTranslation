@@ -11,17 +11,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include "gecode/kernel.hh"
-#include "gecode/int.hh"
-#include "gecode/search.hh"
-#include "gecode/minimodel.hh"
-#include "gecode/set.hh"
-
 #include "../headers/Utilities.hpp"
-
-using namespace Gecode;
-using namespace Gecode::Search;
-using namespace std;
 
 /** Types of search engines */
 enum {
@@ -35,6 +25,12 @@ protected:
     
 
 public:
+
+    FirstSpecies();
+
+    FirstSpecies(int cf_len, PartClass *lowest);
+
+    void create_h_intervals(int cf_len, PartClass *lowest);
 
 };
 
