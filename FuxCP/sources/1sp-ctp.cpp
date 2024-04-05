@@ -12,7 +12,7 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
 
     IntVarArray hint = IntVarArray(*this, cf_len-1, 0, 11);
     h_intervals = {hint}; //corresponds to line 22 in original 1st-ctp.lisp
-    set_notes(13); //if they aren't set -> segfault...
+    // set_notes(13); //if they aren't set -> segfault...
     IntVarArray note = notes[0];
     IntVarArray h_int = h_intervals[0];
     IntVarArray low = lowest->get_notes()[0];
@@ -23,7 +23,7 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
                 Gecode::IntVar diff = Gecode::expr(*this, abs(p-q)); //here segfault if notes don't have fixed int value
                 Gecode::IntVar mod = Gecode::expr(*this, diff%12);
                 std::cout << i.min();
-                std::cout << endl;
+                std::cout << "   ";
                 Gecode::rel(*this, i==mod);
             }
         }
