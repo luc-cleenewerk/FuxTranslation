@@ -26,15 +26,12 @@ int main(int argc, char* argv[]) {
 
     PartClass *low = new PartClass(12);
 
-    // low->set_notes(1);
+    low->set_notes(1);
 
     vector<IntVarArray> note = low->get_notes();
 
-    std::cout << note.size();
-    std::cout << note[0];
-
     for(int i = 0; i < note.size(); i++){
-        std::cout << note[i];
+        std::cout << intVarArray_to_string(note[i]);
         std::cout << endl;
     }
 
