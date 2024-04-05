@@ -19,6 +19,18 @@ using namespace Gecode::Search;
 class PartClass: public Space{
     protected:
 
+        //CONSTANT VARIABLES
+        //Major triad (0,4,7)
+        IntVar MAJ_H_TRIAD = IntVar(*this, 0, 7);
+        //H triad (0,4,7)
+        IntVar H_TRIAD = IntVar(*this, 0, 7);
+        //PERFECT CONSONANCES (0,7)
+        IntVar P_CONS = IntVar(*this, 0, 7);
+        //IMPERFECT CONSONANCES (3,4,8,9)
+        IntVar IMP_CONS = IntVar(*this, 0, 9);
+        //ALL CONSONANCES (0,3,4,7,8,9)
+        IntVar ALL_CONS = IntVar(*this, 0, 9);
+
         int species; //0 for cf, 1 for 1st, 2 for 2nd, 3 for 3rd, 4 for 4th, 5 for 5th
         IntVarArray solution_array;
         int solution_len;

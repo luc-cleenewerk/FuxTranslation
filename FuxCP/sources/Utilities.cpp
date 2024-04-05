@@ -2,11 +2,16 @@
 
 PartClass::PartClass(int cf_len){
 
+    rel(*this, MAJ_H_TRIAD==0 || MAJ_H_TRIAD==4 || MAJ_H_TRIAD==7);
+    rel(*this, P_CONS==0 || P_CONS==7);
+    rel(*this, IMP_CONS==3 || IMP_CONS==4 || IMP_CONS==8 || IMP_CONS==9);
+    rel(*this, ALL_CONS==0 || ALL_CONS==3 || ALL_CONS==4 || ALL_CONS==4 || ALL_CONS==8 || ALL_CONS==9);
+
     init_m_intervals_brut(cf_len);
-    notes = {IntVarArray(*this, 16, 0, 120),
-            IntVarArray(*this, 16, 0, 120),
-            IntVarArray(*this, 16, 0, 120),
-            IntVarArray(*this, 16, 0, 120)};
+    notes = {IntVarArray(*this, cf_len-1, 0, 120),
+            IntVarArray(*this, cf_len-1, 0, 120),
+            IntVarArray(*this, cf_len-1, 0, 120),
+            IntVarArray(*this, cf_len-1, 0, 120)};
 
 }
 

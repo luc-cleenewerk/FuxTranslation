@@ -22,21 +22,30 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
             for(IntVar i : h_int){
                 Gecode::IntVar diff = Gecode::expr(*this, abs(p-q)); //here segfault if notes don't have fixed int value
                 Gecode::IntVar mod = Gecode::expr(*this, diff%12);
-                std::cout << i.min();
-                std::cout << "   ";
+                // std::cout << i.min();
+                // std::cout << "   ";
                 Gecode::rel(*this, i==mod);
             }
         }
     }
 
+    
+
     for(int i = 0; i < h_intervals.size(); i++){
-        std::cout << "Notes : " + intVarArray_to_string(note);
+        std::cout << "Note : ";
+        std::cout << note;
         std::cout << endl;
-        std::cout << "Harmonic Intervals : " + intVarArray_to_string(h_int);
+
+        std::cout << "Harmonic Intervals : ";
+        std::cout << h_int;
         std::cout << endl;
-        std::cout << "Lower Stratum notes : " + intVarArray_to_string(low);
+
+        std::cout << "Lower Stratum notes : ";
+        std::cout << low;
         std::cout << endl;
-        std::cout << intVarArray_to_string(h_intervals[i]);
+        
+        // std::cout << intVarArray_to_string(h_intervals[i]);
+        std::cout << h_intervals[i];
         std::cout << endl;
     }
 }
