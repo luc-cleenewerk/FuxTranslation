@@ -3,6 +3,10 @@
 PartClass::PartClass(int cf_len){
 
     init_m_intervals_brut(cf_len);
+    notes = {IntVarArray(*this, 16, 0, 120),
+            IntVarArray(*this, 16, 0, 120),
+            IntVarArray(*this, 16, 0, 120),
+            IntVarArray(*this, 16, 0, 120)};
 
 }
 
