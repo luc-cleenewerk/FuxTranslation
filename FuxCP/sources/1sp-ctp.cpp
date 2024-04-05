@@ -6,6 +6,25 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest) : PartClass(cf_len){
 
     create_h_intervals(cf_len, lowest);
 
+    std::cout << "BEFORE MEMBER : ";
+    std::cout << h_intervals[0];
+    std::cout << endl;
+
+    // CONSTRAINT 1 : ALL HARMONIC INTERVALS ARE CONSONANCES
+    for(int j = 0; j < h_intervals.size(); j++){
+        for(int m = 0; m < h_intervals[j].size(); m++){
+            member(*this, ALL_CONS_VAR, h_intervals[j][m]);
+        }
+    }
+
+    //branch here
+    for(int i = 0; i < h_intervals.size(); i++){
+        branch(*this, h_intervals[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    }
+    std::cout << "AFTER MEMBER : ";
+    std::cout << h_intervals[0];
+    std::cout << endl;
+
 }
 
 void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
@@ -28,8 +47,6 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
             }
         }
     }
-
-    
 
     for(int i = 0; i < h_intervals.size(); i++){
         std::cout << "Note : ";
