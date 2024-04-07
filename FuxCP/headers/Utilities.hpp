@@ -25,7 +25,7 @@ class PartClass: public Space{
         //H triad (0,4,7)
         const IntSet H_TRIAD = IntSet({0,4,7});
         //PERFECT CONSONANCES (0,7)
-        const IntSet P_CONS = IntSet({0,7});
+        const IntVarArgs P_CONS = IntVarArgs({IntVar(*this,0,0), IntVar(*this,7,7)});
         //IMPERFECT CONSONANCES (3,4,8,9)
         const IntSet IMP_CONS = IntSet({3,4,8,9});
         //ALL CONSONANCES (0,3,4,7,8,9)
@@ -49,6 +49,7 @@ class PartClass: public Space{
         vector<IntVarArray> notes;
         vector<IntVarArray> h_intervals;
         vector<IntVarArray> m_intervals_brut;
+        IntVarArray h_intervals_brut;
         vector<int> m_intervals;
         vector<int> motions;
         vector<int> motions_cost;

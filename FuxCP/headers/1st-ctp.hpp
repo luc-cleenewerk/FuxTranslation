@@ -28,7 +28,7 @@ public:
 
     FirstSpecies();
 
-    FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf);
+    FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_counterpoints, vector<PartClass *> upper);
 
     void create_h_intervals(int cf_len, PartClass *lowest);
 

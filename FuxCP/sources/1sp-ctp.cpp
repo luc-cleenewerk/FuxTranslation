@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 
-FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartClass(cf_len){
+FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_counterpoints, vector<PartClass *> upper) : PartClass(cf_len){
 
     create_h_intervals(cf_len, lowest);
     init_cfb(cf_len, cf);
@@ -36,6 +36,33 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartC
             rel(*this, notes[i][j], IRT_NQ, cf->notes[i][j]); //segfaults
         }
     }
+    //CONSTRAINT PERFECT CONSONANCE AT THE START AND THE END
+    for(int i = 0; i < h_intervals[0].size(); i++){
+        member(*this, P_CONS, h_intervals[0][i]);
+    }
+    for(int i = 0; i < h_intervals[0].size(); i++){
+        member(*this, P_CONS, h_intervals[h_intervals.size()-1][i]);
+    }
+
+    //CONSTRAINT H7 / H8 (HARMONIC INTERVAL MUST BE EITHER MINOR THIRD, PERFECT FIFTH, MAJOR SIXTH OR OCTAVE)
+    IntVarArgs constraint_args = IntVarArgs({IntVar{*this, 0,0}, IntVar(*this, 3,3), IntVar(*this,7,7), IntVar(*this,9,9)});
+    for(int i = 0; i < h_intervals[0].size(); i++){
+        member(*this, constraint_args, h_intervals[0][i]);
+    }
+
+    //H10 TENTHS ARE PROHIBITED IN THE LAST CHORD
+    /*
+    for(int i = 0; i < n_counterpoints; i++){
+        IntVar h_last = upper[i].h_intervals[0][upper[i].h_intervals[0].size()-1];
+        IntVar h_brut_last = upper[i].h_intervals_brut[upper[i].h_intervals_brut.size()-1];
+        BoolVar is_hbrut_not_third = BoolVar(*this, 0, 1);
+    
+        rel(*this, h_brut_last, IRT_NQ, 4, Reify(is_hbrut_not_third));
+        rel(*this, h_last, IRT_NQ, 4, Reify(is_hbrut_not_third));
+    }*/
+
+    //H12 LAST CHORD CANNOT INCLUDE A MINOR THIRD
+    rel(*this, h_intervals[0][h_intervals[0].size()-1], IRT_NQ, 3);
 
     //branch here
     for(int i = 0; i < h_intervals.size(); i++){

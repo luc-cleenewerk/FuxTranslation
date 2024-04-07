@@ -35,7 +35,9 @@ int main(int argc, char* argv[]) {
         std::cout << endl;
     }
 
-    FirstSpecies *first = new FirstSpecies(4, low, low);
+    vector<PartClass *> parts_upper = {low};
+
+    FirstSpecies *first = new FirstSpecies(4, low, low , 1, parts_upper);
 
     return 0;
 
