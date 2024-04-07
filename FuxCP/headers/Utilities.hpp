@@ -17,7 +17,7 @@ using namespace Gecode;
 using namespace Gecode::Search;
 
 class PartClass: public Space{
-    protected:
+    public:
 
         //CONSTANT VARIABLES
         //Major triad (0,4,7)

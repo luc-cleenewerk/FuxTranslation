@@ -24,7 +24,7 @@ FirstSpecies* get_next_solution(Search::Base<FirstSpecies>* solver){
 
 int main(int argc, char* argv[]) {
 
-    PartClass *low = new PartClass(12);
+    PartClass *low = new PartClass(4);
 
     // low->set_notes(1);
 

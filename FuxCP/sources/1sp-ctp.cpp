@@ -30,6 +30,12 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartC
             }
         }
     }
+    //CONSTRAINT H5 : VOICES CANNOT PLAY SAME NOTE
+    for(int i = 0; i < 4; i++){
+        for(int j = 1; j < cf_len; j++){
+            rel(*this, notes[i][j], IRT_NQ, cf->notes[i][j]); //segfaults
+        }
+    }
 
     //branch here
     for(int i = 0; i < h_intervals.size(); i++){
@@ -38,9 +44,11 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartC
     for(int i = 0; i < is_cf_lower_arr.size(); i++){
         branch(*this, is_cf_lower_arr[i], BOOL_VAR_DEGREE_MIN(), BOOL_VAL_MIN());
     }
+    for(int i = 0; i < notes.size(); i++){
+        branch(*this, notes[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    }
     std::cout << "AFTER MEMBER : ";
     std::cout << h_intervals[0];
-    std::cout << is_cf_lower_arr[0];
     std::cout << endl;
 
 }

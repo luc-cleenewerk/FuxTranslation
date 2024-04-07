@@ -5,10 +5,10 @@ PartClass::PartClass(int cf_len){
     //branch come here
 
     init_m_intervals_brut(cf_len);
-    notes = {IntVarArray(*this, cf_len-1, 0, 120),
-            IntVarArray(*this, cf_len-1, 0, 120),
-            IntVarArray(*this, cf_len-1, 0, 120),
-            IntVarArray(*this, cf_len-1, 0, 120)};
+    notes = {IntVarArray(*this, cf_len, 0, 120),
+            IntVarArray(*this, cf_len, 0, 120),
+            IntVarArray(*this, cf_len, 0, 120),
+            IntVarArray(*this, cf_len, 0, 120)};
 
 }
 
@@ -19,6 +19,9 @@ PartClass::PartClass(PartClass &s) : Space(s){
     }
     for(int i = 0; i < is_cf_lower_arr.size(); i++){
         is_cf_lower_arr[i].update(*this, s.is_cf_lower_arr[0]);
+    }
+    for(int i = 0; i < notes.size(); i++){
+        notes[i].update(*this, s.notes[0]);
     }
 }
 
