@@ -18,12 +18,16 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartC
         }
     }
     //CONSTRAINT H4 : KEY TONE TUNES TO FIRST NOTE OF CF
-    if(is_cf_lower_arr[0][0].val()==0){
-        rel(*this, h_intervals[0][0], IRT_EQ, 0);
+    if(is_cf_lower_arr[0][0].assigned()){ //maybe because of this check some things may not work? unsure tbh
+        if(is_cf_lower_arr[0][0].val()==0){
+            rel(*this, h_intervals[0][0], IRT_EQ, 0);
+        }
     }
     for(int i = 0; i < cf_len; i++){
-        if(is_cf_lower_arr[0][i].val()==0){
-            rel(*this, h_intervals[0][0], IRT_EQ, 0);
+        if(is_cf_lower_arr[0][i].assigned()){
+            if(is_cf_lower_arr[0][i].val()==0){
+                rel(*this, h_intervals[0][i], IRT_EQ, 0); //same worry as before
+            }
         }
     }
 
