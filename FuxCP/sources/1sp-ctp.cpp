@@ -11,10 +11,19 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartC
     std::cout << h_intervals[0];
     std::cout << endl;
 
-    // CONSTRAINT 1 : ALL HARMONIC INTERVALS ARE CONSONANCES
+    // CONSTRAINT H1 : ALL HARMONIC INTERVALS ARE CONSONANCES
     for(int j = 0; j < h_intervals.size(); j++){
         for(int m = 0; m < h_intervals[j].size(); m++){
             member(*this, ALL_CONS_VAR, h_intervals[j][m]);
+        }
+    }
+    //CONSTRAINT H4 : KEY TONE TUNES TO FIRST NOTE OF CF
+    if(is_cf_lower_arr[0][0].val()==0){
+        rel(*this, h_intervals[0][0], IRT_EQ, 0);
+    }
+    for(int i = 0; i < cf_len; i++){
+        if(is_cf_lower_arr[0][i].val()==0){
+            rel(*this, h_intervals[0][0], IRT_EQ, 0);
         }
     }
 
@@ -75,7 +84,7 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
 void FirstSpecies::init_cfb(int cf_len, PartClass *cf){
     BoolVarArray temp_bool = BoolVarArray(*this, cf_len, 0,1);
     is_cf_lower_arr = {temp_bool};
-    is_cf_lower_arr[0][0] = BoolVar(*this, 1,1);
+    is_cf_lower_arr[0][0] = BoolVar(*this, 0,1);
 
     IntVarArray note = notes[0];
     BoolVarArray is_lower = is_cf_lower_arr[0];
