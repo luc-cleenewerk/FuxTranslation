@@ -28,9 +28,11 @@ public:
 
     FirstSpecies();
 
-    FirstSpecies(int cf_len, PartClass *lowest);
+    FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf);
 
     void create_h_intervals(int cf_len, PartClass *lowest);
+
+    void init_cfb(int cf_len, PartClass *cf);
 
 };
 

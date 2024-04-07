@@ -14,6 +14,12 @@ PartClass::PartClass(int cf_len){
 
 PartClass::PartClass(PartClass &s) : Space(s){
     //update come in here
+    for(int i = 0; i < h_intervals.size(); i++){
+        h_intervals[i].update(*this, s.h_intervals[0]);
+    }
+    for(int i = 0; i < is_cf_lower_arr.size(); i++){
+        is_cf_lower_arr[i].update(*this, s.is_cf_lower_arr[0]);
+    }
 }
 
 Space* PartClass::copy(void){

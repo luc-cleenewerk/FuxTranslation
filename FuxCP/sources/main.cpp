@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
         std::cout << endl;
     }
 
-    FirstSpecies *first = new FirstSpecies(4, low);
+    FirstSpecies *first = new FirstSpecies(4, low, low);
 
     return 0;
 

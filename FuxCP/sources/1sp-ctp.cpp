@@ -2,9 +2,10 @@
 #include <vector>
 #include <iostream>
 
-FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest) : PartClass(cf_len){
+FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf) : PartClass(cf_len){
 
     create_h_intervals(cf_len, lowest);
+    init_cfb(cf_len, cf);
 
     std::cout << "BEFORE MEMBER : ";
     std::cout << h_intervals[0];
@@ -21,8 +22,12 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest) : PartClass(cf_len){
     for(int i = 0; i < h_intervals.size(); i++){
         branch(*this, h_intervals[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
     }
+    for(int i = 0; i < is_cf_lower_arr.size(); i++){
+        branch(*this, is_cf_lower_arr[i], BOOL_VAR_DEGREE_MIN(), BOOL_VAL_MIN());
+    }
     std::cout << "AFTER MEMBER : ";
     std::cout << h_intervals[0];
+    std::cout << is_cf_lower_arr[0];
     std::cout << endl;
 
 }
@@ -64,6 +69,27 @@ void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
         // std::cout << intVarArray_to_string(h_intervals[i]);
         std::cout << h_intervals[i];
         std::cout << endl;
+    }
+}
+
+void FirstSpecies::init_cfb(int cf_len, PartClass *cf){
+    BoolVarArray temp_bool = BoolVarArray(*this, cf_len, 0,1);
+    is_cf_lower_arr = {temp_bool};
+    is_cf_lower_arr[0][0] = BoolVar(*this, 1,1);
+
+    IntVarArray note = notes[0];
+    BoolVarArray is_lower = is_cf_lower_arr[0];
+    vector<IntVarArray> cf_notes = cf->get_notes();
+
+    for(IntVar p : note){
+        for(IntVarArray cf_n : cf->get_notes()){
+            for(IntVar q : cf_n){
+                for(BoolVar b : is_lower){
+                    Gecode::BoolVar temp = Gecode::expr(*this, p >= q);
+                    rel(*this, b==temp);
+                }
+            }
+        }
     }
 }
 

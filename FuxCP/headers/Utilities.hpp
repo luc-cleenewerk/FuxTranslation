@@ -52,7 +52,7 @@ class PartClass: public Space{
         vector<int> m_intervals;
         vector<int> motions;
         vector<int> motions_cost;
-        vector<bool> is_cf_lower_arr;
+        vector<BoolVarArray> is_cf_lower_arr;
         vector<int> m2_intervals_brut;
         vector<int> m2_intervals;
         //some variables still not there, they'll come when we extend the code
