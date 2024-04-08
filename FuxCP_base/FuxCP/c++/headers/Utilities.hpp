@@ -41,20 +41,20 @@ enum variable_selection{
     AFC_MAX,                        //4
 };
 
-/// go <-- soprano->bass: 4-3-2-1-8-7-6-5 etc
-auto right_to_left = [](const Space& home, const IntVar& x, int i) {
-    return i;
-};
+// /// go <-- soprano->bass: 4-3-2-1-8-7-6-5 etc
+// auto right_to_left = [](const Space& home, const IntVar& x, int i) {
+//     return i;
+// };
 
-/// go --> soprano->bass
-auto left_to_right_soprano_to_bass = [](const Space& home, const IntVar& x, int i) {
-    return (i/4) * 4 + (4 - i%4);
-};
+// /// go --> soprano->bass
+// auto left_to_right_soprano_to_bass = [](const Space& home, const IntVar& x, int i) {
+//     return (i/4) * 4 + (4 - i%4);
+// };
 
-const vector<IntVarBranch> variable_selection_heuristics = {INT_VAR_DEGREE_MAX(),
-                                                            INT_VAR_SIZE_MIN(),
-                                                            INT_VAR_MERIT_MAX(right_to_left),
-                                                            INT_VAR_MERIT_MIN(left_to_right_soprano_to_bass)};
+// const vector<IntVarBranch> variable_selection_heuristics = {INT_VAR_DEGREE_MAX(),
+//                                                             INT_VAR_SIZE_MIN(),
+//                                                             INT_VAR_MERIT_MAX(right_to_left),
+//                                                             INT_VAR_MERIT_MIN(left_to_right_soprano_to_bass)};
 
 const vector<string> variable_selection_heuristics_names = {"Degree max", "Domain size min", "Left to right",
                                                             "Right to left", "AFC max"};
@@ -66,19 +66,19 @@ enum value_selection{
     VAL_RND,            //3
 };
 
-/// value selection heuristic
-auto branchVal = [](const Space& home, IntVar x, int i) {
-    return x.min();
-};
+// /// value selection heuristic
+// auto branchVal = [](const Space& home, IntVar x, int i) {
+//     return x.min();
+// };
 
-/// commit function (EQ and DIFF)
-auto branchCommit = [](Space& home, unsigned int a, IntVar x, int i, int n){
-    if (a == 0U){
-        rel(home, x, IRT_EQ, n);
-    } else {
-        rel(home, x, IRT_NQ, n);
-    }
-};
+// /// commit function (EQ and DIFF)
+// auto branchCommit = [](Space& home, unsigned int a, IntVar x, int i, int n){
+//     if (a == 0U){
+//         rel(home, x, IRT_EQ, n);
+//     } else {
+//         rel(home, x, IRT_NQ, n);
+//     }
+// };
 
 const vector<IntValBranch> value_selection_heuristics = {INT_VAL_MIN(), INT_VAL_MAX(), INT_VAL_MED(), INT_VAL_RND(1U)};
 
