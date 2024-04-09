@@ -205,12 +205,12 @@ const int C_FLAT = 11;
 const vector<std::string> noteNames = {"C", "Csharp", "D", "Eb", "E", "F", "Fsharp", "G", "Ab", "A", "Bb", "B"};
 
 /** Voice positions */
-enum voices{
-    BASS,       //0
-    TENOR,      //1
-    ALTO,       //2
-    SOPRANO     //3
-};
+//enum voices{
+//    BASS,       //0
+//    TENOR,      //1
+//    ALTO,       //2
+//    SOPRANO     //3
+//};
 
 const vector<std::string> voiceNames = {"Bass", "Tenor", "Alto", "Soprano"};
 
