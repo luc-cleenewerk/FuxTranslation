@@ -6,7 +6,6 @@
 PartClass::PartClass(int cf_len, int species){
 
     //branch come here
-
     init_m_intervals_brut(cf_len);
     notes = {IntVarArray(*this, cf_len, 0, 120),
             IntVarArray(*this, cf_len, 0, 120),

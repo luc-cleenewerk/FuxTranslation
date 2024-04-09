@@ -120,12 +120,14 @@ void Problem::constrain(const Space& _b) {
 // /**
 //  * Prints the solution in the console
 //  */
-// void Problem::print_solution(){
-//     for(int i = 0; i < size; i++){
-//         cout << cp[i].val() << " ";
-//     }
-//     cout << endl;
-// }
+void Problem::print_solution(){
+    for(int i = 0; i < voices.size(); i++){
+        for(int j = 0; j < voices.at(i)->get_notes().size(); j++){
+            cout << voices.at(i)->get_notes()[j] << " ";
+        }
+    }
+    cout << endl;
+}
 
 // /**
 //  * toString method
