@@ -15,6 +15,8 @@
 #include "gecode/minimodel.hh"
 #include "gecode/set.hh"
 
+#include "Utilities.hpp"
+
 using namespace Gecode;
 using namespace Gecode::Search;
 using namespace std;
@@ -32,24 +34,31 @@ enum {
 class Problem: public Space {
 protected:
     // solution related attributes
-    IntVarArray cp; // The variables for the counterpoint
-    int size; // The size of the variable array of interest
-    int lower_bound_domain;
-    int upper_bound_domain;
-    /* @todo Add here any additional attributes you need to represent your problem */
-    int species;
+    // IntVarArray cp; // The variables for the counterpoint
+    // int size; // The size of the variable array of interest
+    // int lower_bound_domain;
+    // int upper_bound_domain;
+    // /* @todo Add here any additional attributes you need to represent your problem */
+    // int species;
+
     vector<int> cantusFirmus;
+    vector<int> species_list;
+    int n_measures;
+    int n_voices;
+    
+    vector<PartClass> voices;
 
 public:
     /**
      * Constructor
      * @todo Modify this constructor depending on your problem. This constructor is where the problem is defined
      * @todo (variables, constraints, branching, ...)
-     * @param s the size of the array of variables
-     * @param l the lower bound of the domain of the variables
-     * @param u the upper bound of the domain of the variables
+    //  * @param n_measures the number of measures (= the number of notes in the Cantus Firmus)
+    //  * @param n_voices   the number of total voices wanted (if 3 : 2 counterpoints)
+     * @param cf the cantus firmus notes 
+     * @param sp an array of the species of the different voices (0 if cantus firmus, 1-5 for counterpoints)
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf);
+    Problem(vector<int> cf, vector<int> sp);
 
     /**
      * Copy constructor

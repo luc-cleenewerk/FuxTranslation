@@ -9,27 +9,43 @@
  * Constructor
  * @todo Modify this constructor depending on your problem. This constructor is where the problem is defined
  * @todo (variables, constraints, branching, ...)
- * @param size the size of the array of variables
- * @param l the lower bound of the domain of the variables
- * @param u the upper bound of the domain of the variables
+ * @param cf the cantus firmus notes 
+ * @param sp an array of the species of the different voices (0 if cantus firmus, 1-5 for counterpoints)
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
-    string message = "WSpace object created. ";
-    size = s;
-    lower_bound_domain = l;
-    upper_bound_domain = u;
-    species = sp;
+Problem::Problem(vector<int> cf, vector<int> sp) {
+
+    // size = s;
+    // lower_bound_domain = l;
+    // upper_bound_domain = u;
+    // species = sp;
     cantusFirmus = cf;
+    species_list = sp;
+    n_measures = cantusFirmus.size();
+    n_voices   = species_list.size();
 
     // variable initialization todo depends on the species
-    cp = IntVarArray(*this, size, l, u);
+    // cp = IntVarArray(*this, size, l, u);
+    for (int s : species_list)
+    {
+        voices.push_back(PartClass(n_measures, s));
+    }
+    
 
     //constraints todo depends on the cantus firmus
-    distinct(*this, cp);
+    distinct(*this, voices[1].get_notes()[0]);
 
     //branching
-    branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    writeToLogFile(message.c_str());
+    // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+
+    for (PartClass partClass : voices) {
+        if (partClass.species != 0){ // not cantus firmus
+            for (IntVarArray notesArray : partClass.get_notes()) {
+                branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+            }
+        }
+    }   
+
+    // writeToLogFile(message.c_str());
 }
 
 /**
@@ -39,38 +55,47 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
  */
 Problem::Problem(Problem& s): Space(s){
     //IntVars update
-    size = s.size;
-    lower_bound_domain = s.lower_bound_domain;
-    upper_bound_domain = s.upper_bound_domain;
-    cp.update(*this, s.cp);
+    cantusFirmus = s.cantusFirmus;
+    species_list = s.species_list;
+    
+    // do we need to reinstantiate all variables? 
+
+    // cp.update(*this, s.cp);
+    for (PartClass partClass : s.voices) {
+        if (partClass.species != 0){ // not cantus firmus
+            for (IntVarArray notesArray : partClass.get_notes()) {
+                notesArray.update(*this, notesArray);
+            }
+        }
+    }   
 }
 
-/**
- * Returns the size of the problem
- * @return an integer representing the size of the vars array
- */
-int Problem::getSize(){
-    string message = "getSize function called. size = " + to_string(size) + "\n";
-    writeToLogFile(message.c_str());
-    return size;
-}
+// /**
+//  * Returns the size of the problem
+//  * @return an integer representing the size of the vars array
+//  */
+// int Problem::getSize(){
+//     string message = "getSize function called. size = " + to_string(size) + "\n";
+//     writeToLogFile(message.c_str());
+//     return size;
+// }
 
-/**
- * Returns the values taken by the variables vars in a solution
- * @todo Modify this to return the solution for your problem. This function uses @param size to generate an array of integers
- * @return an array of integers representing the values of the variables in a solution
- */
-int* Problem::return_solution(){
-    string message = "return_solution method. Solution : [";
-    int* solution = new int[size];
-    for(int i = 0; i < size; i++){
-        solution[i] = cp[i].val();
-        message += to_string(solution[i]) + " ";
-    }
-    message += "]\n";
-    writeToLogFile(message.c_str());
-    return solution;
-}
+// /**
+//  * Returns the values taken by the variables vars in a solution
+//  * @todo Modify this to return the solution for your problem. This function uses @param size to generate an array of integers
+//  * @return an array of integers representing the values of the variables in a solution
+//  */
+// int* Problem::return_solution(){
+//     string message = "return_solution method. Solution : [";
+//     int* solution = new int[size];
+//     for(int i = 0; i < size; i++){
+//         solution[i] = cp[i].val();
+//         message += to_string(solution[i]) + " ";
+//     }
+//     message += "]\n";
+//     writeToLogFile(message.c_str());
+//     return solution;
+// }
 
 /**
  * Copy method
@@ -80,48 +105,48 @@ Space* Problem::copy(void) {
     return new Problem(*this);
 }
 
-/**
- * Constrain method for bab search
- * @todo modify this function if you want to use branch and bound
- * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
- */
-void Problem::constrain(const Space& _b) {
-    const Problem &b = static_cast<const Problem &>(_b);
-    rel(*this, cp, IRT_GQ, 2);
-}
+// /**
+//  * Constrain method for bab search
+//  * @todo modify this function if you want to use branch and bound
+//  * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
+//  */
+// void Problem::constrain(const Space& _b) {
+//     const Problem &b = static_cast<const Problem &>(_b);
+//     rel(*this, cp, IRT_GQ, 2);
+// }
 
-/**
- * Prints the solution in the console
- */
-void Problem::print_solution(){
-    for(int i = 0; i < size; i++){
-        cout << cp[i].val() << " ";
-    }
-    cout << endl;
-}
+// /**
+//  * Prints the solution in the console
+//  */
+// void Problem::print_solution(){
+//     for(int i = 0; i < size; i++){
+//         cout << cp[i].val() << " ";
+//     }
+//     cout << endl;
+// }
 
-/**
- * toString method
- * @return a string representation of the current instance of the Problem class.
- * Right now, it returns a string "Problem object. size = <size>"
- * If a variable is not assigned when this function is called, it writes <not assigned> instead of the value
- * @todo modify this method to also print any additional attributes you add to the class
- */
-string Problem::toString(){
-    string message = "Problem object. \n";
-    message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
-            to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
-             + "\n" + "current values for vars: [";
-    for(int i = 0; i < size; i++){
-        if (cp[i].assigned())
-            message += to_string(cp[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n\n";
-    writeToLogFile(message.c_str());
-    return message;
-}
+// /**
+//  * toString method
+//  * @return a string representation of the current instance of the Problem class.
+//  * Right now, it returns a string "Problem object. size = <size>"
+//  * If a variable is not assigned when this function is called, it writes <not assigned> instead of the value
+//  * @todo modify this method to also print any additional attributes you add to the class
+//  */
+// string Problem::toString(){
+//     string message = "Problem object. \n";
+//     message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
+//             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
+//              + "\n" + "current values for vars: [";
+//     for(int i = 0; i < size; i++){
+//         if (cp[i].assigned())
+//             message += to_string(cp[i].val()) + " ";
+//         else
+//             message += "<not assigned> ";
+//     }
+//     message += "]\n\n";
+//     writeToLogFile(message.c_str());
+//     return message;
+// }
 
 /*************************
  * Search engine methods *

@@ -10,12 +10,12 @@ extern "C" {
 /**
  * Wraps the Problem constructor.
  * @todo modify this to include any parameters your Problem constructor requires
- * @param size an integer representing the size of the problem
- * @param lower_bound_domain an integer representing the lower bound of the domain of the variables
- * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
+//  * @param size an integer representing the size of the problem
+//  * @param lower_bound_domain an integer representing the lower bound of the domain of the variables
+//  * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
  * @return A pointer to a Problem object casted as a void*
  */
-void* create_new_problem(int size, int lower_bound_domain, int upper_bound_domain, int species, int* cantusFirmus);
+void* create_new_problem(int n_measures, int n_voices, int* cantusFirmus, int* speciesList);
 
 /**
  * returns the size of the problem

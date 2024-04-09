@@ -9,8 +9,14 @@ int main(int argc, char* argv[]) {
     int lower_bound_domain = 1;
     int species = 0;
     vector<int> cantusFirmus = {1, 2, 3};
+
+    vector<int> species_list = {0, 1};
+
+
+
+
     // create a new problem
-    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus);
+    Problem* p = new Problem(cantusFirmus, species_list);
 
     // create a new search engine
     Search::Base<Problem>* e = make_solver(p, bab_solver);
