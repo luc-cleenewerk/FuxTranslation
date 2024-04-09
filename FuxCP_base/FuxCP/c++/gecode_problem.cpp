@@ -27,19 +27,20 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     // cp = IntVarArray(*this, size, l, u);
     for (int s : species_list)
     {
-        voices.push_back(PartClass(n_measures, s));
+        PartClass *tmp = new PartClass(n_measures, s);
+        voices.push_back(tmp);
     }
     
 
     //constraints todo depends on the cantus firmus
-    distinct(*this, voices[1].get_notes()[0]);
+    distinct(*this, voices.at(1)->get_notes()[0]);
 
     //branching
     // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
-    for (PartClass partClass : voices) {
-        if (partClass.species != 0){ // not cantus firmus
-            for (IntVarArray notesArray : partClass.get_notes()) {
+    for (PartClass *partClass : voices) {
+        if (partClass->species != 0){ // not cantus firmus
+            for (IntVarArray notesArray : partClass->get_notes()) {
                 branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
             }
         }
@@ -61,9 +62,10 @@ Problem::Problem(Problem& s): Space(s){
     // do we need to reinstantiate all variables? 
 
     // cp.update(*this, s.cp);
-    for (PartClass partClass : s.voices) {
-        if (partClass.species != 0){ // not cantus firmus
-            for (IntVarArray notesArray : partClass.get_notes()) {
+    
+    for (PartClass *partClass : s.voices) {
+        if (partClass->species != 0){ // not cantus firmus
+            for (IntVarArray notesArray : partClass->get_notes()) {
                 notesArray.update(*this, notesArray);
             }
         }
@@ -110,10 +112,10 @@ Space* Problem::copy(void) {
 //  * @todo modify this function if you want to use branch and bound
 //  * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
 //  */
-// void Problem::constrain(const Space& _b) {
-//     const Problem &b = static_cast<const Problem &>(_b);
-//     rel(*this, cp, IRT_GQ, 2);
-// }
+void Problem::constrain(const Space& _b) {
+    const Problem &b = static_cast<const Problem &>(_b);
+    //rel(*this, cp, IRT_GQ, 2);
+}
 
 // /**
 //  * Prints the solution in the console
@@ -182,7 +184,7 @@ Problem* get_next_solution_space(Search::Base<Problem>* solver){
     Problem* sol_space = solver->next();
     if (sol_space == nullptr)
         return NULL;
-    message += sol_space->toString();
+    //message += sol_space->toString();
     writeToLogFile(message.c_str());
     return sol_space;
 }

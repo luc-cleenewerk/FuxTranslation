@@ -23,13 +23,13 @@ int main(int argc, char* argv[]) {
     delete p;
 
     int nb_sol = 0;
-
+    /*
     while(Problem * pb = get_next_solution_space(e)){
         nb_sol++;
         cout << "Solution " << nb_sol << ": " << endl;
         pb->print_solution();
         delete pb;
-    }
+    }*/
     cout << "No (more) solutions." << endl;
     return 0;
 }

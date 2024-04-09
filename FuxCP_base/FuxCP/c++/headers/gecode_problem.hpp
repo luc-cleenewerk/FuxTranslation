@@ -46,7 +46,7 @@ protected:
     int n_measures;
     int n_voices;
     
-    vector<PartClass> voices;
+    vector<PartClass*> voices;
 
 public:
     /**
