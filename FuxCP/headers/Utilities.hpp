@@ -50,12 +50,13 @@ class PartClass: public Space{
         vector<IntVarArray> h_intervals;
         vector<IntVarArray> m_intervals_brut;
         IntVarArray h_intervals_brut;
-        vector<int> m_intervals;
+        vector<IntVarArray> m_intervals;
         vector<int> motions;
         vector<int> motions_cost;
         vector<BoolVarArray> is_cf_lower_arr;
         vector<int> m2_intervals_brut;
         vector<int> m2_intervals;
+
         //some variables still not there, they'll come when we extend the code
 
         //3 voices variables
@@ -72,6 +73,8 @@ class PartClass: public Space{
         virtual Space *copy(void);
 
         void set_notes(int n);
+
+        void set_h_intervals(int cf_len);
 };
 
 Base<PartClass> *make_solver(PartClass *pb);

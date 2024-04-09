@@ -87,3 +87,11 @@ string intVarArray_to_string(IntVarArray vars){
     res += "}";
     return res;
 }
+
+void PartClass::set_h_intervals(int cf_len){
+    IntVarArray hint = IntVarArray(*this, cf_len, 0, 11);
+    for(int i = 0; i < cf_len; i++){
+        hint[i] = IntVar(*this, i+1, i+1);
+    }
+    h_intervals = {hint};
+}

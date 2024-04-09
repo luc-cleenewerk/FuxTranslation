@@ -26,18 +26,19 @@ int main(int argc, char* argv[]) {
 
     PartClass *low = new PartClass(4);
 
-    // low->set_notes(1);
-
-    vector<IntVarArray> note = low->get_notes();
-
-    for(int i = 0; i < note.size(); i++){
-        std::cout << note[i];
-        std::cout << endl;
-    }
+    low->set_notes(65);
+    low->set_h_intervals(4);
 
     vector<PartClass *> parts_upper = {low};
 
-    FirstSpecies *first = new FirstSpecies(4, low, low , 1, parts_upper);
+    PartClass *cf = new PartClass(4);
+    cf->set_h_intervals(4);
+    cf->set_notes(66);
+    std::cout << low->h_intervals[0];
+    std::cout << low->notes[0];
+    std::cout << endl;
+
+    FirstSpecies *first = new FirstSpecies(4, low, cf , 1, parts_upper);
 
     return 0;
 

@@ -4,12 +4,16 @@
 
 FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_counterpoints, vector<PartClass *> upper) : PartClass(cf_len){
 
+    set_notes(64);
     create_h_intervals(cf_len, lowest);
+    create_m_intervals(cf_len-1);
     init_cfb(cf_len, cf);
 
     std::cout << "BEFORE MEMBER : ";
     std::cout << h_intervals[0];
     std::cout << endl;
+
+    //NOTE : FOR NOW THESE CONSTRAINTS APPLY TO A SIMPLE 2 VOICE SPECIES
 
     // CONSTRAINT H1 : ALL HARMONIC INTERVALS ARE CONSONANCES
     for(int j = 0; j < h_intervals.size(); j++){
@@ -17,37 +21,40 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_c
             member(*this, ALL_CONS_VAR, h_intervals[j][m]);
         }
     }
+
+    //CONSTRAINT H2 : FIRST HARMONIC INTERVAL MUST BE A PERFECT CONSNANCE
+    member(*this, P_CONS, h_intervals[0][0]);
+
+    //CONSTRAINT H3 : LAST HARMONIC INTERVAL MUST BE A PERFECT CONSONANCE
+    member(*this, P_CONS, h_intervals[0][h_intervals[0].size()-1]);
+
     //CONSTRAINT H4 : KEY TONE TUNES TO FIRST NOTE OF CF
     if(is_cf_lower_arr[0][0].assigned()){ //maybe because of this check some things may not work? unsure tbh
         if(is_cf_lower_arr[0][0].val()==0){
             rel(*this, h_intervals[0][0], IRT_EQ, 0);
         }
     }
-    for(int i = 0; i < cf_len; i++){
-        if(is_cf_lower_arr[0][i].assigned()){
-            if(is_cf_lower_arr[0][i].val()==0){
-                rel(*this, h_intervals[0][i], IRT_EQ, 0); //same worry as before
-            }
+    if(is_cf_lower_arr[0][cf_len-1].assigned()){
+        if(is_cf_lower_arr[0][cf_len-1].val()==0){
+            rel(*this, h_intervals[0][cf_len-1], IRT_EQ, 0); //same worry as before
         }
     }
+
     //CONSTRAINT H5 : VOICES CANNOT PLAY SAME NOTE
     for(int i = 0; i < 4; i++){
         for(int j = 1; j < cf_len; j++){
-            rel(*this, notes[i][j], IRT_NQ, cf->notes[i][j]); //segfaults
+            rel(*this, notes[i][j], IRT_NQ, cf->notes[i][j]);
         }
     }
-    //CONSTRAINT PERFECT CONSONANCE AT THE START AND THE END
-    for(int i = 0; i < h_intervals[0].size(); i++){
-        member(*this, P_CONS, h_intervals[0][i]);
-    }
-    for(int i = 0; i < h_intervals[0].size(); i++){
-        member(*this, P_CONS, h_intervals[h_intervals.size()-1][i]);
-    }
 
-    //CONSTRAINT H7 / H8 (HARMONIC INTERVAL MUST BE EITHER MINOR THIRD, PERFECT FIFTH, MAJOR SIXTH OR OCTAVE)
-    IntVarArgs constraint_args = IntVarArgs({IntVar{*this, 0,0}, IntVar(*this, 3,3), IntVar(*this,7,7), IntVar(*this,9,9)});
-    for(int i = 0; i < h_intervals[0].size(); i++){
-        member(*this, constraint_args, h_intervals[0][i]);
+
+    //CONSTRAINT H7 / H8
+    if(is_cf_lower_arr[0][cf_len-2].assigned()){
+        if(is_cf_lower_arr[0][cf_len-2].val()==1){
+            rel(*this, h_intervals[0][cf_len-2], IRT_EQ, 9);
+        } else {
+            rel(*this, h_intervals[0][cf_len-2], IRT_EQ, 3);
+        }
     }
 
     //H10 TENTHS ARE PROHIBITED IN THE LAST CHORD
@@ -62,7 +69,18 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_c
     }*/
 
     //H12 LAST CHORD CANNOT INCLUDE A MINOR THIRD
-    rel(*this, h_intervals[0][h_intervals[0].size()-1], IRT_NQ, 3);
+    //rel(*this, h_intervals[0][h_intervals[0].size()-1], IRT_NQ, 3);
+
+    //=================================
+    //|     MELODIC CONSTRAINTS       |
+    //=================================
+
+    //CONSTRAINT M2 : MELODIC INTERVALS CANNOT EXCEED A MINOR SIXTH INTERVAL
+    /*for(int j = 0; j < cf_len; j++){
+        rel(*this, m_intervals[0][j], IRT_LQ, 8);
+    }
+    */
+
 
     //branch here
     for(int i = 0; i < h_intervals.size(); i++){
@@ -82,7 +100,7 @@ FirstSpecies::FirstSpecies(int cf_len, PartClass *lowest, PartClass *cf, int n_c
 
 void FirstSpecies::create_h_intervals(int cf_len, PartClass *lowest){
 
-    IntVarArray hint = IntVarArray(*this, cf_len-1, 0, 11);
+    IntVarArray hint = IntVarArray(*this, cf_len, 0, 11);
     h_intervals = {hint}; //corresponds to line 22 in original 1st-ctp.lisp
     // set_notes(13); //if they aren't set -> segfault...
     IntVarArray note = notes[0];
@@ -139,6 +157,15 @@ void FirstSpecies::init_cfb(int cf_len, PartClass *cf){
             }
         }
     }
+
+    std::cout << is_cf_lower_arr[0];
+    std::cout << endl;
+}
+
+void FirstSpecies::create_m_intervals(int cf_lowest){
+    m_intervals = {IntVarArray(*this, cf_lowest, 0, 12)};
+
+
 }
 
 /*

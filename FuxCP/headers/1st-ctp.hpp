@@ -34,6 +34,8 @@ public:
 
     void init_cfb(int cf_len, PartClass *cf);
 
+    void create_m_intervals(int cf_lowest);
+
 };
 
 #endif
