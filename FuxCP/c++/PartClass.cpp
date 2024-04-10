@@ -14,15 +14,17 @@ PartClass::PartClass(int cf_len, int species, vector<int> cf_notes){
     harmonic_intervals = IntVarArray(*this, cf_len, 0, 11);
     h_intervals.push_back(harmonic_intervals);
 
-    for(IntVar p : notes[0]){
-        for(int q : cf_notes){
-            for(IntVarArray i_arr : h_intervals){
-                for(IntVar i : i_arr){
-                    IntVar t1 = expr(*this, p-q);
-                    IntVar t2 = IntVar(*this, 0, 127);
-                    abs(*this, t2, t1);
-                    mod(*this, t2, IntVar(*this, 12,12), i);
-                    member(*this, ALL_CONS_VAR, i);
+    for(IntVarArray p_arr : notes){
+        for(IntVar p : p_arr){
+            for(int q : cf_notes){
+                for(IntVarArray i_arr : h_intervals){
+                    for(IntVar i : i_arr){
+                        IntVar t1 = expr(*this, p-q);
+                        IntVar t2 = IntVar(*this, 0, 127);
+                        abs(*this, t2, t1);
+                        mod(*this, t2, IntVar(*this, 12,12), i);
+                        member(*this, ALL_CONS_VAR, i);
+                    }
                 }
             }
         }
@@ -89,6 +91,7 @@ void PartClass::print_solution(){
     //cout << temp_notes << endl;
     
     for(int i = 0; i < notes.size(); i++){
+        
         cout << notes[i] << endl;
     }
 }
