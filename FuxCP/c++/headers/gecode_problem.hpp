@@ -23,10 +23,10 @@ using namespace Gecode::Search;
 using namespace std;
 
 /** Types of search engines */
-enum {
-    dfs_solver, //0
-    bab_solver, //1
-};
+//enum {
+//    dfs_solver, //0
+//    bab_solver, //1
+//};
 
 /*****************
  * Problem class *
@@ -47,6 +47,7 @@ protected:
     int n_measures;
     int n_voices;
     int size;
+    IntVarArray temp_notes;
     
     vector<PartClass*> voices;
 

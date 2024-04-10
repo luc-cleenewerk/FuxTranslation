@@ -1,4 +1,4 @@
-#include "headers/gecode_problem.hpp"
+#include "headers/PartClass.hpp"
 
 using namespace Gecode;
 using namespace std;
@@ -9,23 +9,24 @@ int main(int argc, char* argv[]) {
     // int lower_bound_domain = 1;
     // int species = 0;
 
-    vector<int> cantusFirmus = {1, 2, 3};
-    vector<int> speciesList = {0,1,1};
+    vector<int> cantusFirmus = {1, 2};
+    vector<int> speciesList = {0,1};
 
     // create a new problem
-    Problem* p = new Problem(cantusFirmus, speciesList);
+    //Problem* p = new Problem(cantusFirmus, speciesList);
+
+    PartClass* p = new PartClass(2, 1, {63,63});
 
     // create a new search engine
-    Search::Base<Problem>* e = make_solver(p, bab_solver);
+    Search::Base<PartClass>* e = make_solver(p, bab_solver);
     delete p;
 
     int nb_sol = 0;
 
-    while(Problem * pb = get_next_solution_space(e)){
+    while(PartClass * pb = get_next_solution_space(e)){
         nb_sol++;
         cout << "Solution " << nb_sol << ": " << endl;
         pb->print_solution();
-        cout << pb->status() << endl;
         delete pb;
     }
 

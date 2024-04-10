@@ -14,6 +14,12 @@
 using namespace std;
 using namespace Gecode;
 
+enum {
+    dfs_solver, //0
+    bab_solver, //1
+};
+
+
 class PartClass: public Space{
     public:
 
@@ -73,6 +79,29 @@ class PartClass: public Space{
         virtual Space *copy(void);
 
         void set_notes(int n);
+
+        void print_solution();
+
 };
+
+/*************************
+ * Search engine methods *
+ *************************/
+
+/**
+ * Creates a search engine for the given problem
+ * @todo Modify this function to add search options etc
+ * @param pb an instance of the Problem class representing a given problem
+ * @param type the type of search engine to create (see enumeration in headers/gecode_problem.hpp)
+ * @return a search engine for the given problem
+ */
+Search::Base<PartClass>* make_solver(PartClass* pb, int type);
+
+/**
+ * Returns the next solution space for the problem
+ * @param solver a solver for the problem
+ * @return an instance of the Problem class representing the next solution to the problem
+ */
+PartClass* get_next_solution_space(Search::Base<PartClass>* solver);
 
 #endif

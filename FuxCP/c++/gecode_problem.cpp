@@ -42,14 +42,13 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     //branching
     // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
-    /*for (PartClass *partClass : voices) {
+    for (PartClass *partClass : voices) {
         if (partClass->species != 0){ // not cantus firmus
             for (IntVarArray notesArray : partClass->get_notes()) {
-                branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+                //branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
             }
         }
-    }   */
-
+    }
     // writeToLogFile(message.c_str());
 }
 
@@ -68,14 +67,11 @@ Problem::Problem(Problem& s): Space(s){
 
     // cp.update(*this, s.cp);
     
-    /*for (PartClass *partClass : s.voices) {
-        if (partClass->species != 0){ // not cantus firmus
-            for (IntVarArray notesArray : partClass->get_notes()) {
-                notesArray.update(*this, notesArray);
-            }
+    /*for (int i = 0; i < voices.size(); i++) {
+        for(int j = 0; j < voices[i]->notes.size(); j++){
+            voices[i]->notes[j].update(*this, s.voices[i]->notes[j]);
         }
     }*/
-    
 }
 
 // /**
@@ -136,8 +132,9 @@ void Problem::constrain(const Space& _b) {
 //  * Prints the solution in the console
 //  */
 void Problem::print_solution(){
-    cout << voices[0]->h_intervals[0];
-    cout << endl;
+    //cout << voices[0]->h_intervals[0] << endl;
+    //cout << voices[0]->notes[0] << endl;
+    //cout << temp_notes << endl;
 }
 
 // /**
