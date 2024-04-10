@@ -11,12 +11,12 @@
  * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
  * @return A pointer to a Problem object casted as a void*
  */
-void* create_new_problem(int n_measures, int n_voices, int* cantusFirmus, int* speciesList){
-    vector<int> cf(int_pointer_to_vector(cantusFirmus, n_measures));
-    vector<int> sp(int_pointer_to_vector(cantusFirmus, n_measures));
-    return (void*) new Problem(cf, sp);
+void* create_new_problem(int size, int n_measures, int n_voices, int species, int* cantusFirmus){
+    //vector<int> cf(int_pointer_to_vector(cantusFirmus, n_measures));
+    //vector<int> sp(int_pointer_to_vector(cantusFirmus, n_measures));
+    //return (void*) new Problem(tmp, tmp);
 }
-
+ 
 /**
  * returns the size of the problem
  * @param sp a void* pointer to a Problem object

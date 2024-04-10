@@ -22,6 +22,7 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     species_list = sp;
     n_measures = cantusFirmus.size();
     n_voices   = species_list.size();
+    size = sizeof(cf);
 
     // variable initialization todo depends on the species
     // cp = IntVarArray(*this, size, l, u);
@@ -76,28 +77,37 @@ Problem::Problem(Problem& s): Space(s){
 //  * Returns the size of the problem
 //  * @return an integer representing the size of the vars array
 //  */
-// int Problem::getSize(){
-//     string message = "getSize function called. size = " + to_string(size) + "\n";
-//     writeToLogFile(message.c_str());
-//     return size;
-// }
+int Problem::getSize(){
+    string message = "getSize function called. size = " + to_string(size) + "\n";
+    writeToLogFile(message.c_str());
+    return size;
+}
 
 // /**
 //  * Returns the values taken by the variables vars in a solution
 //  * @todo Modify this to return the solution for your problem. This function uses @param size to generate an array of integers
 //  * @return an array of integers representing the values of the variables in a solution
 //  */
-// int* Problem::return_solution(){
-//     string message = "return_solution method. Solution : [";
-//     int* solution = new int[size];
-//     for(int i = 0; i < size; i++){
-//         solution[i] = cp[i].val();
-//         message += to_string(solution[i]) + " ";
-//     }
-//     message += "]\n";
-//     writeToLogFile(message.c_str());
-//     return solution;
-// }
+int* Problem::return_solution(){
+    string message = "return_solution method. Solution : [";
+    int* solution = new int[999];
+    int n = 0;
+    for(int i = 0; i < voices.size(); i++){
+        for(int j = 0; j < voices.at(i)->get_notes().size(); j++){
+            IntVarArray tmp = voices.at(i)->get_notes()[j];
+            for(IntVar var : tmp){
+                for(int k = var.min(); k <= var.max(); k++){
+                    solution[n] = k;
+                    message += to_string(solution[i]) + " ";
+                    n++;
+                }
+            }
+        }
+    }
+    message += "]\n";
+    writeToLogFile(message.c_str());
+    return solution;
+}
 
 /**
  * Copy method

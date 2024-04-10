@@ -45,6 +45,7 @@ protected:
     vector<int> species_list;
     int n_measures;
     int n_voices;
+    int size;
     
     vector<PartClass*> voices;
 

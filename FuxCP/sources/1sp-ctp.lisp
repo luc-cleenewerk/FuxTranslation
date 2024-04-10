@@ -8,5 +8,5 @@
 ;; FIRST SPECIES            #
 ;;==========================#
 (defun fux-cp-1st (counterpoint &optional (species 1))
-    (first::first-species )
+    (gilf::new-ctp-problem 0 120 species *cf)
 )
