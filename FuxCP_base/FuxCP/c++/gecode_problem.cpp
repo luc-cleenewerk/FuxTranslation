@@ -28,32 +28,25 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     n_measures = cantusFirmus.size();
     n_voices   = speciesList.size();
 
+    n_counterpoints = n_voices-1;
 
 
-    for (int i = 0; i < n_voices; i++)
+
+    for (int i = 0; i < n_counterpoints; i++)
     {
         IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);    // use 1, 5 for now. update later (create range)
         counterpoints.push_back(cpTemp);
     }
     
-
-    // variable initialization todo depends on the species
-    // cp = IntVarArray(*this, size, l, u);
-    // cp2 = IntVarArray(*this, size, l, u);
-
-    // counterpoints.push_back(cp);
-    // counterpoints.push_back(cp2);
-
-    std::cout << counterpoints.size() << std::endl;
-    std::cout << counterpoints[0] << std::endl;
-
     //constraints todo depends on the cantus firmus
     distinct(*this, counterpoints[0]);
     distinct(*this, counterpoints[1]);
 
     //branching
-    branch(*this, counterpoints[0], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    branch(*this, counterpoints[1], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    for (int i = 0; i < n_counterpoints; i++)
+    {
+        branch(*this, counterpoints[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    }
     writeToLogFile(message.c_str());
 }
 
@@ -68,6 +61,7 @@ Problem::Problem(Problem& s): Space(s){
     speciesList = s.speciesList;
     n_measures = s.n_measures;
     n_voices = s.n_voices;
+    n_counterpoints = s.n_counterpoints;
 
     // The segfault was there because the counterpoints[] array was not initialized with IntVarArrays in the copy.
     // cp = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
@@ -76,18 +70,18 @@ Problem::Problem(Problem& s): Space(s){
     // counterpoints.push_back(cp2);
 
 
-    for (int i = 0; i < n_voices; i++)
+    for (int i = 0; i < n_counterpoints; i++)
     {
         IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);      // use 1, 5 for now. update later (create range)
         counterpoints.push_back(cpTemp);
     }
 
-    // std::cout << counterpoints[0] << std::endl;
-
-    counterpoints[0].update(*this, s.counterpoints[0]);
-    counterpoints[1].update(*this, s.counterpoints[1]);
-    // cp.update(*this, s.cp);
-    // cp2.update(*this, s.cp2);
+    // counterpoints[0].update(*this, s.counterpoints[0]);
+    // counterpoints[1].update(*this, s.counterpoints[1]);
+    for (int i = 0; i < n_counterpoints; i++)
+    {
+        counterpoints[i].update(*this, s.counterpoints[i]);
+    }
 }
 
 /**

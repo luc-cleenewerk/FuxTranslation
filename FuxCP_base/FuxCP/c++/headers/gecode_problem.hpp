@@ -44,6 +44,7 @@ protected:
     vector<int> speciesList;
     int n_measures;
     int n_voices;
+    int n_counterpoints;
 
 public:
     /**
