@@ -15,20 +15,24 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
+Problem::Problem(vector<int> cf, vector<int> sp) {
     string message = "WSpace object created. ";
-    size = s;
-    lower_bound_domain = l;
-    upper_bound_domain = u;
-    species = sp;
+    // size = s;
+    // lower_bound_domain = l;
+    // upper_bound_domain = u;
+    // species = sp;
+
+
     cantusFirmus = cf;
+    speciesList = sp;
+    n_measures = cantusFirmus.size();
+    n_voices   = speciesList.size();
 
 
-    int nCP = 2;
 
-    for (int i = 0; i < nCP; i++)
+    for (int i = 0; i < n_voices; i++)
     {
-        IntVarArray cpTemp = IntVarArray(*this, size, l, u);
+        IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);    // use 1, 5 for now. update later (create range)
         counterpoints.push_back(cpTemp);
     }
     
@@ -60,9 +64,10 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
  */
 Problem::Problem(Problem& s): Space(s){
     //IntVars update
-    size = s.size;
-    lower_bound_domain = s.lower_bound_domain;
-    upper_bound_domain = s.upper_bound_domain;
+    cantusFirmus = s.cantusFirmus;
+    speciesList = s.speciesList;
+    n_measures = s.n_measures;
+    n_voices = s.n_voices;
 
     // The segfault was there because the counterpoints[] array was not initialized with IntVarArrays in the copy.
     // cp = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
@@ -70,11 +75,10 @@ Problem::Problem(Problem& s): Space(s){
     // counterpoints.push_back(cp);
     // counterpoints.push_back(cp2);
 
-    int nCP = 2;
 
-    for (int i = 0; i < nCP; i++)
+    for (int i = 0; i < n_voices; i++)
     {
-        IntVarArray cpTemp = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
+        IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);      // use 1, 5 for now. update later (create range)
         counterpoints.push_back(cpTemp);
     }
 
@@ -91,9 +95,9 @@ Problem::Problem(Problem& s): Space(s){
  * @return an integer representing the size of the vars array
  */
 int Problem::getSize(){
-    string message = "getSize function called. size = " + to_string(size) + "\n";
+    string message = "getSize function called. size = " + to_string(n_measures) + "\n";
     writeToLogFile(message.c_str());
-    return size;
+    return n_measures;
 }
 
 /**
@@ -103,8 +107,8 @@ int Problem::getSize(){
  */
 int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
-    int* solution = new int[size];
-    for(int i = 0; i < size; i++){
+    int* solution = new int[n_measures];
+    for(int i = 0; i < n_measures; i++){
         solution[i] = counterpoints[0][i].val();       // TODO : modify!!
         message += to_string(solution[i]) + " ";
     }
@@ -135,7 +139,7 @@ void Problem::constrain(const Space& _b) {
  * Prints the solution in the console
  */
 void Problem::print_solution(){
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i < n_measures; i++){
         cout << counterpoints[0][i].val() << " ";
         cout << counterpoints[1][i].val() << " ";
     }
@@ -151,10 +155,10 @@ void Problem::print_solution(){
  */
 string Problem::toString(){
     string message = "Problem object. \n";
-    message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
-            to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
+    message += "size = " + to_string(n_measures) + "\n" + "lower bound for the domain : " +
+            to_string(1) + "\n" + "upper bound for the domain : " + to_string(5)               // 1 and 5 for now, change later
              + "\n" + "current values for vars: [";
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i < n_measures; i++){
         if (counterpoints[0][i].assigned())
             message += to_string(counterpoints[0][i].val()) + " ";      // TODO : MODIFY!!
         else

@@ -35,12 +35,15 @@ protected:
     // IntVarArray cp; // The variables for the counterpoint
     // IntVarArray cp2;
     vector<IntVarArray> counterpoints;
-    int size; // The size of the variable array of interest
-    int lower_bound_domain;
-    int upper_bound_domain;
+    // int size; // The size of the variable array of interest
+    // int lower_bound_domain;
+    // int upper_bound_domain;
     /* @todo Add here any additional attributes you need to represent your problem */
-    int species;
+    // int species;
     vector<int> cantusFirmus;
+    vector<int> speciesList;
+    int n_measures;
+    int n_voices;
 
 public:
     /**
@@ -51,7 +54,7 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf);
+    Problem(vector<int> cf, vector<int> sp);
 
     /**
      * Copy constructor

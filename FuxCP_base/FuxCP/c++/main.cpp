@@ -4,13 +4,16 @@ using namespace Gecode;
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    int size = 3;
-    int upper_bound_domain = 5;
-    int lower_bound_domain = 1;
-    int species = 0;
+    // int size = 3;
+    // int upper_bound_domain = 5;
+    // int lower_bound_domain = 1;
+    // int species = 0;
+
     vector<int> cantusFirmus = {1, 2, 3};
+    vector<int> speciesList = {0,1};
+
     // create a new problem
-    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus);
+    Problem* p = new Problem(cantusFirmus, speciesList);
 
     // create a new search engine
     Search::Base<Problem>* e = make_solver(p, bab_solver);
