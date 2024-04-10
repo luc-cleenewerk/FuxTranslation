@@ -12,9 +12,9 @@
  * @return A pointer to a Problem object casted as a void*
  */
 void* create_new_problem(int size, int n_measures, int n_voices, int species, int* cantusFirmus){
-    //vector<int> cf(int_pointer_to_vector(cantusFirmus, n_measures));
-    //vector<int> sp(int_pointer_to_vector(cantusFirmus, n_measures));
-    //return (void*) new Problem(tmp, tmp);
+    vector<int> cf(int_pointer_to_vector(cantusFirmus, sizeof(cantusFirmus)));
+    vector<int> sp(int_pointer_to_vector(cantusFirmus, sizeof(cantusFirmus)));
+    return (void*) new Problem(cf, sp);
 }
  
 /**
