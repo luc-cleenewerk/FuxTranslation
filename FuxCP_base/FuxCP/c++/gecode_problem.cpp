@@ -5,6 +5,8 @@
  *                                          Problem class methods                                                      *
  ***********************************************************************************************************************/
 
+
+
 /**
  * Constructor
  * @todo Modify this constructor depending on your problem. This constructor is where the problem is defined
@@ -21,14 +23,33 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     species = sp;
     cantusFirmus = cf;
 
+
+    int nCP = 2;
+
+    for (int i = 0; i < nCP; i++)
+    {
+        IntVarArray cpTemp = IntVarArray(*this, size, l, u);
+        counterpoints.push_back(cpTemp);
+    }
+    
+
     // variable initialization todo depends on the species
-    cp = IntVarArray(*this, size, l, u);
+    // cp = IntVarArray(*this, size, l, u);
+    // cp2 = IntVarArray(*this, size, l, u);
+
+    // counterpoints.push_back(cp);
+    // counterpoints.push_back(cp2);
+
+    std::cout << counterpoints.size() << std::endl;
+    std::cout << counterpoints[0] << std::endl;
 
     //constraints todo depends on the cantus firmus
-    distinct(*this, cp);
+    distinct(*this, counterpoints[0]);
+    distinct(*this, counterpoints[1]);
 
     //branching
-    branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    branch(*this, counterpoints[0], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    branch(*this, counterpoints[1], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
     writeToLogFile(message.c_str());
 }
 
@@ -42,7 +63,27 @@ Problem::Problem(Problem& s): Space(s){
     size = s.size;
     lower_bound_domain = s.lower_bound_domain;
     upper_bound_domain = s.upper_bound_domain;
-    cp.update(*this, s.cp);
+
+    // The segfault was there because the counterpoints[] array was not initialized with IntVarArrays in the copy.
+    // cp = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
+    // cp2 = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
+    // counterpoints.push_back(cp);
+    // counterpoints.push_back(cp2);
+
+    int nCP = 2;
+
+    for (int i = 0; i < nCP; i++)
+    {
+        IntVarArray cpTemp = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
+        counterpoints.push_back(cpTemp);
+    }
+
+    // std::cout << counterpoints[0] << std::endl;
+
+    counterpoints[0].update(*this, s.counterpoints[0]);
+    counterpoints[1].update(*this, s.counterpoints[1]);
+    // cp.update(*this, s.cp);
+    // cp2.update(*this, s.cp2);
 }
 
 /**
@@ -64,7 +105,7 @@ int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
     int* solution = new int[size];
     for(int i = 0; i < size; i++){
-        solution[i] = cp[i].val();
+        solution[i] = counterpoints[0][i].val();       // TODO : modify!!
         message += to_string(solution[i]) + " ";
     }
     message += "]\n";
@@ -87,7 +128,7 @@ Space* Problem::copy(void) {
  */
 void Problem::constrain(const Space& _b) {
     const Problem &b = static_cast<const Problem &>(_b);
-    rel(*this, cp, IRT_GQ, 2);
+    // rel(*this, cp, IRT_GQ, 2);
 }
 
 /**
@@ -95,7 +136,8 @@ void Problem::constrain(const Space& _b) {
  */
 void Problem::print_solution(){
     for(int i = 0; i < size; i++){
-        cout << cp[i].val() << " ";
+        cout << counterpoints[0][i].val() << " ";
+        cout << counterpoints[1][i].val() << " ";
     }
     cout << endl;
 }
@@ -113,8 +155,8 @@ string Problem::toString(){
             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
              + "\n" + "current values for vars: [";
     for(int i = 0; i < size; i++){
-        if (cp[i].assigned())
-            message += to_string(cp[i].val()) + " ";
+        if (counterpoints[0][i].assigned())
+            message += to_string(counterpoints[0][i].val()) + " ";      // TODO : MODIFY!!
         else
             message += "<not assigned> ";
     }

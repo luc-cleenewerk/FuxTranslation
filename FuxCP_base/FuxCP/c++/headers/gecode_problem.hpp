@@ -32,7 +32,9 @@ enum {
 class Problem: public Space {
 protected:
     // solution related attributes
-    IntVarArray cp; // The variables for the counterpoint
+    // IntVarArray cp; // The variables for the counterpoint
+    // IntVarArray cp2;
+    vector<IntVarArray> counterpoints;
     int size; // The size of the variable array of interest
     int lower_bound_domain;
     int upper_bound_domain;

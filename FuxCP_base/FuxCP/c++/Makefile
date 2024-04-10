@@ -30,3 +30,4 @@ clean:
 
 compiletmp:
 	g++ -std=c++11 -I ../../../gecode-release-6.2.0/gecode main.cpp -o launch Utilities.cpp gecode_problem.cpp -L ../../../gecode-release-6.2.0 -lgecodekernel -lgecodesearch -lgecodeint -lgecodedriver -lgecodeminimodel -lgecodesupport
+	./launch
