@@ -16,6 +16,7 @@
 #include "gecode/set.hh"
 
 #include "Utilities.hpp"
+#include "PartClass.hpp"
 
 using namespace Gecode;
 using namespace Gecode::Search;

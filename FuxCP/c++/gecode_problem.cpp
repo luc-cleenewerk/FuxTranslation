@@ -1,5 +1,6 @@
 #include "headers/gecode_problem.hpp"
 #include "headers/Utilities.hpp"
+#include "headers/PartClass.hpp"
 
 /***********************************************************************************************************************
  *                                          Problem class methods                                                      *
@@ -28,24 +29,30 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     // cp = IntVarArray(*this, size, l, u);
     for (int s : species_list)
     {
-        PartClass *tmp = new PartClass(n_measures, s);
+        PartClass *tmp = new PartClass(n_measures, s, {114,116,118});
         voices.push_back(tmp);
     }
-    
+
+    IntVarArray temp_arr = voices[0]->h_intervals[0];
+    cout << temp_arr;
+    cout << endl;
 
     //constraints todo depends on the cantus firmus
-    distinct(*this, voices.at(1)->get_notes()[0]);
+    distinct(*this, voices[0]->h_intervals[0]);
 
     //branching
     // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
-    for (PartClass *partClass : voices) {
+    /*for (PartClass *partClass : voices) {
         if (partClass->species != 0){ // not cantus firmus
             for (IntVarArray notesArray : partClass->get_notes()) {
                 branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
             }
         }
-    }   
+    }   */
+
+
+    branch(*this, voices[0]->h_intervals[0], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
     // writeToLogFile(message.c_str());
 }
@@ -64,13 +71,18 @@ Problem::Problem(Problem& s): Space(s){
 
     // cp.update(*this, s.cp);
     
-    for (PartClass *partClass : s.voices) {
+    /*for (PartClass *partClass : s.voices) {
         if (partClass->species != 0){ // not cantus firmus
             for (IntVarArray notesArray : partClass->get_notes()) {
                 notesArray.update(*this, notesArray);
             }
         }
-    }   
+    } */
+
+    //NO UPDATE = MEMORY HEAP EXHAUSTION, UPDATE = SEGFAULT
+
+    //voices[0]->h_intervals[0].update(*this, s.voices[0]->h_intervals[0]);    
+    
 }
 
 // /**
@@ -123,7 +135,7 @@ Space* Problem::copy(void) {
 //  * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
 //  */
 void Problem::constrain(const Space& _b) {
-    const Problem &b = static_cast<const Problem &>(_b);
+    //const Problem &b = static_cast<const Problem &>(_b);
     //rel(*this, cp, IRT_GQ, 2);
 }
 
@@ -131,11 +143,7 @@ void Problem::constrain(const Space& _b) {
 //  * Prints the solution in the console
 //  */
 void Problem::print_solution(){
-    for(int i = 0; i < voices.size(); i++){
-        for(int j = 0; j < voices.at(i)->get_notes().size(); j++){
-            cout << voices.at(i)->get_notes()[j] << " ";
-        }
-    }
+    cout << voices[0]->h_intervals[0];
     cout << endl;
 }
 
