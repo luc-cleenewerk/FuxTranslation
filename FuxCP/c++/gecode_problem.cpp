@@ -38,7 +38,6 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     cout << endl;
 
     //constraints todo depends on the cantus firmus
-    distinct(*this, voices[0]->h_intervals[0]);
 
     //branching
     // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
@@ -50,9 +49,6 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
             }
         }
     }   */
-
-
-    branch(*this, voices[0]->h_intervals[0], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
     // writeToLogFile(message.c_str());
 }
@@ -66,6 +62,7 @@ Problem::Problem(Problem& s): Space(s){
     //IntVars update
     cantusFirmus = s.cantusFirmus;
     species_list = s.species_list;
+    voices = s.voices;
     
     // do we need to reinstantiate all variables? 
 
@@ -77,11 +74,7 @@ Problem::Problem(Problem& s): Space(s){
                 notesArray.update(*this, notesArray);
             }
         }
-    } */
-
-    //NO UPDATE = MEMORY HEAP EXHAUSTION, UPDATE = SEGFAULT
-
-    //voices[0]->h_intervals[0].update(*this, s.voices[0]->h_intervals[0]);    
+    }*/
     
 }
 

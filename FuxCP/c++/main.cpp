@@ -24,7 +24,8 @@ int main(int argc, char* argv[]) {
     while(Problem * pb = get_next_solution_space(e)){
         nb_sol++;
         cout << "Solution " << nb_sol << ": " << endl;
-        //pb->print_solution();
+        pb->print_solution();
+        cout << pb->status() << endl;
         delete pb;
     }
 
