@@ -15,21 +15,16 @@
  */
 Problem::Problem(vector<int> cf, vector<int> sp) {
 
-    // size = s;
-    // lower_bound_domain = l;
-    // upper_bound_domain = u;
-    // species = sp;
     cantusFirmus = cf;
     species_list = sp;
     n_measures = cantusFirmus.size();
     n_voices   = species_list.size();
     size = sizeof(cf);
 
-    // variable initialization todo depends on the species
-    // cp = IntVarArray(*this, size, l, u);
+    // Initialize counterpoints
     for (int s : species_list)
     {
-        PartClass *tmp = new PartClass(n_measures, s, {114,116,118});
+        PartClass *tmp = new PartClass(n_measures, s, cantusFirmus);
         voices.push_back(tmp);
     }
 
@@ -49,7 +44,6 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
             }
         }
     }
-    // writeToLogFile(message.c_str());
 }
 
 /**
@@ -62,6 +56,15 @@ Problem::Problem(Problem& s): Space(s){
     cantusFirmus = s.cantusFirmus;
     species_list = s.species_list;
     voices = s.voices;
+
+
+    // Copy each PartClass object in the voices vector
+    for (const auto& voice : s.voices) {
+        // Allocate a new PartClass object and push its pointer into the vector
+        voices.push_back(new PartClass(*voice)); // Call the copy constructor of PartClass
+    }
+
+    
     
     // do we need to reinstantiate all variables? 
 
