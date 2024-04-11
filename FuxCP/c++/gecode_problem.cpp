@@ -40,7 +40,7 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     for (PartClass *partClass : voices) {
         if (partClass->species != 0){ // not cantus firmus
             for (IntVarArray notesArray : partClass->get_notes()) {
-                //branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+                // branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
             }
         }
     }
@@ -136,7 +136,7 @@ void Problem::constrain(const Space& _b) {
 //  */
 void Problem::print_solution(){
     //cout << voices[0]->h_intervals[0] << endl;
-    //cout << voices[0]->notes[0] << endl;
+    cout << voices[0]->notes[0] << endl;
     //cout << temp_notes << endl;
 }
 
