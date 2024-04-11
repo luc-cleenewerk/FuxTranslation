@@ -82,6 +82,8 @@ class PartClass: public Space{
 
         void print_solution();
 
+        void init_cfb(int cf_len, vector<int> cf);
+
 };
 
 /*************************
