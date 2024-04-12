@@ -5,7 +5,34 @@
  *                                          Problem class methods                                                      *
  ***********************************************************************************************************************/
 
+// class PartClass {
+// public:
+    // Constructor
+    PartClass::PartClass(Gecode::Space& space, int n_measures, int species_val, int voice_type_val) : species(species_val), voice_type(voice_type_val), space(space), n_measures(n_measures){
+        
+        // TODO: range from voice_type, number of IntVarArrays in "notes" from species
 
+        for (int i = 0; i < 1; ++i) {
+            notes.push_back(IntVarArray(space, n_measures, 1, 5));   // use 1,5 for now, TODO: define range
+        }
+    }
+
+    // copy constructor
+    PartClass::PartClass( PartClass &s): species(s.species), voice_type(s.voice_type), space(s.space), n_measures(s.n_measures){
+        notes = s.notes;
+        for(int i = 0; i < notes.size(); i++){
+            notes[i].update(s.space, s.notes[i]);
+        }
+    }
+
+
+    // Member variables
+    // vector<IntVarArray> notes;
+    // int n_measures;
+    // int species;
+    // int voice_type;
+    // Gecode::Space& space;
+// };
 
 /**
  * Constructor
@@ -16,38 +43,45 @@
  * @param u the upper bound of the domain of the variables
  */
 Problem::Problem(vector<int> cf, vector<int> sp) {
-    string message = "WSpace object created. ";
-    // size = s;
-    // lower_bound_domain = l;
-    // upper_bound_domain = u;
-    // species = sp;
 
-
+    vector<int> voice_types = {1,1};   // TODO: pass as argument
+    
     cantusFirmus = cf;
     speciesList = sp;
     n_measures = cantusFirmus.size();
-    n_voices   = speciesList.size();
+    n_counterpoints   = speciesList.size();
 
-    n_counterpoints = n_voices-1;
-
+    n_voices = n_counterpoints+1;
 
 
     for (int i = 0; i < n_counterpoints; i++)
     {
-        IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);    // use 1, 5 for now. update later (create range)
-        counterpoints.push_back(cpTemp);
+        counterpoints.push_back(PartClass(*this, n_measures, speciesList[i], voice_types[i]));
     }
     
-    //constraints todo depends on the cantus firmus
-    distinct(*this, counterpoints[0]);
-    distinct(*this, counterpoints[1]);
+
+
+    // for (int i = 0; i < n_counterpoints; i++)
+    // {
+    //     IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);    // use 1, 5 for now. update later (create range)
+    //     counterpoints.push_back(cpTemp);
+    // }
+    
+    // //constraints todo depends on the cantus firmus
+    // distinct(*this, counterpoints[0]);
+    // distinct(*this, counterpoints[1]);
 
     //branching
-    for (int i = 0; i < n_counterpoints; i++)
-    {
-        branch(*this, counterpoints[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    // for (int i = 0; i < n_counterpoints; i++)
+    // {
+    //     branch(*this, counterpoints[i], INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    // }
+
+    for(PartClass ctp: counterpoints){
+        for (IntVarArray iva: ctp.notes){
+            branch(*this, iva, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+        }
     }
-    writeToLogFile(message.c_str());
 }
 
 /**
@@ -70,18 +104,29 @@ Problem::Problem(Problem& s): Space(s){
     // counterpoints.push_back(cp2);
 
 
-    for (int i = 0; i < n_counterpoints; i++)
-    {
-        IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);      // use 1, 5 for now. update later (create range)
-        counterpoints.push_back(cpTemp);
+    // for (int i = 0; i < n_counterpoints; i++)
+    // {
+    //     IntVarArray cpTemp = IntVarArray(*this, n_measures, 1, 5);      // use 1, 5 for now. update later (create range)
+    //     counterpoints.push_back(cpTemp);
+    // }
+
+
+    // Copy each PartClass object in the counterpoints vector
+    // for (const auto& part : s.counterpoints) {
+    //     counterpoints.push_back(PartClass(part)); // Use the copy constructor of PartClass
+    // }
+
+    for (PartClass& part : s.counterpoints) {
+        counterpoints.push_back(PartClass(part)); // Use the copy constructor of PartClass
     }
+
 
     // counterpoints[0].update(*this, s.counterpoints[0]);
     // counterpoints[1].update(*this, s.counterpoints[1]);
-    for (int i = 0; i < n_counterpoints; i++)
-    {
-        counterpoints[i].update(*this, s.counterpoints[i]);
-    }
+    // for (int i = 0; i < n_counterpoints; i++)
+    // {
+    //     counterpoints[i].update(*this, s.counterpoints[i]);
+    // }
 }
 
 /**
@@ -103,7 +148,8 @@ int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
     int* solution = new int[n_measures];
     for(int i = 0; i < n_measures; i++){
-        solution[i] = counterpoints[0][i].val();       // TODO : modify!!
+        // solution[i] = counterpoints[0][i].val();       // TODO : modify!!
+        solution[i] = counterpoints[0].notes[0][i].val();       // TODO : modify!!
         message += to_string(solution[i]) + " ";
     }
     message += "]\n";
@@ -134,8 +180,10 @@ void Problem::constrain(const Space& _b) {
  */
 void Problem::print_solution(){
     for(int i = 0; i < n_measures; i++){
-        cout << counterpoints[0][i].val() << " ";
-        cout << counterpoints[1][i].val() << " ";
+        // cout << counterpoints[0][i].val() << " ";
+        // cout << counterpoints[1][i].val() << " ";
+        cout << counterpoints[0].notes[0][i].val() << " ";
+        cout << counterpoints[1].notes[0][i].val() << " ";   // MODIFY
     }
     cout << endl;
 }
@@ -153,8 +201,8 @@ string Problem::toString(){
             to_string(1) + "\n" + "upper bound for the domain : " + to_string(5)               // 1 and 5 for now, change later
              + "\n" + "current values for vars: [";
     for(int i = 0; i < n_measures; i++){
-        if (counterpoints[0][i].assigned())
-            message += to_string(counterpoints[0][i].val()) + " ";      // TODO : MODIFY!!
+        if (counterpoints[0].notes[0][i].assigned())
+            message += to_string(counterpoints[0].notes[0][i].val()) + " ";      // TODO : MODIFY!!
         else
             message += "<not assigned> ";
     }

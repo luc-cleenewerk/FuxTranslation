@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     // int species = 0;
 
     vector<int> cantusFirmus = {1, 2, 3};
-    vector<int> speciesList = {0,1,1};
+    vector<int> speciesList = {1,1};
 
     // create a new problem
     Problem* p = new Problem(cantusFirmus, speciesList);

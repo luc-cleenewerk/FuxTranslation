@@ -25,6 +25,28 @@ enum {
     bab_solver, //1
 };
 
+
+
+class PartClass {
+public:
+    // Constructor
+    PartClass(Gecode::Space& space, int n_measures, int species_val, int voice_type_val);
+
+    // Copy constructor
+    PartClass(PartClass& s);
+
+    // Member variables
+    vector<IntVarArray> notes;
+    int n_measures;
+    int species;
+    int voice_type;
+    Gecode::Space& space;
+};
+
+
+
+
+
 /*****************
  * Problem class *
  *****************/
@@ -34,7 +56,11 @@ protected:
     // solution related attributes
     // IntVarArray cp; // The variables for the counterpoint
     // IntVarArray cp2;
-    vector<IntVarArray> counterpoints;
+
+
+    // vector<IntVarArray> counterpoints;
+    vector<PartClass> counterpoints;
+    
     // int size; // The size of the variable array of interest
     // int lower_bound_domain;
     // int upper_bound_domain;
