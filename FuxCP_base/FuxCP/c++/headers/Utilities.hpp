@@ -14,78 +14,6 @@
 using namespace std;
 using namespace Gecode;
 
-
-
-/***********************************************************************************************************************
- *                                                                                                                     *
- *                                                   Useful classes                                                    *
- *                                                                                                                     *
- ***********************************************************************************************************************/
-
-
-class PartClass: public Space{
-    public:
-
-        //CONSTANT VARIABLES
-        //Major triad (0,4,7)
-        const IntSet MAJ_H_TRIAD = IntSet({0,4,7});
-        //H triad (0,4,7)
-        const IntSet H_TRIAD = IntSet({0,4,7});
-        //PERFECT CONSONANCES (0,7)
-        const IntVarArgs P_CONS = IntVarArgs({IntVar(*this,0,0), IntVar(*this,7,7)});
-        //IMPERFECT CONSONANCES (3,4,8,9)
-        const IntSet IMP_CONS = IntSet({3,4,8,9});
-        //ALL CONSONANCES (0,3,4,7,8,9)
-        const IntSet ALL_CONS = IntSet({0,3,4,7,8,9});
-        const IntVarArgs ALL_CONS_VAR = IntVarArgs({IntVar(*this, 0, 0), IntVar(*this, 3,3), IntVar(*this, 4,4), IntVar(*this, 7, 7),
-        IntVar(*this, 8,8),IntVar(*this, 9,9)});
-
-        int species; //0 for cf, 1 for 1st, 2 for 2nd, 3 for 3rd, 4 for 4th, 5 for 5th
-        IntVarArray solution_array;
-        int solution_len;
-
-        //voice variables
-        vector<int> cp_range;
-        vector<int> cp_domain;
-        vector<int> chromatic_cp_domain;
-        vector<int> extended_cp_domain;
-        vector<int> off_domain;
-        int voice_type;
-
-        //1st species variables
-        vector<IntVarArray> notes;
-        vector<IntVarArray> h_intervals;
-        vector<IntVarArray> m_intervals_brut;
-        IntVarArray h_intervals_brut;
-        vector<int> m_intervals;
-        vector<int> motions;
-        vector<int> motions_cost;
-        vector<BoolVarArray> is_cf_lower_arr;
-        vector<int> m2_intervals_brut;
-        vector<int> m2_intervals;
-        //some variables still not there, they'll come when we extend the code
-
-        //3 voices variables
-    
-    public:
-        PartClass(int n_measures, int species);
-
-        void init_m_intervals_brut(int n_measures);
-
-        vector<IntVarArray> get_notes();
-
-        PartClass(PartClass &s);
-
-        virtual Space *copy(void);
-
-        void set_notes(int n);
-};
-
-
-
-
-
-
 /***********************************************************************************************************************
  *                                                                                                                     *
  *                                                  Useful constants                                                   *
@@ -113,20 +41,20 @@ enum variable_selection{
     AFC_MAX,                        //4
 };
 
-// /// go <-- soprano->bass: 4-3-2-1-8-7-6-5 etc
-// auto right_to_left = [](const Space& home, const IntVar& x, int i) {
-//     return i;
-// };
+/// go <-- soprano->bass: 4-3-2-1-8-7-6-5 etc
+auto right_to_left = [](const Space& home, const IntVar& x, int i) {
+    return i;
+};
 
-// /// go --> soprano->bass
-// auto left_to_right_soprano_to_bass = [](const Space& home, const IntVar& x, int i) {
-//     return (i/4) * 4 + (4 - i%4);
-// };
+/// go --> soprano->bass
+auto left_to_right_soprano_to_bass = [](const Space& home, const IntVar& x, int i) {
+    return (i/4) * 4 + (4 - i%4);
+};
 
-// const vector<IntVarBranch> variable_selection_heuristics = {INT_VAR_DEGREE_MAX(),
-//                                                             INT_VAR_SIZE_MIN(),
-//                                                             INT_VAR_MERIT_MAX(right_to_left),
-//                                                             INT_VAR_MERIT_MIN(left_to_right_soprano_to_bass)};
+const vector<IntVarBranch> variable_selection_heuristics = {INT_VAR_DEGREE_MAX(),
+                                                            INT_VAR_SIZE_MIN(),
+                                                            INT_VAR_MERIT_MAX(right_to_left),
+                                                            INT_VAR_MERIT_MIN(left_to_right_soprano_to_bass)};
 
 const vector<string> variable_selection_heuristics_names = {"Degree max", "Domain size min", "Left to right",
                                                             "Right to left", "AFC max"};
@@ -138,19 +66,19 @@ enum value_selection{
     VAL_RND,            //3
 };
 
-// /// value selection heuristic
-// auto branchVal = [](const Space& home, IntVar x, int i) {
-//     return x.min();
-// };
+/// value selection heuristic
+auto branchVal = [](const Space& home, IntVar x, int i) {
+    return x.min();
+};
 
-// /// commit function (EQ and DIFF)
-// auto branchCommit = [](Space& home, unsigned int a, IntVar x, int i, int n){
-//     if (a == 0U){
-//         rel(home, x, IRT_EQ, n);
-//     } else {
-//         rel(home, x, IRT_NQ, n);
-//     }
-// };
+/// commit function (EQ and DIFF)
+auto branchCommit = [](Space& home, unsigned int a, IntVar x, int i, int n){
+    if (a == 0U){
+        rel(home, x, IRT_EQ, n);
+    } else {
+        rel(home, x, IRT_NQ, n);
+    }
+};
 
 const vector<IntValBranch> value_selection_heuristics = {INT_VAL_MIN(), INT_VAL_MAX(), INT_VAL_MED(), INT_VAL_RND(1U)};
 
@@ -205,12 +133,12 @@ const int C_FLAT = 11;
 const vector<std::string> noteNames = {"C", "Csharp", "D", "Eb", "E", "F", "Fsharp", "G", "Ab", "A", "Bb", "B"};
 
 /** Voice positions */
-//enum voices{
-//    BASS,       //0
-//    TENOR,      //1
-//    ALTO,       //2
-//    SOPRANO     //3
-//};
+enum voices{
+    BASS,       //0
+    TENOR,      //1
+    ALTO,       //2
+    SOPRANO     //3
+};
 
 const vector<std::string> voiceNames = {"Bass", "Tenor", "Alto", "Soprano"};
 
