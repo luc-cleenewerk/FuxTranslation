@@ -53,10 +53,10 @@ RM = /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++
+CMAKE_SOURCE_DIR = /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug
+CMAKE_BINARY_DIR = /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/damien.dir/depend.make
@@ -70,51 +70,66 @@ include CMakeFiles/damien.dir/progress.make
 include CMakeFiles/damien.dir/flags.make
 
 CMakeFiles/damien.dir/gecode_problem.cpp.o: CMakeFiles/damien.dir/flags.make
-CMakeFiles/damien.dir/gecode_problem.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/gecode_problem.cpp
+CMakeFiles/damien.dir/gecode_problem.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/gecode_problem.cpp
 CMakeFiles/damien.dir/gecode_problem.cpp.o: CMakeFiles/damien.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/damien.dir/gecode_problem.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/gecode_problem.cpp.o -MF CMakeFiles/damien.dir/gecode_problem.cpp.o.d -o CMakeFiles/damien.dir/gecode_problem.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/gecode_problem.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/damien.dir/gecode_problem.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/gecode_problem.cpp.o -MF CMakeFiles/damien.dir/gecode_problem.cpp.o.d -o CMakeFiles/damien.dir/gecode_problem.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/gecode_problem.cpp
 
 CMakeFiles/damien.dir/gecode_problem.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/damien.dir/gecode_problem.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/gecode_problem.cpp > CMakeFiles/damien.dir/gecode_problem.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/gecode_problem.cpp > CMakeFiles/damien.dir/gecode_problem.cpp.i
 
 CMakeFiles/damien.dir/gecode_problem.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/damien.dir/gecode_problem.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/gecode_problem.cpp -o CMakeFiles/damien.dir/gecode_problem.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/gecode_problem.cpp -o CMakeFiles/damien.dir/gecode_problem.cpp.s
 
 CMakeFiles/damien.dir/main.cpp.o: CMakeFiles/damien.dir/flags.make
-CMakeFiles/damien.dir/main.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/main.cpp
+CMakeFiles/damien.dir/main.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/main.cpp
 CMakeFiles/damien.dir/main.cpp.o: CMakeFiles/damien.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/damien.dir/main.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/main.cpp.o -MF CMakeFiles/damien.dir/main.cpp.o.d -o CMakeFiles/damien.dir/main.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/damien.dir/main.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/main.cpp.o -MF CMakeFiles/damien.dir/main.cpp.o.d -o CMakeFiles/damien.dir/main.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/main.cpp
 
 CMakeFiles/damien.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/damien.dir/main.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/main.cpp > CMakeFiles/damien.dir/main.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/main.cpp > CMakeFiles/damien.dir/main.cpp.i
 
 CMakeFiles/damien.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/damien.dir/main.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/main.cpp -o CMakeFiles/damien.dir/main.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/main.cpp -o CMakeFiles/damien.dir/main.cpp.s
+
+CMakeFiles/damien.dir/constraints.cpp.o: CMakeFiles/damien.dir/flags.make
+CMakeFiles/damien.dir/constraints.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/constraints.cpp
+CMakeFiles/damien.dir/constraints.cpp.o: CMakeFiles/damien.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/damien.dir/constraints.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/constraints.cpp.o -MF CMakeFiles/damien.dir/constraints.cpp.o.d -o CMakeFiles/damien.dir/constraints.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/constraints.cpp
+
+CMakeFiles/damien.dir/constraints.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/damien.dir/constraints.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/constraints.cpp > CMakeFiles/damien.dir/constraints.cpp.i
+
+CMakeFiles/damien.dir/constraints.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/damien.dir/constraints.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/constraints.cpp -o CMakeFiles/damien.dir/constraints.cpp.s
 
 CMakeFiles/damien.dir/problem_wrapper.cpp.o: CMakeFiles/damien.dir/flags.make
-CMakeFiles/damien.dir/problem_wrapper.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/problem_wrapper.cpp
+CMakeFiles/damien.dir/problem_wrapper.cpp.o: /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/problem_wrapper.cpp
 CMakeFiles/damien.dir/problem_wrapper.cpp.o: CMakeFiles/damien.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/damien.dir/problem_wrapper.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/problem_wrapper.cpp.o -MF CMakeFiles/damien.dir/problem_wrapper.cpp.o.d -o CMakeFiles/damien.dir/problem_wrapper.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/problem_wrapper.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/damien.dir/problem_wrapper.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/damien.dir/problem_wrapper.cpp.o -MF CMakeFiles/damien.dir/problem_wrapper.cpp.o.d -o CMakeFiles/damien.dir/problem_wrapper.cpp.o -c /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/problem_wrapper.cpp
 
 CMakeFiles/damien.dir/problem_wrapper.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/damien.dir/problem_wrapper.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/problem_wrapper.cpp > CMakeFiles/damien.dir/problem_wrapper.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/problem_wrapper.cpp > CMakeFiles/damien.dir/problem_wrapper.cpp.i
 
 CMakeFiles/damien.dir/problem_wrapper.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/damien.dir/problem_wrapper.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/problem_wrapper.cpp -o CMakeFiles/damien.dir/problem_wrapper.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/problem_wrapper.cpp -o CMakeFiles/damien.dir/problem_wrapper.cpp.s
 
 # Object files for target damien
 damien_OBJECTS = \
 "CMakeFiles/damien.dir/gecode_problem.cpp.o" \
 "CMakeFiles/damien.dir/main.cpp.o" \
+"CMakeFiles/damien.dir/constraints.cpp.o" \
 "CMakeFiles/damien.dir/problem_wrapper.cpp.o"
 
 # External object files for target damien
@@ -122,10 +137,11 @@ damien_EXTERNAL_OBJECTS =
 
 libdamien.a: CMakeFiles/damien.dir/gecode_problem.cpp.o
 libdamien.a: CMakeFiles/damien.dir/main.cpp.o
+libdamien.a: CMakeFiles/damien.dir/constraints.cpp.o
 libdamien.a: CMakeFiles/damien.dir/problem_wrapper.cpp.o
 libdamien.a: CMakeFiles/damien.dir/build.make
 libdamien.a: CMakeFiles/damien.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libdamien.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libdamien.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/damien.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/damien.dir/link.txt --verbose=$(VERBOSE)
 
@@ -138,6 +154,6 @@ CMakeFiles/damien.dir/clean:
 .PHONY : CMakeFiles/damien.dir/clean
 
 CMakeFiles/damien.dir/depend:
-	cd /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++ /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++ /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles/damien.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++ /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++ /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles/damien.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/damien.dir/depend
 

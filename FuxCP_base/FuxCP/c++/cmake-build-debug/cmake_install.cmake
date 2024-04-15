@@ -1,4 +1,4 @@
-# Install script for directory: /Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++
+# Install script for directory: /Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
