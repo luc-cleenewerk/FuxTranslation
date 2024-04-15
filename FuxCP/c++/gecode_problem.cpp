@@ -38,17 +38,38 @@ Problem::Problem(vector<int> cf, vector<int> sp) {
     cout << endl;
 
     //constraints todo depends on the cantus firmus
+    /*for(PartClass *pc : voices){
+        cout << pc->notes[0] << endl;
+        for(IntVar p : pc->notes[0]){
+            for(int q : cantusFirmus){
+                //for(IntVarArray i_arr : h_intervals){
+                    for(IntVar i : pc->h_intervals[0]){
+                        IntVar t1 = expr(*this, p-q);
+                        IntVar t2 = IntVar(*this, 0, 127);
+                        abs(*this, t2, t1);
+                        mod(*this, t2, IntVar(*this, 12,12), i);
+                    }
+                //}
+            }
+        }
+    }
 
+    for(PartClass *pc : voices){
+        for(int i = 0; i < size; i++){
+            member(*this, IntVarArgs({IntVar(*this, 0, 0), IntVar(*this, 3,3), IntVar(*this, 4,4), IntVar(*this, 7, 7),
+                IntVar(*this, 8,8),IntVar(*this, 9,9)}), pc->h_intervals[0][i]);
+        }
+    }
     //branching
     // branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 
     for (PartClass *partClass : voices) {
         if (partClass->species != 0){ // not cantus firmus
             for (IntVarArray notesArray : partClass->get_notes()) {
-                //branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+                branch(*this, notesArray, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
             }
         }
-    }
+    }*/
     // writeToLogFile(message.c_str());
 }
 
@@ -63,6 +84,18 @@ Problem::Problem(Problem& s): Space(s){
     species_list = s.species_list;
     voices = s.voices;
     
+    /*for(int i = 0; i < voices.size(); i++){
+        for(int j = 0; j < voices[i]->notes.size(); j++){
+            voices[i]->notes[j].update(*this, s.voices[i]->notes[j]);
+        }
+    }*/
+    /**/
+    //voices.clear();
+    // Copy each PartClass object in the voices vector
+    //for (const auto& voice : s.voices) {
+        // Allocate a new PartClass object and push its pointer into the vector
+    //    voices.push_back(new PartClass(*voice)); // Call the copy constructor of PartClass
+    //}
     // do we need to reinstantiate all variables? 
 
     // cp.update(*this, s.cp);
