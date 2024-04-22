@@ -35,6 +35,12 @@ protected:
     IntVarArray cp; // The variables for the counterpoint (represents the notes)
     IntVarArray h_intervals; //represents the harmonic intervals
     BoolVarArray is_cfb;
+    IntVarArray m_intervals;
+    IntVarArray m_intervals_brut;
+    IntVarArray motions;
+    IntVarArray motions_cost;
+    BoolVarArray is_lowest;
+    BoolVarArray cf_lowest;
     int size; // The size of the variable array of interest
     int lower_bound_domain;
     int upper_bound_domain;
@@ -102,6 +108,8 @@ public:
      * @todo modify this method to also print any additional attributes you add to the class
      */
     string toString();
+
+    int get_lowest_stratum_note(int index);
 };
 
 

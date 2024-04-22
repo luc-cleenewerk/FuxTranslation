@@ -31,47 +31,77 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     
     // variable initialization todo depends on the species
     cp = IntVarArray(*this, size, l, u);
+
     h_intervals = IntVarArray(*this, size, 0, 11);
+
+    m_intervals = IntVarArray(*this, size-1, 0, 12);
+    m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
+    
+    //motions = IntVarArray(*this, size-1, -1, 2);
+
+    //motions_cost = IntVarArray();
+
+    is_lowest = BoolVarArray(*this, size, 0, 1);
+    cf_lowest = BoolVarArray(*this, size, 0, 1);
+
     is_cfb = BoolVarArray(*this, size, 0, 1);
 
     //constraints todo depends on the cantus firmus
     //distinct(*this, cp);
 
     //create_h_intervals
-    for(IntVar p : cp){
-        for(int q : cf){
-            for(IntVar i : h_intervals){
-                IntVar t1 = expr(*this, p - q);
-                IntVar t2 = IntVar(*this, 0, 127);
-                abs(*this, t1, t2);
-                mod(*this, t2, IntVar(*this, 12, 12), i);
+
+    for(int i = 0; i < size; i++){
+        IntVar t1 = expr(*this, cp[i]-cf[i]);
+        IntVar t2 = IntVar(*this, 0, 127);
+        abs(*this, t1, t2);
+        mod(*this, t2, IntVar(*this, 12, 12), h_intervals[i]);
+    }
+
+    //create melodic intervals
+
+    for(int i = 0; i < size-1; i++){
+        rel(*this, expr(*this, cp[i]-cp[i+1]), IRT_EQ, m_intervals_brut[i]);
+        abs(*this, expr(*this, cp[i]-cp[i+1]), m_intervals[i]);
+    }
+
+    //create cfb array
+
+    for(int i = 0; i < size; i++){
+        rel(*this, cp[i], IRT_GQ, cf[i], Reify(is_cfb[i], RM_EQV));
+    }
+
+    //create cf lowest
+    for(int j = 0; j < size; j++){
+        int low_note = get_lowest_stratum_note(j);
+        if(cantusFirmus[j]==low_note){
+            rel(*this, cf_lowest[j], IRT_EQ, 1);
+        } else {
+            rel(*this, cf_lowest[j], IRT_EQ, 0);
+        }
+    }
+    
+    //create is lowest
+    for(int j = 0; j < size; j++){
+        int low_note = get_lowest_stratum_note(j);
+        cout << "LOW NOTE : " << low_note << endl;
+        if(cp[j].assigned() && cf_lowest[j].assigned()){
+            if((cp[j].val()==low_note) && cf_lowest[j].val()!=1){
+                rel(*this, is_lowest[j], IRT_EQ, 1);
+            } else {
+                rel(*this, is_lowest[j], IRT_EQ, 0);
             }
         }
     }
 
-    //create cfb array
-    for(IntVar p : cp){
-        for(int q : cf){
-            for (BoolVar b : is_cfb){
-                rel(*this, p, IRT_GQ, q, Reify(b, RM_EQV));
-            }
-        }
-    }
-    
     //CONSTRAINT 1, 2 et 3
     for(int i = 0; i < size; i++){
         if(i==0 || i==size-1){
-            //member(*this, CONS_P, h_intervals[i]);
+            member(*this, CONS_P, h_intervals[i]);
         } else {
             member(*this, ALL_CONS, h_intervals[i]);
         }
     }
-
-    //CONSTRAINT 2
-    //member(*this, CONS_P, h_intervals[0]);
-
-    //CONSTRAINT 3
-    //member(*this, CONS_P, h_intervals[size-1]);
 
     //CONSTRAINT 4
     if(is_cfb[0].assigned()){
@@ -80,17 +110,68 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
         }
     }
 
-    //CONSTRAINT 5
+    //CONSTRAINT 4
     if(is_cfb[size-1].assigned()){
         if(is_cfb[size-1].val()==0){
             rel(*this, h_intervals[size-1], IRT_EQ, 0);
         }
     }
 
+    //CONSTRAINT 5
+    for(int i = 1; i < size-1; i++){
+        rel(*this, cp[i], IRT_NQ, cf[i]);
+    }
+
+    //CONSTRAINT 6
+    for(int j = 0; j < size; j++){
+
+    }
+
+    //CONSTRAINT 7
+    int p = size-1;
+    if(is_cfb[p].assigned()){
+        int pitch = 3;
+        if(is_cfb[p].val()==1){
+            pitch = 9;
+        }
+        rel(*this, h_intervals[p], IRT_EQ, pitch);
+    }
+
+    // ===================
+    // MELODIC CONSTRAINTS
+    // ===================
+
+    //CONSTRAINT 2
+
+    for(int j = 0; j < size-1; j++){
+        rel(*this, m_intervals[j], IRT_LQ, 8);
+    }
+
+    // ==================
+    // MOTION CONSTRAINTS
+    // ==================
+
+    //CONSTRAINT 1 : NO PREFECT CONSONANCES THROUGH DIRECT MOTIONS
+    for(int j = 0; j < size-1; j++){
+        if(h_intervals[j].assigned() && motions[j].assigned()){
+            if(h_intervals[j].val()==7 || h_intervals[j].val()==0){
+                rel(*this, motions[j], IRT_NQ, 2);
+            }
+        }
+    }
+
     //branching
     branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
     branch(*this, h_intervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    branch(*this, m_intervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    branch(*this, m_intervals_brut, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
     for(BoolVar b : is_cfb){
+        branch(*this, b, BOOL_VAL_MIN());
+    }
+    for(BoolVar b : cf_lowest){
+        branch(*this, b, BOOL_VAL_MIN());
+    }
+    for(BoolVar b : is_lowest){
         branch(*this, b, BOOL_VAL_MIN());
     }
     writeToLogFile(message.c_str());
@@ -108,10 +189,19 @@ Problem::Problem(Problem& s): Space(s){
     upper_bound_domain = s.upper_bound_domain;
     cp = s.cp;
     h_intervals = s.h_intervals;
+    m_intervals = s.m_intervals;
+    m_intervals_brut = s.m_intervals_brut;
     is_cfb = s.is_cfb;
+    cf_lowest = s.cf_lowest;
+    is_lowest = s.is_lowest;
+
     cp.update(*this, s.cp);
     h_intervals.update(*this, s.h_intervals);
+    m_intervals.update(*this, s.m_intervals);
+    m_intervals_brut.update(*this, s.m_intervals_brut);
     is_cfb.update(*this, s.is_cfb);
+    cf_lowest.update(*this, s.cf_lowest);
+    is_lowest.update(*this, s.is_lowest);
 }
 
 /**
@@ -162,18 +252,41 @@ void Problem::constrain(const Space& _b) {
  * Prints the solution in the console
  */
 void Problem::print_solution(){
+    /*cout << "CP NOTES ";
     for(int i = 0; i < size; i++){
         cout << cp[i].val() << " ";
     }
     cout << endl;
+    cout << "H INTERVALS ";
     for(int i = 0; i < size; i++){
         cout << h_intervals[i].val() << " ";
     }
     cout << endl;
+    cout << "IS CFB ";
     for(int i = 0; i < size; i++){
         cout << is_cfb[i].val() << " ";
     }
     cout << endl;
+    cout << "M INTERVALS ";
+    for(int i = 0; i < size-1; i++){
+        cout << m_intervals[i].val() << " ";
+    }
+    cout << endl;
+    cout << "M INTERVALS BRUT ";
+    for(int i = 0; i < size-1; i++){
+        cout << m_intervals_brut[i].val() << " ";
+    }
+    cout << endl;
+    cout << "CF LOWEST ";
+    for(int i = 0; i < size; i++){
+        cout << cf_lowest[i].val() << " ";
+    }
+    cout << endl;
+    cout << "IS LOWEST ";
+    for(int i = 0; i < size; i++){
+        cout << is_lowest[i].val() << " ";
+    }
+    cout << endl;*/
 }
 
 /**
@@ -259,6 +372,16 @@ void writeToLogFile(const char* message){
         if (myfile.is_open()) {
             myfile <<timeString<< endl << message << endl;
             myfile.close();
+        }
+    }
+}
+
+int Problem::get_lowest_stratum_note(int index){
+    if(cp[index].assigned()){
+        if(cp[index].val()<cantusFirmus[index]){
+            return cp[index].val();
+        } else {
+            return cantusFirmus[index];
         }
     }
 }

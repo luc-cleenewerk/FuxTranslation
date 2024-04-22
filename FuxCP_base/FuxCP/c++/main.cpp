@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     int upper_bound_domain = 127;
     int lower_bound_domain = 0;
     int species = 0;
-    vector<int> cantusFirmus = {63, 63, 63, 63};
+    vector<int> cantusFirmus = {120, 63, 63};
     // create a new problem
     Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus);
 
