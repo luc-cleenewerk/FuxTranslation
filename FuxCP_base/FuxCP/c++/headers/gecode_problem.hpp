@@ -41,6 +41,9 @@ protected:
     IntVarArray motions_cost;
     BoolVarArray is_lowest;
     BoolVarArray cf_lowest;
+    vector<int> p_cons_cost;
+    IntVarArray fifth_cost;
+    IntVarArray octave_cost;
     int size; // The size of the variable array of interest
     int lower_bound_domain;
     int upper_bound_domain;

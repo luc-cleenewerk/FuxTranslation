@@ -46,6 +46,9 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
 
     is_cfb = BoolVarArray(*this, size, 0, 1);
 
+    fifth_cost = IntVarArray(*this, size-1, 0, 1);
+    octave_cost = IntVarArray(*this, size-1, 0, 1);
+
     //constraints todo depends on the cantus firmus
     //distinct(*this, cp);
 
@@ -92,6 +95,13 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
                 rel(*this, is_lowest[j], IRT_EQ, 0);
             }
         }
+    }
+
+    //create fifth cost
+    for(int i = 0; i < size-1; i++){
+        BoolVar b = BoolVar(*this, 0, 1);
+        rel(*this, h_intervals[i], IRT_EQ, 7, Reify(b));
+        ite(*this, b, IntVar(*this, 1, 1), IntVar(*this, 0, 0), fifth_cost[i]);
     }
 
     //CONSTRAINT 1, 2 et 3
@@ -174,6 +184,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     for(BoolVar b : is_lowest){
         branch(*this, b, BOOL_VAL_MIN());
     }
+    branch(*this, fifth_cost, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
     writeToLogFile(message.c_str());
 }
 
@@ -188,12 +199,14 @@ Problem::Problem(Problem& s): Space(s){
     lower_bound_domain = s.lower_bound_domain;
     upper_bound_domain = s.upper_bound_domain;
     cp = s.cp;
+    cantusFirmus = s.cantusFirmus;
     h_intervals = s.h_intervals;
     m_intervals = s.m_intervals;
     m_intervals_brut = s.m_intervals_brut;
     is_cfb = s.is_cfb;
     cf_lowest = s.cf_lowest;
     is_lowest = s.is_lowest;
+    fifth_cost = s.fifth_cost;
 
     cp.update(*this, s.cp);
     h_intervals.update(*this, s.h_intervals);
@@ -202,6 +215,7 @@ Problem::Problem(Problem& s): Space(s){
     is_cfb.update(*this, s.is_cfb);
     cf_lowest.update(*this, s.cf_lowest);
     is_lowest.update(*this, s.is_lowest);
+    fifth_cost.update(*this, s.fifth_cost);
 }
 
 /**
@@ -252,12 +266,17 @@ void Problem::constrain(const Space& _b) {
  * Prints the solution in the console
  */
 void Problem::print_solution(){
-    /*cout << "CP NOTES ";
+    cout << "CF NOTES ";
+    for(int i = 0; i < cantusFirmus.size(); i++){
+        cout << cantusFirmus.at(i) << " ";
+    }
+    cout << endl;
+    cout << "CP NOTES ";
     for(int i = 0; i < size; i++){
         cout << cp[i].val() << " ";
     }
     cout << endl;
-    cout << "H INTERVALS ";
+    /*cout << "H INTERVALS ";
     for(int i = 0; i < size; i++){
         cout << h_intervals[i].val() << " ";
     }
@@ -276,7 +295,7 @@ void Problem::print_solution(){
     for(int i = 0; i < size-1; i++){
         cout << m_intervals_brut[i].val() << " ";
     }
-    cout << endl;
+    cout << endl;*/
     cout << "CF LOWEST ";
     for(int i = 0; i < size; i++){
         cout << cf_lowest[i].val() << " ";
@@ -286,7 +305,7 @@ void Problem::print_solution(){
     for(int i = 0; i < size; i++){
         cout << is_lowest[i].val() << " ";
     }
-    cout << endl;*/
+    cout << endl;
 }
 
 /**
@@ -383,5 +402,7 @@ int Problem::get_lowest_stratum_note(int index){
         } else {
             return cantusFirmus[index];
         }
+    } else{
+        return -1;
     }
 }
