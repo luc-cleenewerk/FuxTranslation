@@ -20,11 +20,11 @@
 ;; Problem methods ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(defun new-ctp-problem (lb ub sp cf)
+(defun new-ctp-problem (lb ub sp cf pc mtc)
     (let (
         (x (cffi::foreign-alloc :int :initial-contents cf))
     )
-    (new-problem (length cf) lb ub sp x)
+    (new-problem (length cf) lb ub sp x pc mtc)
     )
 )
 
@@ -35,6 +35,8 @@
     (upper-bound-domain :int) ; an integer representing the upper bound of the domain
     (species            :int)
     (cantus-firmus      :pointer :int)
+    (pcost              :int)
+    (mtricost           :int)
     ; TODO add here any additional arguments that your Problem constructor takes
 )
 

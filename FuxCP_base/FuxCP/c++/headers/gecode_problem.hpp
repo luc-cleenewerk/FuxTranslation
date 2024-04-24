@@ -36,8 +36,13 @@ protected:
     int upper_bound_domain;
     int species;
     int costpcons;
+    int costtritone;
 
     vector<int> cantusFirmus;
+
+    vector<int> speciesList;
+
+    vector<IntVarArray> parts;
 
     /// variables
     IntVarArray cp;                 // The variables for the counterpoint
@@ -46,6 +51,7 @@ protected:
     IntVarArray m_intervals;
     IntVarArray m_intervals_brut;
     IntVarArray P_cons_cost;
+    IntVarArray M_deg_cost;
 
 public:
     /**
@@ -56,7 +62,7 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost);
+    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList);
 
     /**
      * Copy constructor
@@ -128,6 +134,8 @@ void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isC
 void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus);
 
 void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB);
+
+void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost);
 
 void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals);
 /*************************

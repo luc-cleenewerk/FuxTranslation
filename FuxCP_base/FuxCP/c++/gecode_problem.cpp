@@ -13,7 +13,7 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost) {
+Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist) {
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
@@ -21,14 +21,20 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost) {
     species = sp;
     cantusFirmus = cf;
     costpcons = pcost;
+    costtritone = mtricost;
+    speciesList = splist;
 
     /// variable initialization todo depends on the species
     cp = IntVarArray(*this, size, l, u);
+    for(int i = 0; i < splist.size(); i++){
+        parts.push_back(IntVarArray(*this, size, l, u));
+    }
     hIntervalsCpCf = IntVarArray(*this, size, 0, 11);
     isCFB = BoolVarArray(*this, size, 0, 1);
     m_intervals = IntVarArray(*this, size-1, 0, 12);
     m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
     P_cons_cost = IntVarArray(*this, size, 0, 64);
+    M_deg_cost = IntVarArray(*this, size-1, 0, 64);
 
     /// constraints
 
@@ -51,6 +57,8 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost) {
     voices_cannot_play_same_note(*this, size, cp, cantusFirmus);
 
     penultimate_note_must_be_major_sixth_or_minor_third(*this, size, hIntervalsCpCf, isCFB);
+
+    no_tritonic_intervals(*this, size, m_intervals, costtritone, M_deg_cost);
 
     melodic_intervals_not_exceed_minor_sixth(*this, size, m_intervals);
 
@@ -75,13 +83,20 @@ Problem::Problem(Problem& s): Space(s){
     species = s.species;
     cantusFirmus = s.cantusFirmus;
     costpcons = s.costpcons;
+    costtritone = s.costtritone;
+    speciesList = s.speciesList;
+    parts = s.parts;
 
     cp.update(*this, s.cp);
+    for(int p = 0; p < parts.size(); p++){
+        parts[p].update(*this, s.parts[p]);
+    }
     hIntervalsCpCf.update(*this, s.hIntervalsCpCf);
     isCFB.update(*this, s.isCFB);
     m_intervals.update(*this, s.m_intervals);
     m_intervals_brut.update(*this, s.m_intervals_brut);
     P_cons_cost.update(*this, s.P_cons_cost);
+    M_deg_cost.update(*this, s.M_deg_cost);
 }
 
 /**
@@ -189,6 +204,26 @@ string Problem::toString(){
         else
             message += "<not assigned> ";
     }
+    message += "]\n";
+     message += "current values for M_deg_cost : [";
+    for(int i = 0; i < size-1; i++){
+        if (M_deg_cost[i].assigned())
+            message += to_string(M_deg_cost[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+    message += "Parts : [";
+    for(int k = 0; k < parts.size(); k++){
+        message += "current values for cp : [";
+        for(int i = 0; i < size; i++){
+            if (parts[k][i].assigned())
+                message += to_string(parts[k][i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
     message += "]\n\n";
     writeToLogFile(message.c_str());
     return message;
@@ -262,6 +297,13 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
     //rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
     //rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
 
+}
+
+void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost){
+    for(int j = 0; j < size-1; j++){
+        rel(home, (m_intervals[j]==6) >> (Mdegcost[j]==costtri));
+        rel(home, (m_intervals[j]!=6) >> (Mdegcost[j]==0));
+    }
 }
 
 void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals){
