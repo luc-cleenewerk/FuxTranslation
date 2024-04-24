@@ -13,13 +13,14 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
+Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost) {
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
     upper_bound_domain = u;
     species = sp;
     cantusFirmus = cf;
+    costpcons = pcost;
 
     /// variable initialization todo depends on the species
     cp = IntVarArray(*this, size, l, u);
@@ -27,6 +28,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     isCFB = BoolVarArray(*this, size, 0, 1);
     m_intervals = IntVarArray(*this, size-1, 0, 12);
     m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
+    P_cons_cost = IntVarArray(*this, size, 0, 64);
 
     /// constraints
 
@@ -41,6 +43,8 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     dom(*this, hIntervalsCpCf, consonances);
 
     perfect_consonance_constraints(*this, size, hIntervalsCpCf);
+
+    imperfect_consonances_are_preferred(*this, size, hIntervalsCpCf, P_cons_cost, costpcons);
 
     key_tone_tuned_to_cantusfirmus(*this, size, isCFB, hIntervalsCpCf);
 
@@ -70,12 +74,14 @@ Problem::Problem(Problem& s): Space(s){
     upper_bound_domain = s.upper_bound_domain;
     species = s.species;
     cantusFirmus = s.cantusFirmus;
+    costpcons = s.costpcons;
 
     cp.update(*this, s.cp);
     hIntervalsCpCf.update(*this, s.hIntervalsCpCf);
     isCFB.update(*this, s.isCFB);
     m_intervals.update(*this, s.m_intervals);
     m_intervals_brut.update(*this, s.m_intervals_brut);
+    P_cons_cost.update(*this, s.P_cons_cost);
 }
 
 /**
@@ -175,6 +181,14 @@ string Problem::toString(){
         else
             message += "<not assigned> ";
     }
+    message += "]\n";
+     message += "current values for P_cons_cost : [";
+    for(int i = 0; i < size; i++){
+        if (P_cons_cost[i].assigned())
+            message += to_string(P_cons_cost[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
     message += "]\n\n";
     writeToLogFile(message.c_str());
     return message;
@@ -222,6 +236,13 @@ void perfect_consonance_constraints(const Home &home, int size, IntVarArray hInt
     dom(home, hIntervalsCpCf[size-1], perfect_consonance);
 }
 
+void imperfect_consonances_are_preferred(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray Pconscost, int costpcons){
+    for(int i = 0; i < size; i++){
+        rel(home, (hIntervalsCpCf[i]==UNISSON || hIntervalsCpCf[i]==PERFECT_FIFTH) >> (Pconscost[i]==costpcons));
+        rel(home, (hIntervalsCpCf[i]!=UNISSON && hIntervalsCpCf[i]!=PERFECT_FIFTH) >> (Pconscost[i]==0));
+    }
+}
+
 void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isCFB, IntVarArray hIntervalsCpCf){
     //work
     rel(home, (isCFB[0] == 0) >> (hIntervalsCpCf[0]==0));
@@ -238,8 +259,8 @@ void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, ve
 void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB){
     //find better test case
     int p = size-1;
-    rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
-    rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
+    //rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
+    //rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
 
 }
 

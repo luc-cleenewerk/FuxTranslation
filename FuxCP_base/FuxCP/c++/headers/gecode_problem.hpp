@@ -35,6 +35,7 @@ protected:
     int lower_bound_domain;
     int upper_bound_domain;
     int species;
+    int costpcons;
 
     vector<int> cantusFirmus;
 
@@ -44,6 +45,7 @@ protected:
     BoolVarArray isCFB;
     IntVarArray m_intervals;
     IntVarArray m_intervals_brut;
+    IntVarArray P_cons_cost;
 
 public:
     /**
@@ -54,7 +56,7 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf);
+    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost);
 
     /**
      * Copy constructor
@@ -116,6 +118,8 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp
 void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB);
 
 void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut);
+
+void imperfect_consonances_are_preferred(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray Pconscost, int costpcons);
 
 void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf);
 

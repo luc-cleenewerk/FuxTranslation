@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     int species = 0;
     vector<int> cantusFirmus = {1, 2, 3};
     // create a new problem
-    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus);
+    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus, 32);
 
     // create a new search engine
     Search::Base<Problem>* e = make_solver(p, bab_solver);
