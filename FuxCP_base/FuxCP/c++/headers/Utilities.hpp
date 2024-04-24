@@ -190,6 +190,10 @@ enum chordTypes{
     MINOR_SEVENTH_CHORD         //6
 };
 
+// Types of different combinations of consonances used
+const IntSet consonances({UNISSON,MINOR_THIRD,MAJOR_THIRD,PERFECT_FIFTH,MINOR_SIXTH,MAJOR_SIXTH, PERFECT_OCTAVE});
+const IntSet perfect_consonance({UNISSON, PERFECT_FIFTH});
+
 /// Types of chords represented by the intervals between their notes in root position up to an octave
 const vector<int> MAJOR_CHORD_INTERVALS = {MAJOR_THIRD, MINOR_THIRD, PERFECT_FOURTH};
 const vector<int> MINOR_CHORD_INTERVALS = {MINOR_THIRD, MAJOR_THIRD, PERFECT_FOURTH};

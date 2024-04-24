@@ -28,31 +28,22 @@ enum {
 /*****************
  * Problem class *
  *****************/
- // This class represents a constraint problem to be solved
 class Problem: public Space {
 protected:
-    // solution related attributes
-    IntVarArray cp; // The variables for the counterpoint (represents the notes)
-    IntVarArray h_intervals; //represents the harmonic intervals
-    BoolVarArray is_cfb;
-    IntVarArray m_intervals;
-    IntVarArray m_intervals_brut;
-    IntVarArray motions;
-    IntVarArray motions_cost;
-    BoolVarArray is_lowest;
-    BoolVarArray cf_lowest;
-    vector<int> p_cons_cost;
-    IntVarArray fifth_cost;
-    IntVarArray octave_cost;
-    int size; // The size of the variable array of interest
+    /// Input data
+    int size;                       // The size of the variable array of interest
     int lower_bound_domain;
     int upper_bound_domain;
-    /* @todo Add here any additional attributes you need to represent your problem */
     int species;
+
     vector<int> cantusFirmus;
-    const IntVarArgs ALL_CONS = IntVarArgs({IntVar(*this, 0, 0), IntVar(*this, 3,3), IntVar(*this, 4,4), IntVar(*this, 7, 7),
-                IntVar(*this, 8,8),IntVar(*this, 9,9)});
-    const IntVarArgs CONS_P = IntVarArgs({IntVar(*this, 0, 0), IntVar(*this, 7, 7)});
+
+    /// variables
+    IntVarArray cp;                 // The variables for the counterpoint
+    IntVarArray hIntervalsCpCf;     // The intervals between the counterpoint and the cantus firmus
+    BoolVarArray isCFB;
+    IntVarArray m_intervals;
+    IntVarArray m_intervals_brut;
 
 public:
     /**
@@ -112,10 +103,29 @@ public:
      */
     string toString();
 
-    int get_lowest_stratum_note(int index);
 };
 
 
+/*************************
+ *      Constraints      *
+ *************************/
+
+// todo move this into appropriate file (should be organised)
+void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray hIntervalsCpCf, vector<int> cantusFirmus);
+
+void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB);
+
+void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut);
+
+void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf);
+
+void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isCFB, IntVarArray hIntervalsCpCf);
+
+void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus);
+
+void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB);
+
+void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals);
 /*************************
  * Search engine methods *
  *************************/
@@ -146,5 +156,7 @@ Problem* get_next_solution_space(Search::Base<Problem>* solver);
  * @param message the text to write
  */
 void writeToLogFile(const char* message);
+
+string int_vector_to_string(vector<int> vector);
 
 #endif

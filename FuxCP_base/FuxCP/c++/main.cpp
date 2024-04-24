@@ -5,10 +5,10 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     int size = 3;
-    int upper_bound_domain = 127;
-    int lower_bound_domain = 0;
+    int upper_bound_domain = 12;
+    int lower_bound_domain = 1;
     int species = 0;
-    vector<int> cantusFirmus = {120, 63, 63};
+    vector<int> cantusFirmus = {1, 2, 3};
     // create a new problem
     Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus);
 
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     while(Problem * pb = get_next_solution_space(e)){
         nb_sol++;
         cout << "Solution " << nb_sol << ": " << endl;
-        pb->print_solution();
+        cout << pb->toString() << endl;
         delete pb;
     }
     cout << "No (more) solutions." << endl;

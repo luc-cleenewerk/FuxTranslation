@@ -17,7 +17,9 @@ include_directories(${GECODE_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/headers)
 # Create the dynamic library and link to the Gecode library
 set(MY_HEADERS headers/problem_wrapper.hpp headers/gecode_problem.hpp gecode_problem.cpp main.cpp
-        headers/Utilities.hpp)
+        headers/Utilities.hpp
+)
 add_library(damien ${MY_HEADERS} problem_wrapper.cpp main.cpp
-        headers/Utilities.hpp)
+        headers/Utilities.hpp
+)
 target_link_libraries(damien ${GECODE_LIBRARY})

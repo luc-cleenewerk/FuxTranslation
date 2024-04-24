@@ -1,14 +1,6 @@
 #include "headers/gecode_problem.hpp"
 #include "headers/Utilities.hpp"
 
-/**
- * Imagine this represents now the first species problem.
- * If we extend this to the next species, we add more of these classes, like to a list where the first entry is this class,
- * the next entry the next class and so on.
- * The next classes could inherit from this class.
- * Still in the thinking portion.
-*/
-
 /***********************************************************************************************************************
  *                                          Problem class methods                                                      *
  ***********************************************************************************************************************/
@@ -28,164 +20,42 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf) {
     upper_bound_domain = u;
     species = sp;
     cantusFirmus = cf;
-    
-    // variable initialization todo depends on the species
+
+    /// variable initialization todo depends on the species
     cp = IntVarArray(*this, size, l, u);
-
-    h_intervals = IntVarArray(*this, size, 0, 11);
-
+    hIntervalsCpCf = IntVarArray(*this, size, 0, 11);
+    isCFB = BoolVarArray(*this, size, 0, 1);
     m_intervals = IntVarArray(*this, size-1, 0, 12);
     m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
+
+    /// constraints
+
+    link_harmonic_arrays_1st_species(*this, size, cp, hIntervalsCpCf, cantusFirmus);
+
+    link_cfb_arrays_1st_species(*this, size, cp, cantusFirmus, isCFB);
+
+    link_melodic_arrays_1st_species(*this, size, cp, m_intervals, m_intervals_brut);
+
+    /// harmonic intervals must be consonnances (define the consonnances in Utilities.hpp so its easier to reuse)
     
-    //motions = IntVarArray(*this, size-1, -1, 2);
+    dom(*this, hIntervalsCpCf, consonances);
 
-    //motions_cost = IntVarArray();
+    perfect_consonance_constraints(*this, size, hIntervalsCpCf);
 
-    is_lowest = BoolVarArray(*this, size, 0, 1);
-    cf_lowest = BoolVarArray(*this, size, 0, 1);
+    key_tone_tuned_to_cantusfirmus(*this, size, isCFB, hIntervalsCpCf);
 
-    is_cfb = BoolVarArray(*this, size, 0, 1);
+    voices_cannot_play_same_note(*this, size, cp, cantusFirmus);
 
-    fifth_cost = IntVarArray(*this, size-1, 0, 1);
-    octave_cost = IntVarArray(*this, size-1, 0, 1);
+    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, hIntervalsCpCf, isCFB);
 
-    //constraints todo depends on the cantus firmus
-    //distinct(*this, cp);
+    melodic_intervals_not_exceed_minor_sixth(*this, size, m_intervals);
 
-    //create_h_intervals
-
-    for(int i = 0; i < size; i++){
-        IntVar t1 = expr(*this, cp[i]-cf[i]);
-        IntVar t2 = IntVar(*this, 0, 127);
-        abs(*this, t1, t2);
-        mod(*this, t2, IntVar(*this, 12, 12), h_intervals[i]);
-    }
-
-    //create melodic intervals
-
-    for(int i = 0; i < size-1; i++){
-        rel(*this, expr(*this, cp[i]-cp[i+1]), IRT_EQ, m_intervals_brut[i]);
-        abs(*this, expr(*this, cp[i]-cp[i+1]), m_intervals[i]);
-    }
-
-    //create cfb array
-
-    for(int i = 0; i < size; i++){
-        rel(*this, cp[i], IRT_GQ, cf[i], Reify(is_cfb[i], RM_EQV));
-    }
-
-    //create cf lowest
-    for(int j = 0; j < size; j++){
-        int low_note = get_lowest_stratum_note(j);
-        if(cantusFirmus[j]==low_note){
-            rel(*this, cf_lowest[j], IRT_EQ, 1);
-        } else {
-            rel(*this, cf_lowest[j], IRT_EQ, 0);
-        }
-    }
+    //todo add other constraints
     
-    //create is lowest
-    for(int j = 0; j < size; j++){
-        int low_note = get_lowest_stratum_note(j);
-        cout << "LOW NOTE : " << low_note << endl;
-        if(cp[j].assigned() && cf_lowest[j].assigned()){
-            if((cp[j].val()==low_note) && cf_lowest[j].val()!=1){
-                rel(*this, is_lowest[j], IRT_EQ, 1);
-            } else {
-                rel(*this, is_lowest[j], IRT_EQ, 0);
-            }
-        }
-    }
 
-    //create fifth cost
-    for(int i = 0; i < size-1; i++){
-        BoolVar b = BoolVar(*this, 0, 1);
-        rel(*this, h_intervals[i], IRT_EQ, 7, Reify(b));
-        ite(*this, b, IntVar(*this, 1, 1), IntVar(*this, 0, 0), fifth_cost[i]);
-    }
-
-    //CONSTRAINT 1, 2 et 3
-    for(int i = 0; i < size; i++){
-        if(i==0 || i==size-1){
-            member(*this, CONS_P, h_intervals[i]);
-        } else {
-            member(*this, ALL_CONS, h_intervals[i]);
-        }
-    }
-
-    //CONSTRAINT 4
-    if(is_cfb[0].assigned()){
-        if(is_cfb[0].val()==0){
-            rel(*this, h_intervals[0], IRT_EQ, 0);
-        }
-    }
-
-    //CONSTRAINT 4
-    if(is_cfb[size-1].assigned()){
-        if(is_cfb[size-1].val()==0){
-            rel(*this, h_intervals[size-1], IRT_EQ, 0);
-        }
-    }
-
-    //CONSTRAINT 5
-    for(int i = 1; i < size-1; i++){
-        rel(*this, cp[i], IRT_NQ, cf[i]);
-    }
-
-    //CONSTRAINT 6
-    for(int j = 0; j < size; j++){
-
-    }
-
-    //CONSTRAINT 7
-    int p = size-1;
-    if(is_cfb[p].assigned()){
-        int pitch = 3;
-        if(is_cfb[p].val()==1){
-            pitch = 9;
-        }
-        rel(*this, h_intervals[p], IRT_EQ, pitch);
-    }
-
-    // ===================
-    // MELODIC CONSTRAINTS
-    // ===================
-
-    //CONSTRAINT 2
-
-    for(int j = 0; j < size-1; j++){
-        rel(*this, m_intervals[j], IRT_LQ, 8);
-    }
-
-    // ==================
-    // MOTION CONSTRAINTS
-    // ==================
-
-    //CONSTRAINT 1 : NO PREFECT CONSONANCES THROUGH DIRECT MOTIONS
-    for(int j = 0; j < size-1; j++){
-        if(h_intervals[j].assigned() && motions[j].assigned()){
-            if(h_intervals[j].val()==7 || h_intervals[j].val()==0){
-                rel(*this, motions[j], IRT_NQ, 2);
-            }
-        }
-    }
-
-    //branching
+    /// branching
     branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    branch(*this, h_intervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    branch(*this, m_intervals, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    branch(*this, m_intervals_brut, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    for(BoolVar b : is_cfb){
-        branch(*this, b, BOOL_VAL_MIN());
-    }
-    for(BoolVar b : cf_lowest){
-        branch(*this, b, BOOL_VAL_MIN());
-    }
-    for(BoolVar b : is_lowest){
-        branch(*this, b, BOOL_VAL_MIN());
-    }
-    branch(*this, fifth_cost, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-    writeToLogFile(message.c_str());
+    writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
 }
 
 /**
@@ -198,24 +68,14 @@ Problem::Problem(Problem& s): Space(s){
     size = s.size;
     lower_bound_domain = s.lower_bound_domain;
     upper_bound_domain = s.upper_bound_domain;
-    cp = s.cp;
+    species = s.species;
     cantusFirmus = s.cantusFirmus;
-    h_intervals = s.h_intervals;
-    m_intervals = s.m_intervals;
-    m_intervals_brut = s.m_intervals_brut;
-    is_cfb = s.is_cfb;
-    cf_lowest = s.cf_lowest;
-    is_lowest = s.is_lowest;
-    fifth_cost = s.fifth_cost;
 
     cp.update(*this, s.cp);
-    h_intervals.update(*this, s.h_intervals);
+    hIntervalsCpCf.update(*this, s.hIntervalsCpCf);
+    isCFB.update(*this, s.isCFB);
     m_intervals.update(*this, s.m_intervals);
     m_intervals_brut.update(*this, s.m_intervals_brut);
-    is_cfb.update(*this, s.is_cfb);
-    cf_lowest.update(*this, s.cf_lowest);
-    is_lowest.update(*this, s.is_lowest);
-    fifth_cost.update(*this, s.fifth_cost);
 }
 
 /**
@@ -229,9 +89,10 @@ int Problem::getSize(){
 }
 
 /**
- * Returns the values taken by the variables vars in a solution
+ * Returns the values taken by the variables cp in a solution
  * @todo Modify this to return the solution for your problem. This function uses @param size to generate an array of integers
  * @return an array of integers representing the values of the variables in a solution
+ * Should only be used when using OM
  */
 int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
@@ -260,58 +121,12 @@ Space* Problem::copy(void) {
  */
 void Problem::constrain(const Space& _b) {
     const Problem &b = static_cast<const Problem &>(_b);
-}
-
-/**
- * Prints the solution in the console
- */
-void Problem::print_solution(){
-    cout << "CF NOTES ";
-    for(int i = 0; i < cantusFirmus.size(); i++){
-        cout << cantusFirmus.at(i) << " ";
-    }
-    cout << endl;
-    cout << "CP NOTES ";
-    for(int i = 0; i < size; i++){
-        cout << cp[i].val() << " ";
-    }
-    cout << endl;
-    /*cout << "H INTERVALS ";
-    for(int i = 0; i < size; i++){
-        cout << h_intervals[i].val() << " ";
-    }
-    cout << endl;
-    cout << "IS CFB ";
-    for(int i = 0; i < size; i++){
-        cout << is_cfb[i].val() << " ";
-    }
-    cout << endl;
-    cout << "M INTERVALS ";
-    for(int i = 0; i < size-1; i++){
-        cout << m_intervals[i].val() << " ";
-    }
-    cout << endl;
-    cout << "M INTERVALS BRUT ";
-    for(int i = 0; i < size-1; i++){
-        cout << m_intervals_brut[i].val() << " ";
-    }
-    cout << endl;*/
-    cout << "CF LOWEST ";
-    for(int i = 0; i < size; i++){
-        cout << cf_lowest[i].val() << " ";
-    }
-    cout << endl;
-    cout << "IS LOWEST ";
-    for(int i = 0; i < size; i++){
-        cout << is_lowest[i].val() << " ";
-    }
-    cout << endl;
+    rel(*this, cp, IRT_GQ, 2);
 }
 
 /**
  * toString method
  * @return a string representation of the current instance of the Problem class.
- * Right now, it returns a string "Problem object. size = <size>"
  * If a variable is not assigned when this function is called, it writes <not assigned> instead of the value
  * @todo modify this method to also print any additional attributes you add to the class
  */
@@ -319,10 +134,44 @@ string Problem::toString(){
     string message = "Problem object. \n";
     message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
-             + "\n" + "current values for vars: [";
+             + "\n";
+    message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
+    message += "current values for cp : [";
     for(int i = 0; i < size; i++){
         if (cp[i].assigned())
             message += to_string(cp[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+    message += "current values for hIntervalsCpCf : [";
+    for(int i = 0; i < size; i++){
+        if (hIntervalsCpCf[i].assigned())
+            message += to_string(hIntervalsCpCf[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+    message += "current values for isCFB : [";
+    for(int i = 0; i < size; i++){
+        if (isCFB[i].assigned())
+            message += to_string(isCFB[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+     message += "current values for mIntervals : [";
+    for(int i = 0; i < size-1; i++){
+        if (m_intervals[i].assigned())
+            message += to_string(m_intervals[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+     message += "current values for mIntervalsBrut : [";
+    for(int i = 0; i < size-1; i++){
+        if (m_intervals_brut[i].assigned())
+            message += to_string(m_intervals_brut[i].val()) + " ";
         else
             message += "<not assigned> ";
     }
@@ -332,11 +181,81 @@ string Problem::toString(){
 }
 
 /*************************
+ *      Constraints      *
+ *************************/
+
+ // todo move this into appropriate file (should be organised) for species and type of constraint (harmonic, melodic, motion, linking arrays,...)
+
+ /**
+  * Link the harmonic intervals arrays for the first species
+  * @param home the problem
+  * @param size the number of notes in the cf
+  * @param cp the variable array for the counterpoint to be generated
+  * @param hIntervalsCpCf the variable array for the harmonic intervals between the cp and the cf
+  * @param cantusFirmus the cantus firmus
+  */
+void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray hIntervalsCpCf, vector<int> cantusFirmus){
+    //works
+    for(int i = 0; i < size; i++){
+        rel(home, hIntervalsCpCf[i] == abs(cp[i] - cantusFirmus[i]));
+    }
+}
+
+void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB){
+    //works
+    for(int i = 0; i < size; i++){
+        rel(home, cp[i], IRT_GQ, cantusFirmus[i], Reify(isCFB[i], RM_EQV));
+    }
+}
+
+void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut){
+    //works
+    for(int i = 0; i < size-1; i++){
+        rel(home, expr(home, cp[i]-cp[i+1]), IRT_EQ, m_intervals_brut[i]);
+        abs(home, m_intervals_brut[i], m_intervals[i]);
+    }
+}
+
+void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf){
+    //works
+    dom(home, hIntervalsCpCf[0], perfect_consonance);
+    dom(home, hIntervalsCpCf[size-1], perfect_consonance);
+}
+
+void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isCFB, IntVarArray hIntervalsCpCf){
+    //work
+    rel(home, (isCFB[0] == 0) >> (hIntervalsCpCf[0]==0));
+    rel(home, (isCFB[size-1] == 0) >> (hIntervalsCpCf[size-1]==0));
+}
+
+void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus){
+    //works
+    for(int i = 1; i < size-1; i++){
+        rel(home, cp[i], IRT_NQ, cantusFirmus[i]);
+    }
+}
+
+void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB){
+    //find better test case
+    int p = size-1;
+    rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
+    rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
+
+}
+
+void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals){
+    //works
+    for(int j = 0; j < size-1; j++){
+        rel(home, m_intervals[j], IRT_LQ, 8);
+    }
+}
+/*************************
  * Search engine methods *
  *************************/
 
 /**
  * Creates a search engine for the given problem
+ * Should only be used when using OM, otherwise you can create the solver etc in the main file
  * @todo Modify this function to add search options etc
  * @param pb an instance of the Problem class representing a given problem
  * @param type the type of search engine to create (see enumeration in headers/gecode_problem.hpp)
@@ -357,6 +276,7 @@ Search::Base<Problem>* make_solver(Problem* pb, int type){
 
 /**
  * Returns the next solution space for the problem
+ * Should only be used when using OM
  * @param solver a solver for the problem
  * @return an instance of the Problem class representing the next solution to the problem
  */
@@ -395,14 +315,12 @@ void writeToLogFile(const char* message){
     }
 }
 
-int Problem::get_lowest_stratum_note(int index){
-    if(cp[index].assigned()){
-        if(cp[index].val()<cantusFirmus[index]){
-            return cp[index].val();
-        } else {
-            return cantusFirmus[index];
-        }
-    } else{
-        return -1;
+string int_vector_to_string(vector<int> vector){
+    string s;
+    for (int i = 0; i < vector.size(); ++i) {
+        s += to_string(vector[i]);
+        if(i != vector.size() - 1)
+            s += " , ";
     }
+    return s;
 }

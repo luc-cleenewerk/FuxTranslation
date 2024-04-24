@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug"
+			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -579,7 +579,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -639,7 +639,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++"
+			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++"
 		},
 		{
 			"name" : "CMAKE_INSTALL_NAME_TOOL",
@@ -1243,7 +1243,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++/cmake-build-debug"
+			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++/cmake-build-debug"
 		},
 		{
 			"name" : "MyProject_IS_TOP_LEVEL",
@@ -1267,7 +1267,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/GiL_Framework/c++"
+			"value" : "/Users/sprockeelsd/Documents/FuxCP_base/FuxCP/c++"
 		},
 		{
 			"name" : "ProcessorCount_cmd_sysctl",
