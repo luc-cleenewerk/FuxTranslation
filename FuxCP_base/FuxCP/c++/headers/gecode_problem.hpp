@@ -37,6 +37,9 @@ protected:
     int species;
     int costpcons;
     int costtritone;
+    int con_motion_cost;
+    int obl_motion_cost;
+    int dir_motion_cost;
 
     vector<int> cantusFirmus;
 
@@ -50,8 +53,12 @@ protected:
     BoolVarArray isCFB;
     IntVarArray m_intervals;
     IntVarArray m_intervals_brut;
+    IntVarArray cf_m_intervals_brut;
     IntVarArray P_cons_cost;
     IntVarArray M_deg_cost;
+    IntVarArray motions;
+    IntVarArray motions_cost;
+    BoolVarArray is_P_cons;
 
 public:
     /**
@@ -62,7 +69,7 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList);
+    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir);
 
     /**
      * Copy constructor
@@ -123,7 +130,13 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp
 
 void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB);
 
-void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut);
+void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut, 
+    vector<int> cantusfirmus, IntVarArray cf_m_intervals_brut);
+
+void link_P_cons_arrays(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray Pcons);
+
+void link_motions_arrays(const Home &home, int size, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut, IntVarArray motions,
+     IntVarArray motions_cost, BoolVarArray isCFB, int con_motion_cost, int obl_motion_cost, int dir_motion_cost); //is not lowest not in there yet
 
 void imperfect_consonances_are_preferred(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray Pconscost, int costpcons);
 
@@ -138,6 +151,8 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
 void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost);
 
 void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals);
+
+void no_direct_perfect_consonance(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray motions);
 /*************************
  * Search engine methods *
  *************************/

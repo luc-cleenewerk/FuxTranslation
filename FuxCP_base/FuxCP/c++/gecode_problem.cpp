@@ -13,7 +13,7 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist) {
+Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir) {
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
@@ -23,6 +23,10 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     costpcons = pcost;
     costtritone = mtricost;
     speciesList = splist;
+    con_motion_cost = con;
+    obl_motion_cost = obl;
+    dir_motion_cost = dir;
+
 
     /// variable initialization todo depends on the species
     cp = IntVarArray(*this, size, l, u);
@@ -33,8 +37,12 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     isCFB = BoolVarArray(*this, size, 0, 1);
     m_intervals = IntVarArray(*this, size-1, 0, 12);
     m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
+    cf_m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
     P_cons_cost = IntVarArray(*this, size, 0, 64);
     M_deg_cost = IntVarArray(*this, size-1, 0, 64);
+    motions = IntVarArray(*this, size-1, -1, 2);
+    motions_cost = IntVarArray(*this, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost}));
+    is_P_cons = BoolVarArray(*this, size, 0, 1);
 
     /// constraints
 
@@ -42,7 +50,12 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     link_cfb_arrays_1st_species(*this, size, cp, cantusFirmus, isCFB);
 
-    link_melodic_arrays_1st_species(*this, size, cp, m_intervals, m_intervals_brut);
+    link_melodic_arrays_1st_species(*this, size, cp, m_intervals, m_intervals_brut, cantusFirmus, cf_m_intervals_brut);
+
+    link_P_cons_arrays(*this, size, hIntervalsCpCf, is_P_cons);
+
+    link_motions_arrays(*this, size, m_intervals_brut, cf_m_intervals_brut, motions, motions_cost, isCFB,
+        con_motion_cost, obl_motion_cost, dir_motion_cost);
 
     /// harmonic intervals must be consonnances (define the consonnances in Utilities.hpp so its easier to reuse)
     
@@ -62,6 +75,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     melodic_intervals_not_exceed_minor_sixth(*this, size, m_intervals);
 
+    no_direct_perfect_consonance(*this, size, hIntervalsCpCf, motions);
     //todo add other constraints
     
 
@@ -86,6 +100,9 @@ Problem::Problem(Problem& s): Space(s){
     costtritone = s.costtritone;
     speciesList = s.speciesList;
     parts = s.parts;
+    con_motion_cost = s.con_motion_cost;
+    obl_motion_cost = s.obl_motion_cost;
+    dir_motion_cost = s.dir_motion_cost;
 
     cp.update(*this, s.cp);
     for(int p = 0; p < parts.size(); p++){
@@ -95,8 +112,12 @@ Problem::Problem(Problem& s): Space(s){
     isCFB.update(*this, s.isCFB);
     m_intervals.update(*this, s.m_intervals);
     m_intervals_brut.update(*this, s.m_intervals_brut);
+    cf_m_intervals_brut.update(*this, s.cf_m_intervals_brut);
     P_cons_cost.update(*this, s.P_cons_cost);
     M_deg_cost.update(*this, s.M_deg_cost);
+    motions.update(*this, s.motions);
+    motions_cost.update(*this, s.motions_cost);
+    is_P_cons.update(*this, s.is_P_cons);
 }
 
 /**
@@ -213,6 +234,22 @@ string Problem::toString(){
             message += "<not assigned> ";
     }
     message += "]\n";
+    message += "current values for is_P_CONS : [";
+    for(int i = 0; i < size; i++){
+        if (is_P_cons[i].assigned())
+            message += to_string(is_P_cons[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
+    message += "current values for motions : [";
+    for(int i = 0; i < size-1; i++){
+        if (motions[i].assigned())
+            message += to_string(motions[i].val()) + " ";
+        else
+            message += "<not assigned> ";
+    }
+    message += "]\n";
     message += "Parts : [";
     for(int k = 0; k < parts.size(); k++){
         message += "current values for cp : [";
@@ -257,13 +294,52 @@ void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vec
     }
 }
 
-void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut){
+void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut, 
+    vector<int> cantusFirmus, IntVarArray cf_m_intervals_brut){
     //works
     for(int i = 0; i < size-1; i++){
         rel(home, expr(home, cp[i]-cp[i+1]), IRT_EQ, m_intervals_brut[i]);
+        rel(home, expr(home, cantusFirmus[i]-cantusFirmus[i+1]), IRT_EQ, cf_m_intervals_brut[i]);
         abs(home, m_intervals_brut[i], m_intervals[i]);
     }
 }
+
+void link_P_cons_arrays(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray Pcons){
+    //works
+    for(int i = 0; i<size; i++){
+        rel(home, expr(home, hIntervalsCpCf[i]==0), BOT_OR, expr(home, hIntervalsCpCf[i]==7), Pcons[i]);
+    }
+}
+
+void link_motions_arrays(const Home &home, int size, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut, IntVarArray motions,
+     IntVarArray motions_cost, BoolVarArray isCFB, int con_motion_cost, int obl_motion_cost, int dir_motion_cost){
+        for(int i = 0; i < size-1; i++){
+            //direct motions help creation
+            BoolVar both_up = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]>0));
+            BoolVar both_stay = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]==0));
+            BoolVar both_down = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]<0));
+            //oblique motions help creation
+            BoolVar cf_stays_1 = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]==0));
+            BoolVar cf_stays_2 = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]==0));
+            BoolVar cp_stays_1 = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]>0));
+            BoolVar cp_stays_2 = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]<0));
+            //contrary motions help creation
+            BoolVar cpd_cfu = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]>0));
+            BoolVar cpu_cfd = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]<0));
+            //direct constraints
+            rel(home, ((both_up || both_stay || both_down) && (isCFB[i]==1)) >> (motions[i]==2));
+            rel(home, ((both_up || both_stay || both_down) && (isCFB[i]==1)) >> (motions_cost[i]==dir_motion_cost));
+            //oblique constraints
+            rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (isCFB[i]==1)) >> (motions[i]==1));
+            rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (isCFB[i]==1)) >> (motions_cost[i]==obl_motion_cost));
+            //contrary constraints
+            rel(home, ((cpd_cfu || cpu_cfd)&& (isCFB[i]==1)) >> (motions[i]==0));
+            rel(home, ((cpd_cfu || cpu_cfd)&& (isCFB[i]==1)) >> (motions_cost[i]==con_motion_cost));
+            //bass constraints
+            rel(home, (isCFB[i]==0) >> (motions[i]==-1));
+            rel(home, (isCFB[i]==0) >> (motions_cost[i]==0));
+        }
+     }
 
 void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf){
     //works
@@ -296,7 +372,6 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
     int p = size-1;
     //rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
     //rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
-
 }
 
 void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost){
@@ -310,6 +385,22 @@ void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVar
     //works
     for(int j = 0; j < size-1; j++){
         rel(home, m_intervals[j], IRT_LQ, 8);
+    }
+}
+
+void no_direct_perfect_consonance(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray motions){
+    //works
+    for(int j = 0; j < size-1; j++){
+        rel(home, (hIntervalsCpCf[j]==0 || hIntervalsCpCf[j]==7 || hIntervalsCpCf[j+1]==0 || hIntervalsCpCf[j+1]==7) >> 
+            (motions[j]!=2));
+    }
+}
+
+void no_battuta(const Home &home, int size, IntVarArray motions, IntVarArray hIntervalsCpCf, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut,
+    BoolVarArray isCFB){
+    for(int j = 0; j < size-1; j++){
+        rel(home, expr(home, !((hIntervalsCpCf[j+1]==0)&&(motions[j]==0)&&(m_intervals_brut[j]<-4)&&(isCFB[j]==1))));
+        rel(home, expr(home, !((hIntervalsCpCf[j+1]==0)&&(motions[j]==0)&&(cf_m_intervals_brut[j]<-4)&&(isCFB[j]==0))));
     }
 }
 /*************************
