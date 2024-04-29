@@ -1,5 +1,6 @@
 #include "headers/gecode_problem.hpp"
 #include "headers/Utilities.hpp"
+#include "headers/1sp_constraints.hpp"
 
 /***********************************************************************************************************************
  *                                          Problem class methods                                                      *
@@ -13,7 +14,8 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir) {
+Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir,
+    int var_cost){
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
@@ -26,61 +28,114 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     con_motion_cost = con;
     obl_motion_cost = obl;
     dir_motion_cost = dir;
+    variety_cost = var_cost;
 
+    parts.push_back(Part(*this, cf, s, l, u));
+    for(int i = 0; i < splist.size(); i++){
+        parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost));
+    }
 
     /// variable initialization todo depends on the species
-    cp = IntVarArray(*this, size, l, u);
-    for(int i = 0; i < splist.size(); i++){
-        parts.push_back(IntVarArray(*this, size, l, u));
-    }
-    hIntervalsCpCf = IntVarArray(*this, size, 0, 11);
-    isCFB = BoolVarArray(*this, size, 0, 1);
-    m_intervals = IntVarArray(*this, size-1, 0, 12);
-    m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
-    cf_m_intervals_brut = IntVarArray(*this, size-1, -12, 12);
-    P_cons_cost = IntVarArray(*this, size, 0, 64);
-    M_deg_cost = IntVarArray(*this, size-1, 0, 64);
-    motions = IntVarArray(*this, size-1, -1, 2);
-    motions_cost = IntVarArray(*this, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost}));
-    is_P_cons = BoolVarArray(*this, size, 0, 1);
 
+    lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
+    lowest[0].notes = IntVarArray(*this, size, l, u);
+
+    for(int j = 0; j < parts.size()-1; j++){
+        upper.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
+        upper[j].notes = IntVarArray(*this, size, l, u);
+    }
+
+    for(int i = 0; i < size; i++){
+        IntVarArray voices = IntVarArray(*this, parts.size(), 0, 120);
+        IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
+        for(int j = 0; j < parts.size(); j++){
+            rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]);
+            rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[i]);
+        }
+        
+        IntVarArray order = IntVarArray(*this, parts.size(), 0, parts.size()-1);
+        sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120));
+        
+        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]);
+
+        sorted(*this, voices, sorted_voices[i], order);
+
+        rel(*this, lowest[0].notes[i], IRT_EQ, sorted_voices[i][0]);
+
+        for(int j = 0; j < upper.size(); j++){
+            rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]);
+        }
+
+        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i]));
+
+        BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].notes[i]));
+
+        rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i]));
+
+        if(parts.size()==3){
+            rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]);
+        }
+
+    }
     /// constraints
 
-    link_harmonic_arrays_1st_species(*this, size, cp, hIntervalsCpCf, cantusFirmus);
+    link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
 
-    link_cfb_arrays_1st_species(*this, size, cp, cantusFirmus, isCFB);
+    link_cfb_arrays_1st_species(*this, size, parts);
 
-    link_melodic_arrays_1st_species(*this, size, cp, m_intervals, m_intervals_brut, cantusFirmus, cf_m_intervals_brut);
+    link_melodic_arrays_1st_species(*this, size, parts);
 
-    link_P_cons_arrays(*this, size, hIntervalsCpCf, is_P_cons);
+    //link_P_cons_arrays(*this, size, hIntervalsCpCf, is_P_cons);
 
-    link_motions_arrays(*this, size, m_intervals_brut, cf_m_intervals_brut, motions, motions_cost, isCFB,
-        con_motion_cost, obl_motion_cost, dir_motion_cost);
+    link_motions_arrays(*this, size, con_motion_cost, obl_motion_cost, dir_motion_cost, parts, lowest);
 
     /// harmonic intervals must be consonnances (define the consonnances in Utilities.hpp so its easier to reuse)
     
-    dom(*this, hIntervalsCpCf, consonances);
+    for(int p = 0; p < parts.size(); p++){
+        for(int i = 0; i < parts[p].hIntervalsCpCf.size()-1; i++){
+            dom(*this, parts[p].hIntervalsCpCf[i], consonances);
+        }
+        dom(*this, parts[p].hIntervalsCpCf[parts[p].hIntervalsCpCf.size()-1], major_h_triad);
+    }
 
-    perfect_consonance_constraints(*this, size, hIntervalsCpCf);
+    perfect_consonance_constraints(*this, size, parts, speciesList.size());
 
-    imperfect_consonances_are_preferred(*this, size, hIntervalsCpCf, P_cons_cost, costpcons);
+    imperfect_consonances_are_preferred(*this, size, parts, costpcons);
 
-    key_tone_tuned_to_cantusfirmus(*this, size, isCFB, hIntervalsCpCf);
+    key_tone_tuned_to_cantusfirmus(*this, size, parts);
 
-    voices_cannot_play_same_note(*this, size, cp, cantusFirmus);
+    voices_cannot_play_same_note(*this, size, parts);
 
-    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, hIntervalsCpCf, isCFB);
+    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
 
-    no_tritonic_intervals(*this, size, m_intervals, costtritone, M_deg_cost);
+    no_tritonic_intervals(*this, size, costtritone, parts);
 
-    melodic_intervals_not_exceed_minor_sixth(*this, size, m_intervals);
+    melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
 
-    no_direct_perfect_consonance(*this, size, hIntervalsCpCf, motions);
+    no_direct_perfect_consonance(*this, size, parts, speciesList.size());
+
+    no_battuta(*this, size, parts);
+
+    if(speciesList.size()==2){
+
+        no_tenth_in_last_chord(*this, size, parts, upper, lowest);
+
+        variety_cost_constraint(*this, size, parts);
+
+        avoid_perfect_consonances(*this, size, parts);
+    }
+
+    no_same_direction(*this, size, parts, speciesList.size());
+
+    no_successive_ascending_sixths(*this, size, parts, speciesList.size());
     //todo add other constraints
     
 
     /// branching
-    branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    //branch(*this, cp, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    for(int i = 1; i < parts.size(); i++){
+        branch(*this, parts[i].notes, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+    }
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
 }
 
@@ -99,25 +154,80 @@ Problem::Problem(Problem& s): Space(s){
     costpcons = s.costpcons;
     costtritone = s.costtritone;
     speciesList = s.speciesList;
-    parts = s.parts;
     con_motion_cost = s.con_motion_cost;
     obl_motion_cost = s.obl_motion_cost;
     dir_motion_cost = s.dir_motion_cost;
+    variety_cost = s.variety_cost;
+    parts = s.parts;
+    lowest = s.lowest;
+    upper = s.upper;
+    sorted_voices = s.sorted_voices;
 
-    cp.update(*this, s.cp);
-    for(int p = 0; p < parts.size(); p++){
-        parts[p].update(*this, s.parts[p]);
+    parts[0].home = s.parts[0].home;
+    parts[0].size = s.parts[0].size;
+    parts[0].upper_bound = s.parts[0].upper_bound;
+    parts[0].lower_bound = s.parts[0].lower_bound;
+
+    parts[0].notes.update(*this, s.parts[0].notes);
+    parts[0].m_intervals.update(*this, s.parts[0].m_intervals);
+    parts[0].m_intervals_brut.update(*this, s.parts[0].m_intervals_brut);
+    parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
+    parts[0].hIntervalsCpCf.update(*this, s.parts[0].hIntervalsCpCf);
+    parts[0].succ_cost.update(*this, s.parts[0].succ_cost);
+
+    for(int p = 1; p < parts.size(); p++){
+        parts[p].home = s.parts[p].home;
+        parts[p].size = s.parts[p].size;
+        parts[p].lower_bound = s.parts[p].lower_bound;
+        parts[p].upper_bound = s.parts[p].upper_bound;
+        parts[p].species = s.parts[p].species;
+        parts[p].cantusFirmus = s.parts[p].cantusFirmus;
+        parts[p].costpcons = s.parts[p].costpcons;
+        parts[p].costtritone = s.parts[p].costtritone;
+        parts[p].speciesList = s.parts[p].speciesList;
+        parts[p].con_motion_cost = s.parts[p].con_motion_cost;
+        parts[p].obl_motion_cost = s.parts[p].obl_motion_cost;
+        parts[p].dir_motion_cost = s.parts[p].dir_motion_cost;
+        parts[p].variety_cost = s.parts[p].variety_cost;
+
+        parts[p].notes.update(*this, s.parts[p].notes);
+        parts[p].m_intervals.update(*this, s.parts[p].m_intervals);
+        parts[p].m_intervals_brut.update(*this, s.parts[p].m_intervals_brut);
+        parts[p].isCFB.update(*this, s.parts[p].isCFB);
+        parts[p].is_not_lowest.update(*this, s.parts[p].is_not_lowest);
+        parts[p].hIntervalsCpCf.update(*this, s.parts[p].hIntervalsCpCf);
+        parts[p].P_cons_cost.update(*this, s.parts[p].P_cons_cost);
+        parts[p].M_deg_cost.update(*this, s.parts[p].M_deg_cost);
+        parts[p].varietyArray.update(*this, s.parts[p].varietyArray);
+        parts[p].motions.update(*this, s.parts[p].motions);
+        parts[p].direct_move_cost.update(*this, s.parts[p].direct_move_cost);
+        parts[p].succ_cost.update(*this, s.parts[p].succ_cost);
     }
-    hIntervalsCpCf.update(*this, s.hIntervalsCpCf);
-    isCFB.update(*this, s.isCFB);
-    m_intervals.update(*this, s.m_intervals);
-    m_intervals_brut.update(*this, s.m_intervals_brut);
-    cf_m_intervals_brut.update(*this, s.cf_m_intervals_brut);
-    P_cons_cost.update(*this, s.P_cons_cost);
-    M_deg_cost.update(*this, s.M_deg_cost);
-    motions.update(*this, s.motions);
-    motions_cost.update(*this, s.motions_cost);
-    is_P_cons.update(*this, s.is_P_cons);
+    for(int p = 0; p < sorted_voices.size(); p++){
+        sorted_voices[p].update(*this, s.sorted_voices[p]);
+    }
+
+    lowest[0].home = s.lowest[0].home;
+    lowest[0].size = s.lowest[0].size;
+    lowest[0].lower_bound = s.lowest[0].lower_bound;
+    lowest[0].upper_bound = s.lowest[0].upper_bound;
+    lowest[0].hIntervalsBrut.update(*this, s.lowest[0].hIntervalsBrut);
+    lowest[0].hIntervalsAbs.update(*this, s.lowest[0].hIntervalsAbs);
+    lowest[0].notes.update(*this, s.lowest[0].notes);
+    lowest[0].hIntervals.update(*this, s.lowest[0].hIntervals);
+    lowest[0].m_intervals_brut.update(*this, s.lowest[0].m_intervals_brut);
+
+    for(int p = 0; p < upper.size(); p++){
+        upper[p].home = s.upper[p].home;
+        upper[p].size = s.upper[p].size;
+        upper[p].lower_bound = s.upper[p].lower_bound;
+        upper[p].upper_bound = s.upper[p].upper_bound;
+
+        upper[p].hIntervals.update(*this, s.upper[p].hIntervals);
+        upper[p].notes.update(*this, s.upper[p].notes);
+        upper[p].hIntervalsBrut.update(*this, s.upper[p].hIntervalsBrut);
+        upper[p].hIntervalsAbs.update(*this, s.upper[p].hIntervalsAbs);
+    }
 }
 
 /**
@@ -139,10 +249,10 @@ int Problem::getSize(){
 int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
     int* solution = new int[size];
-    for(int i = 0; i < size; i++){
-        solution[i] = cp[i].val();
-        message += to_string(solution[i]) + " ";
-    }
+        for(int i = 0; i < size; i++){
+            solution[i] = 1;
+            message += to_string(solution[i]) + " ";
+        }
     message += "]\n";
     writeToLogFile(message.c_str());
     return solution;
@@ -163,7 +273,7 @@ Space* Problem::copy(void) {
  */
 void Problem::constrain(const Space& _b) {
     const Problem &b = static_cast<const Problem &>(_b);
-    rel(*this, cp, IRT_GQ, 2);
+    
 }
 
 /**
@@ -178,84 +288,161 @@ string Problem::toString(){
             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
              + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
-    message += "current values for cp : [";
-    for(int i = 0; i < size; i++){
-        if (cp[i].assigned())
-            message += to_string(cp[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-    message += "current values for hIntervalsCpCf : [";
-    for(int i = 0; i < size; i++){
-        if (hIntervalsCpCf[i].assigned())
-            message += to_string(hIntervalsCpCf[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-    message += "current values for isCFB : [";
-    for(int i = 0; i < size; i++){
-        if (isCFB[i].assigned())
-            message += to_string(isCFB[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-     message += "current values for mIntervals : [";
-    for(int i = 0; i < size-1; i++){
-        if (m_intervals[i].assigned())
-            message += to_string(m_intervals[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-     message += "current values for mIntervalsBrut : [";
-    for(int i = 0; i < size-1; i++){
-        if (m_intervals_brut[i].assigned())
-            message += to_string(m_intervals_brut[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
      message += "current values for P_cons_cost : [";
-    for(int i = 0; i < size; i++){
-        if (P_cons_cost[i].assigned())
-            message += to_string(P_cons_cost[i].val()) + " ";
-        else
-            message += "<not assigned> ";
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size; i++){
+            if (parts[p].P_cons_cost[i].assigned())
+                message += to_string(parts[p].P_cons_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
     }
-    message += "]\n";
-     message += "current values for M_deg_cost : [";
-    for(int i = 0; i < size-1; i++){
-        if (M_deg_cost[i].assigned())
-            message += to_string(M_deg_cost[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-    message += "current values for is_P_CONS : [";
-    for(int i = 0; i < size; i++){
-        if (is_P_cons[i].assigned())
-            message += to_string(is_P_cons[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
-    message += "current values for motions : [";
-    for(int i = 0; i < size-1; i++){
-        if (motions[i].assigned())
-            message += to_string(motions[i].val()) + " ";
-        else
-            message += "<not assigned> ";
-    }
-    message += "]\n";
     message += "Parts : [";
     for(int k = 0; k < parts.size(); k++){
         message += "current values for cp : [";
         for(int i = 0; i < size; i++){
-            if (parts[k][i].assigned())
-                message += to_string(parts[k][i].val()) + " ";
+            if (parts[k].notes[i].assigned())
+                message += to_string(parts[k].notes[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "H intervals : [";
+    for(int k = 0; k < parts.size(); k++){
+        message += "current values for hInterVal : [";
+        for(int i = 0; i < size; i++){
+            if (parts[k].hIntervalsCpCf[i].assigned())
+                message += to_string(parts[k].hIntervalsCpCf[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "]\n\n";
+    message += "M intervals brut : [";
+    for(int k = 0; k < parts.size(); k++){
+        message += "current values for M intervals : [";
+        for(int i = 0; i < size-1; i++){
+            if (parts[k].m_intervals_brut[i].assigned())
+                message += to_string(parts[k].m_intervals_brut[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "ISCFB : [";
+    for(int k = 1; k < parts.size(); k++){
+        message += "current values for CFB: [";
+        for(int i = 0; i < size; i++){
+            if (parts[k].isCFB[i].assigned())
+                message += to_string(parts[k].isCFB[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "LOWEST : [";
+    //for(int k = 1; k < parts.size(); k++){
+        message += "current values for LOWEST: [";
+        for(int i = 0; i < size; i++){
+            if (lowest[0].notes[i].assigned())
+                message += to_string(lowest[0].notes[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    //}
+    message += "UPPER : [";
+    for(int k = 0; k < upper.size(); k++){
+        message += "current values for UPPER : [";
+        for(int i = 0; i < upper[k].notes.size(); i++){
+            if (upper[k].notes[i].assigned())
+                message += to_string(upper[k].notes[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "IS NOT LOWEST : [";
+    for(int k = 0; k < parts.size(); k++){
+        message += "current values for IS NOT LOWEST : [";
+        for(int i = 0; i < size; i++){
+            if (parts[k].is_not_lowest[i].assigned())
+                message += to_string(parts[k].is_not_lowest[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "VAR COST : [";
+    for(int k = 1; k < parts.size(); k++){
+        message += "current values for VAR COST : [";
+        for(int i = 0; i < parts[k].varietyArray.size(); i++){
+            if (parts[k].varietyArray[i].assigned())
+                message += to_string(parts[k].varietyArray[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "MOTIONS : [";
+    for(int k = 1; k < parts.size(); k++){
+        message += "current values for MOTIONS : [";
+        for(int i = 0; i < parts[k].motions.size(); i++){
+            if (parts[k].motions[i].assigned())
+                message += to_string(parts[k].motions[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
+    }
+    message += "current values for M_deg_cost : [";
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            if (parts[p].M_deg_cost[i].assigned())
+                message += to_string(parts[p].M_deg_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+    message += "current values for variety_cost : [";
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            if (parts[p].varietyArray[i].assigned())
+                message += to_string(parts[p].varietyArray[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+    message += "current values for direct cost : [";
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-2; i++){
+            if (parts[p].direct_move_cost[i].assigned())
+                message += to_string(parts[p].direct_move_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+    message += "current values for succ cost : [";
+    for(int p = 0; p < parts.size(); p++){
+        for(int i = 0; i < size-2; i++){
+            if (parts[p].succ_cost[i].assigned())
+                message += to_string(parts[p].succ_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+    message += "UPPER BRUT : [";
+    for(int k = 0; k < upper.size(); k++){
+        message += "current values for UPPER BRUT: [";
+        for(int i = 0; i < upper[k].hIntervalsBrut.size(); i++){
+            if (upper[k].hIntervalsBrut[i].assigned())
+                message += to_string(upper[k].hIntervalsBrut[i].val()) + " ";
             else
                 message += "<not assigned> ";
         }
@@ -266,143 +453,6 @@ string Problem::toString(){
     return message;
 }
 
-/*************************
- *      Constraints      *
- *************************/
-
- // todo move this into appropriate file (should be organised) for species and type of constraint (harmonic, melodic, motion, linking arrays,...)
-
- /**
-  * Link the harmonic intervals arrays for the first species
-  * @param home the problem
-  * @param size the number of notes in the cf
-  * @param cp the variable array for the counterpoint to be generated
-  * @param hIntervalsCpCf the variable array for the harmonic intervals between the cp and the cf
-  * @param cantusFirmus the cantus firmus
-  */
-void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray hIntervalsCpCf, vector<int> cantusFirmus){
-    //works
-    for(int i = 0; i < size; i++){
-        rel(home, hIntervalsCpCf[i] == abs(cp[i] - cantusFirmus[i]));
-    }
-}
-
-void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB){
-    //works
-    for(int i = 0; i < size; i++){
-        rel(home, cp[i], IRT_GQ, cantusFirmus[i], Reify(isCFB[i], RM_EQV));
-    }
-}
-
-void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut, 
-    vector<int> cantusFirmus, IntVarArray cf_m_intervals_brut){
-    //works
-    for(int i = 0; i < size-1; i++){
-        rel(home, expr(home, cp[i]-cp[i+1]), IRT_EQ, m_intervals_brut[i]);
-        rel(home, expr(home, cantusFirmus[i]-cantusFirmus[i+1]), IRT_EQ, cf_m_intervals_brut[i]);
-        abs(home, m_intervals_brut[i], m_intervals[i]);
-    }
-}
-
-void link_P_cons_arrays(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray Pcons){
-    //works
-    for(int i = 0; i<size; i++){
-        rel(home, expr(home, hIntervalsCpCf[i]==0), BOT_OR, expr(home, hIntervalsCpCf[i]==7), Pcons[i]);
-    }
-}
-
-void link_motions_arrays(const Home &home, int size, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut, IntVarArray motions,
-     IntVarArray motions_cost, BoolVarArray isCFB, int con_motion_cost, int obl_motion_cost, int dir_motion_cost){
-        for(int i = 0; i < size-1; i++){
-            //direct motions help creation
-            BoolVar both_up = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]>0));
-            BoolVar both_stay = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]==0));
-            BoolVar both_down = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]<0));
-            //oblique motions help creation
-            BoolVar cf_stays_1 = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]==0));
-            BoolVar cf_stays_2 = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]==0));
-            BoolVar cp_stays_1 = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]>0));
-            BoolVar cp_stays_2 = expr(home, (m_intervals_brut[i]==0)&&(cf_m_intervals_brut[i]<0));
-            //contrary motions help creation
-            BoolVar cpd_cfu = expr(home, (m_intervals_brut[i]<0)&&(cf_m_intervals_brut[i]>0));
-            BoolVar cpu_cfd = expr(home, (m_intervals_brut[i]>0)&&(cf_m_intervals_brut[i]<0));
-            //direct constraints
-            rel(home, ((both_up || both_stay || both_down) && (isCFB[i]==1)) >> (motions[i]==2));
-            rel(home, ((both_up || both_stay || both_down) && (isCFB[i]==1)) >> (motions_cost[i]==dir_motion_cost));
-            //oblique constraints
-            rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (isCFB[i]==1)) >> (motions[i]==1));
-            rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (isCFB[i]==1)) >> (motions_cost[i]==obl_motion_cost));
-            //contrary constraints
-            rel(home, ((cpd_cfu || cpu_cfd)&& (isCFB[i]==1)) >> (motions[i]==0));
-            rel(home, ((cpd_cfu || cpu_cfd)&& (isCFB[i]==1)) >> (motions_cost[i]==con_motion_cost));
-            //bass constraints
-            rel(home, (isCFB[i]==0) >> (motions[i]==-1));
-            rel(home, (isCFB[i]==0) >> (motions_cost[i]==0));
-        }
-     }
-
-void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf){
-    //works
-    dom(home, hIntervalsCpCf[0], perfect_consonance);
-    dom(home, hIntervalsCpCf[size-1], perfect_consonance);
-}
-
-void imperfect_consonances_are_preferred(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray Pconscost, int costpcons){
-    for(int i = 0; i < size; i++){
-        rel(home, (hIntervalsCpCf[i]==UNISSON || hIntervalsCpCf[i]==PERFECT_FIFTH) >> (Pconscost[i]==costpcons));
-        rel(home, (hIntervalsCpCf[i]!=UNISSON && hIntervalsCpCf[i]!=PERFECT_FIFTH) >> (Pconscost[i]==0));
-    }
-}
-
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isCFB, IntVarArray hIntervalsCpCf){
-    //work
-    rel(home, (isCFB[0] == 0) >> (hIntervalsCpCf[0]==0));
-    rel(home, (isCFB[size-1] == 0) >> (hIntervalsCpCf[size-1]==0));
-}
-
-void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus){
-    //works
-    for(int i = 1; i < size-1; i++){
-        rel(home, cp[i], IRT_NQ, cantusFirmus[i]);
-    }
-}
-
-void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB){
-    //find better test case
-    int p = size-1;
-    //rel(home, (isCFB[p]==1) >> (hIntervalsCpCf[p]==MAJOR_SIXTH));
-    //rel(home, (isCFB[p]==0) >> (hIntervalsCpCf[p]==MINOR_THIRD));
-}
-
-void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost){
-    for(int j = 0; j < size-1; j++){
-        rel(home, (m_intervals[j]==6) >> (Mdegcost[j]==costtri));
-        rel(home, (m_intervals[j]!=6) >> (Mdegcost[j]==0));
-    }
-}
-
-void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals){
-    //works
-    for(int j = 0; j < size-1; j++){
-        rel(home, m_intervals[j], IRT_LQ, 8);
-    }
-}
-
-void no_direct_perfect_consonance(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray motions){
-    //works
-    for(int j = 0; j < size-1; j++){
-        rel(home, (hIntervalsCpCf[j]==0 || hIntervalsCpCf[j]==7 || hIntervalsCpCf[j+1]==0 || hIntervalsCpCf[j+1]==7) >> 
-            (motions[j]!=2));
-    }
-}
-
-void no_battuta(const Home &home, int size, IntVarArray motions, IntVarArray hIntervalsCpCf, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut,
-    BoolVarArray isCFB){
-    for(int j = 0; j < size-1; j++){
-        rel(home, expr(home, !((hIntervalsCpCf[j+1]==0)&&(motions[j]==0)&&(m_intervals_brut[j]<-4)&&(isCFB[j]==1))));
-        rel(home, expr(home, !((hIntervalsCpCf[j+1]==0)&&(motions[j]==0)&&(cf_m_intervals_brut[j]<-4)&&(isCFB[j]==0))));
-    }
-}
 /*************************
  * Search engine methods *
  *************************/

@@ -9,11 +9,8 @@
 #include <ctime>
 #include <exception>
 
-#include "gecode/kernel.hh"
-#include "gecode/int.hh"
-#include "gecode/search.hh"
-#include "gecode/minimodel.hh"
-#include "gecode/set.hh"
+#include "Part.hpp"
+#include "Stratum.hpp"
 
 using namespace Gecode;
 using namespace Gecode::Search;
@@ -40,13 +37,23 @@ protected:
     int con_motion_cost;
     int obl_motion_cost;
     int dir_motion_cost;
+    int variety_cost;
 
     vector<int> cantusFirmus;
-
     vector<int> speciesList;
 
-    vector<IntVarArray> parts;
+    vector<IntVarArray> counterpoints;
+    vector<IntVarArray> hIntervals;
+    vector<IntVarArray> cp_m_intervals;
+    vector<IntVarArray> cp_m_intervals_brut;
+    vector<BoolVarArray> cp_is_P_cons;
+    vector<IntVarArray> sorted_voices;
 
+    vector<Part> parts;
+
+    vector<Stratum> upper;
+    vector<Stratum> lowest;
+ 
     /// variables
     IntVarArray cp;                 // The variables for the counterpoint
     IntVarArray hIntervalsCpCf;     // The intervals between the counterpoint and the cantus firmus
@@ -69,7 +76,8 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir);
+    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir,
+        int var_cost);
 
     /**
      * Copy constructor
@@ -120,39 +128,6 @@ public:
 
 };
 
-
-/*************************
- *      Constraints      *
- *************************/
-
-// todo move this into appropriate file (should be organised)
-void link_harmonic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray hIntervalsCpCf, vector<int> cantusFirmus);
-
-void link_cfb_arrays_1st_species(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus, BoolVarArray isCFB);
-
-void link_melodic_arrays_1st_species(const Home &home, int size, IntVarArray cp, IntVarArray m_intervals, IntVarArray m_intervals_brut, 
-    vector<int> cantusfirmus, IntVarArray cf_m_intervals_brut);
-
-void link_P_cons_arrays(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray Pcons);
-
-void link_motions_arrays(const Home &home, int size, IntVarArray m_intervals_brut, IntVarArray cf_m_intervals_brut, IntVarArray motions,
-     IntVarArray motions_cost, BoolVarArray isCFB, int con_motion_cost, int obl_motion_cost, int dir_motion_cost); //is not lowest not in there yet
-
-void imperfect_consonances_are_preferred(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray Pconscost, int costpcons);
-
-void perfect_consonance_constraints(const Home &home, int size, IntVarArray hIntervalsCpCf);
-
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, BoolVarArray isCFB, IntVarArray hIntervalsCpCf);
-
-void voices_cannot_play_same_note(const Home &home, int size, IntVarArray cp, vector<int> cantusFirmus);
-
-void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, IntVarArray hIntervalsCpCf, BoolVarArray isCFB);
-
-void no_tritonic_intervals(const Home &home, int size, IntVarArray m_intervals, int costtri, IntVarArray Mdegcost);
-
-void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, IntVarArray m_intervals);
-
-void no_direct_perfect_consonance(const Home &home, int size, IntVarArray hIntervalsCpCf, IntVarArray motions);
 /*************************
  * Search engine methods *
  *************************/

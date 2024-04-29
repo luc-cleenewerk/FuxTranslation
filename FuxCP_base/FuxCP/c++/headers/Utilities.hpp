@@ -42,7 +42,7 @@ enum variable_selection{
 };
 
 /// go <-- soprano->bass: 4-3-2-1-8-7-6-5 etc
-auto right_to_left = [](const Space& home, const IntVar& x, int i) {
+/*auto right_to_left = [](const Space& home, const IntVar& x, int i) {
     return i;
 };
 
@@ -78,7 +78,7 @@ auto branchCommit = [](Space& home, unsigned int a, IntVar x, int i, int n){
     } else {
         rel(home, x, IRT_NQ, n);
     }
-};
+};*/
 
 const vector<IntValBranch> value_selection_heuristics = {INT_VAL_MIN(), INT_VAL_MAX(), INT_VAL_MED(), INT_VAL_RND(1U)};
 
@@ -193,6 +193,8 @@ enum chordTypes{
 // Types of different combinations of consonances used
 const IntSet consonances({UNISSON,MINOR_THIRD,MAJOR_THIRD,PERFECT_FIFTH,MINOR_SIXTH,MAJOR_SIXTH, PERFECT_OCTAVE});
 const IntSet perfect_consonance({UNISSON, PERFECT_FIFTH});
+const IntSet major_h_triad({UNISSON, MAJOR_THIRD, PERFECT_FIFTH});
+const IntSet MIN3_PERF5_MAJ6_OCT({MINOR_THIRD, PERFECT_FIFTH, MAJOR_SIXTH, PERFECT_OCTAVE});
 
 /// Types of chords represented by the intervals between their notes in root position up to an octave
 const vector<int> MAJOR_CHORD_INTERVALS = {MAJOR_THIRD, MINOR_THIRD, PERFECT_FOURTH};

@@ -20,11 +20,12 @@
 ;; Problem methods ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(defun new-ctp-problem (lb ub sp cf pc mtc)
+(defun new-ctp-problem (lb ub sp cf pc mtc spl con obl dir var)
     (let (
         (x (cffi::foreign-alloc :int :initial-contents cf))
+        (y (cffi::foreign-alloc :int :initial-contents spl))
     )
-    (new-problem (length cf) lb ub sp x pc mtc)
+    (new-problem (length cf) lb ub sp x pc mtc y con obl dir var)
     )
 )
 
@@ -37,6 +38,11 @@
     (cantus-firmus      :pointer :int)
     (pcost              :int)
     (mtricost           :int)
+    (species-list       :pointer :int)
+    (con-motion-cost    :int)
+    (obl-motion-cost    :int)
+    (dir-motion-cost    :int)
+    (variety-cost       :int)
     ; TODO add here any additional arguments that your Problem constructor takes
 )
 
