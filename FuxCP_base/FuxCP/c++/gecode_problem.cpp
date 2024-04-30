@@ -30,50 +30,57 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     dir_motion_cost = dir;
     variety_cost = var_cost;
 
-    parts.push_back(Part(*this, cf, s, l, u));
+    //parts contains the cantusFirmus in the first position, the rest are the counterpoints
+    parts.push_back(Part(*this, cf, s, l, u)); //putting the cantusFirmus in first position
     for(int i = 0; i < splist.size(); i++){
-        parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost));
+        parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost)); //adding the counterpoints
     }
 
-    /// variable initialization todo depends on the species
-
+    //lowest is the lowest stratum for each note
+    
     lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
     lowest[0].notes = IntVarArray(*this, size, l, u);
+
+    //upper contains the upper strata for each note
 
     for(int j = 0; j < parts.size()-1; j++){
         upper.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
         upper[j].notes = IntVarArray(*this, size, l, u);
     }
 
+    //creation of the strata and putting the correct notes in each strata
+
     for(int i = 0; i < size; i++){
+
         IntVarArray voices = IntVarArray(*this, parts.size(), 0, 120);
         IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
+
         for(int j = 0; j < parts.size(); j++){
-            rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]);
+            rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]); //getting the notes
             rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[i]);
         }
         
         IntVarArray order = IntVarArray(*this, parts.size(), 0, parts.size()-1);
-        sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120));
+        sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120)); //sorting the voices
         
-        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]);
+        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]); //linking the hInterval in the strata with the one in the cf / cp
 
-        sorted(*this, voices, sorted_voices[i], order);
+        sorted(*this, voices, sorted_voices[i], order); //sorting the voices
 
-        rel(*this, lowest[0].notes[i], IRT_EQ, sorted_voices[i][0]);
+        rel(*this, lowest[0].notes[i], IRT_EQ, sorted_voices[i][0]); //putting the lowest note in the lowest stratum
 
         for(int j = 0; j < upper.size(); j++){
-            rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]);
+            rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]); //the rest go in the upper strata
         }
 
-        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i]));
+        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i])); //determmining if the cf is the lowest strata for each note
 
         BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].notes[i]));
 
-        rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i]));
+        rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
 
         if(parts.size()==3){
-            rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]);
+            rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
         }
 
     }
@@ -85,18 +92,9 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     link_melodic_arrays_1st_species(*this, size, parts);
 
-    //link_P_cons_arrays(*this, size, hIntervalsCpCf, is_P_cons);
-
     link_motions_arrays(*this, size, con_motion_cost, obl_motion_cost, dir_motion_cost, parts, lowest);
-
-    /// harmonic intervals must be consonnances (define the consonnances in Utilities.hpp so its easier to reuse)
     
-    for(int p = 0; p < parts.size(); p++){
-        for(int i = 0; i < parts[p].hIntervalsCpCf.size()-1; i++){
-            dom(*this, parts[p].hIntervalsCpCf[i], consonances);
-        }
-        dom(*this, parts[p].hIntervalsCpCf[parts[p].hIntervalsCpCf.size()-1], major_h_triad);
-    }
+    harmonic_intervals_consonance(*this, parts);
 
     perfect_consonance_constraints(*this, size, parts, speciesList.size());
 
