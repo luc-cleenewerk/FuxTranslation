@@ -51,7 +51,7 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
 
 void link_motions_arrays(const Home &home, int size, int con_motion_cost, int obl_motion_cost, int dir_motion_cost, vector<Part> parts, 
      vector<Stratum> lowest){
-        for(int p = 1; p < parts.size(); p++){
+        for(int p = 0; p < parts.size(); p++){
             for(int i = 0; i < size-1; i++){
                 //direct motions help creation
                 BoolVar both_up = expr(home, (parts[p].m_intervals_brut[i]>0)&&(parts[0].m_intervals_brut[i]>0)); //if both parts are going in the same direction
@@ -201,7 +201,7 @@ void no_tenth_in_last_chord(const Home &home, int size, vector<Part> parts, vect
 }
 
 void last_chord_no_minor_third(const Home &home, int size, vector<Part> parts){
-    for(int p = 0; p < parts.size(); p++){
+    for(int p = 1; p < parts.size(); p++){
         if(parts[p].is_not_lowest[size-1].assigned()){
             if(parts[p].is_not_lowest[size-1].val()==1){
                 //prohibiting minor thirds in the last chord

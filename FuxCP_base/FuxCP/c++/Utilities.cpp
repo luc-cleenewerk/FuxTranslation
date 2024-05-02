@@ -44,6 +44,16 @@ vector<int> get_all_notes_from_chord(int root, vector<int> quality)
     return get_all_notes_from_interval_loop(root, quality);
 }
 
+vector<int> intersection(vector<int> v1, vector<int> v2){
+    vector<int> result;
+    sort(v1.begin(), v1.end());
+    sort(v2.begin(), v2.end());
+
+    set_intersection(v1.begin(), v1.end(), v2.begin(), v2.end(), back_inserter(result));
+
+    return result;
+}
+
 /**
  * Get all values for a given note
  * @param note a note

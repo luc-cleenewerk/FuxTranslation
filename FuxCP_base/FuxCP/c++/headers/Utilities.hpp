@@ -288,6 +288,8 @@ vector<int> get_all_notes_from_chord(int root, vector<int> quality);
  */
 vector<int> get_all_given_note(int note);
 
+vector<int> intersection(vector<int> v1, vector<int> v2);
+
 /**
  * Transforms an int* into a vector<int>
  * @param ptr an int* pointer

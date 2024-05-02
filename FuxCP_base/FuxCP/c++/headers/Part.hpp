@@ -7,6 +7,8 @@
 #include "gecode/minimodel.hh"
 #include "gecode/set.hh"
 
+#include <set>
+
 using namespace Gecode;
 using namespace std;
 
@@ -22,11 +24,17 @@ public:
     int obl_motion_cost;
     int dir_motion_cost;
     int variety_cost;
+    int voice_type;
+    int tone_offset;
 
     Home home;
 
     vector<int> cantusFirmus;
     vector<int> speciesList;
+    vector<int> scale;
+    vector<int> borrowed_scale;
+    vector<int> cp_range;
+    vector<int> union_b_scale;
 
     IntVarArray notes; 
     IntVarArray hIntervalsCpCf;
@@ -49,7 +57,7 @@ public:
     Part(const Home &sp, const vector<int> cf_notes, int s, int l, int u);
 
     Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, 
-        int dir, int var_cost);
+        int dir, int var_cost, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode);
 
     IntVarArray getNotes();
 };

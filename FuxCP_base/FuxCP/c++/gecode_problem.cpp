@@ -15,7 +15,7 @@
  * @param u the upper bound of the domain of the variables
  */
 Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir,
-    int var_cost){
+    int var_cost, vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode){
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
@@ -29,11 +29,29 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     obl_motion_cost = obl;
     dir_motion_cost = dir;
     variety_cost = var_cost;
+    voice_types = v_types;
+    tone_offset = t_off;
+    scale = scle;
+    borrow_mode = b_mode;
+
+    //initializing the cost_factors list
+    if(splist.size()==1){ //if 2 parts
+        if(splist[0]==1){ //if the cp is of species 1
+            cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
+        }
+    } else{ //if 3 parts
+        for(int i = 0; i < splist.size(); i++){
+            if(splist[i]==1){ //if the cp is of species 1
+                cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
+            }
+        }
+    }
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
     parts.push_back(Part(*this, cf, s, l, u)); //putting the cantusFirmus in first position
     for(int i = 0; i < splist.size(); i++){
-        parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost)); //adding the counterpoints
+        parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost, voice_types[i], 
+            tone_offset, scale, b_scale, b_mode)); //adding the counterpoints
     }
 
     //lowest is the lowest stratum for each note
@@ -85,6 +103,21 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
             rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
         }
 
+        if(i > 0){
+
+            vector<IntVarArray> corresponding_m_intervals;
+
+            for(int j = 0; j < parts.size(); j++){
+                corresponding_m_intervals.push_back(parts[j].m_intervals_brut);
+            }
+
+            rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[0].is_not_lowest[i]));
+            rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[1].is_not_lowest[i]));
+            if(parts.size()==3){
+                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[2].is_not_lowest[i]));
+            }
+        }
+
     }
     /// constraints
 
@@ -96,38 +129,38 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     link_motions_arrays(*this, size, con_motion_cost, obl_motion_cost, dir_motion_cost, parts, lowest);
     
-    harmonic_intervals_consonance(*this, parts);
+    //harmonic_intervals_consonance(*this, parts);
 
-    perfect_consonance_constraints(*this, size, parts, speciesList.size());
+    //perfect_consonance_constraints(*this, size, parts, speciesList.size());
 
-    imperfect_consonances_are_preferred(*this, size, parts, costpcons);
+    //imperfect_consonances_are_preferred(*this, size, parts, costpcons);
 
-    key_tone_tuned_to_cantusfirmus(*this, size, parts);
+    //key_tone_tuned_to_cantusfirmus(*this, size, parts);
 
-    voices_cannot_play_same_note(*this, size, parts);
+    //voices_cannot_play_same_note(*this, size, parts);
 
-    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
+    //penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
 
-    no_tritonic_intervals(*this, size, costtritone, parts);
+    //no_tritonic_intervals(*this, size, costtritone, parts);
 
-    melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
+    //melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
 
-    no_direct_perfect_consonance(*this, size, parts, speciesList.size());
+    //no_direct_perfect_consonance(*this, size, parts, speciesList.size());
 
-    no_battuta(*this, size, parts);
+    //no_battuta(*this, size, parts);
 
     if(speciesList.size()==2){
 
-        no_tenth_in_last_chord(*this, size, parts, upper, lowest);
+        //no_tenth_in_last_chord(*this, size, parts, upper, lowest);
 
-        variety_cost_constraint(*this, size, parts);
+        //variety_cost_constraint(*this, size, parts);
 
-        avoid_perfect_consonances(*this, size, parts);
+        //avoid_perfect_consonances(*this, size, parts);
     }
 
-    no_same_direction(*this, size, parts, speciesList.size());
+    //no_same_direction(*this, size, parts, speciesList.size());
 
-    no_successive_ascending_sixths(*this, size, parts, speciesList.size());
+    //no_successive_ascending_sixths(*this, size, parts, speciesList.size());
     //todo add other constraints
     
 
@@ -162,6 +195,11 @@ Problem::Problem(Problem& s): Space(s){
     lowest = s.lowest;
     upper = s.upper;
     sorted_voices = s.sorted_voices;
+    voice_types = s.voice_types;
+    tone_offset = s.tone_offset;
+    scale = s.scale;
+    borrow_mode = s.borrow_mode;
+    cost_factors = s.cost_factors;
 
     parts[0].home = s.parts[0].home;
     parts[0].size = s.parts[0].size;
@@ -174,6 +212,13 @@ Problem::Problem(Problem& s): Space(s){
     parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
     parts[0].hIntervalsCpCf.update(*this, s.parts[0].hIntervalsCpCf);
     parts[0].succ_cost.update(*this, s.parts[0].succ_cost);
+    parts[0].motions.update(*this, s.parts[0].motions);
+    parts[0].motions_cost.update(*this, s.parts[0].motions_cost);
+    parts[0].isCFB.update(*this, s.parts[0].isCFB);
+
+    for(int i = 0; i < cost_factors.size(); i++){
+        cost_factors[i].update(*this, s.cost_factors[i]);
+    }
 
     for(int p = 1; p < parts.size(); p++){
         parts[p].home = s.parts[p].home;
@@ -189,6 +234,12 @@ Problem::Problem(Problem& s): Space(s){
         parts[p].obl_motion_cost = s.parts[p].obl_motion_cost;
         parts[p].dir_motion_cost = s.parts[p].dir_motion_cost;
         parts[p].variety_cost = s.parts[p].variety_cost;
+        parts[p].voice_type = s.parts[p].voice_type;
+        parts[p].tone_offset = s.parts[p].tone_offset;
+        parts[p].scale = s.parts[p].scale;
+        parts[p].borrowed_scale = s.parts[p].borrowed_scale;
+        parts[p].cp_range = s.parts[p].cp_range;
+        parts[p].union_b_scale = s.parts[p].union_b_scale;
 
         parts[p].notes.update(*this, s.parts[p].notes);
         parts[p].m_intervals.update(*this, s.parts[p].m_intervals);
@@ -332,7 +383,7 @@ string Problem::toString(){
         message += "]\n";
     }
     message += "ISCFB : [";
-    for(int k = 1; k < parts.size(); k++){
+    for(int k = 0; k < parts.size(); k++){
         message += "current values for CFB: [";
         for(int i = 0; i < size; i++){
             if (parts[k].isCFB[i].assigned())
@@ -387,7 +438,7 @@ string Problem::toString(){
         message += "]\n";
     }
     message += "MOTIONS : [";
-    for(int k = 1; k < parts.size(); k++){
+    for(int k = 0; k < parts.size(); k++){
         message += "current values for MOTIONS : [";
         for(int i = 0; i < parts[k].motions.size(); i++){
             if (parts[k].motions[i].assigned())
@@ -432,6 +483,16 @@ string Problem::toString(){
         for(int i = 0; i < size-2; i++){
             if (parts[p].succ_cost[i].assigned())
                 message += to_string(parts[p].succ_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+     message += "current values for COST_FAC : [";
+    for(int p = 0; p < cost_factors.size(); p++){
+        for(int i = 0; i < cost_factors[p].size(); i++){
+            if (cost_factors[p][i].assigned())
+                message += to_string(cost_factors[p][i].val()) + " ";
             else
                 message += "<not assigned> ";
         }
@@ -518,7 +579,7 @@ void writeToLogFile(const char* message){
         }
     }
 }
-
+/*
 string int_vector_to_string(vector<int> vector){
     string s;
     for (int i = 0; i < vector.size(); ++i) {
@@ -527,4 +588,4 @@ string int_vector_to_string(vector<int> vector){
             s += " , ";
     }
     return s;
-}
+}*/

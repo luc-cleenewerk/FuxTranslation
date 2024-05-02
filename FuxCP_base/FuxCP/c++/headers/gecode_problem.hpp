@@ -38,9 +38,13 @@ protected:
     int obl_motion_cost;
     int dir_motion_cost;
     int variety_cost;
+    int tone_offset;
+    int borrow_mode;
 
     vector<int> cantusFirmus;
     vector<int> speciesList;
+    vector<int> voice_types;
+    vector<int> scale;
 
     vector<IntVarArray> counterpoints;
     vector<IntVarArray> hIntervals;
@@ -48,6 +52,7 @@ protected:
     vector<IntVarArray> cp_m_intervals_brut;
     vector<BoolVarArray> cp_is_P_cons;
     vector<IntVarArray> sorted_voices;
+    vector<IntVarArray> cost_factors;
 
     vector<Part> parts;
 
@@ -77,7 +82,7 @@ public:
      * @param u the upper bound of the domain of the variables
      */
     Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir,
-        int var_cost);
+        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode);
 
     /**
      * Copy constructor
