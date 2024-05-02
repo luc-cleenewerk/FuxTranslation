@@ -251,8 +251,8 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts){
 }
 
 void no_same_direction(const Home &home, int size, vector<Part> parts, int n_species){
-    for(int j = 0; j < size-2; j++){
-        if(n_species==2){ //if it is 2 voices
+    if(n_species==2){ //if it is 2 voices
+        for(int j = 0; j < size-2; j++){
             //avoid direct motions
             rel(home, parts[1].motions[j]!=2&&parts[2].motions[j]!=2);
         }
@@ -260,7 +260,7 @@ void no_same_direction(const Home &home, int size, vector<Part> parts, int n_spe
 }
 
 void no_successive_ascending_sixths(const Home &home, int size, vector<Part> parts, int n_species){
-    if(n_species==2){ //if it is 3 voices
+    if(n_species==2){ //if it is 2 voices
         for(int v1=0; v1 < parts.size(); v1++){
             for(int v2=0; v2 < parts.size(); v2++){
                 if(v1!=v2){
