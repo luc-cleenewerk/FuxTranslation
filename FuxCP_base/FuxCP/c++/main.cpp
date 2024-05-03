@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     int obl = 2;
     int dir = 3;
     int var_cost = 1;
+    int tri = 1;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
     vector<int> speciesList = {1, 1};
     vector<int> voice_types = {3, 1};
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]) {
     int b_mode = 0;
     // create a new problem
     Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus, pconscst, tricst, speciesList, con, obl, dir, 
-        var_cost, voice_types, t_off, scale, b_scale, b_mode);
+        var_cost, voice_types, t_off, scale, b_scale, b_mode, tri);
 
     // create a new search engine
     Search::Base<Problem>* e = make_solver(p, bab_solver);

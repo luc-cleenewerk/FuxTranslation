@@ -15,7 +15,7 @@
  * @param u the upper bound of the domain of the variables
  */
 Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir,
-    int var_cost, vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode){
+    int var_cost, vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad){
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
@@ -33,6 +33,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     tone_offset = t_off;
     scale = scle;
     borrow_mode = b_mode;
+    h_triad_cost = triad;
 
     //initializing the cost_factors list
     if(splist.size()==1){ //if 2 parts
@@ -51,7 +52,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
     parts.push_back(Part(*this, cf, s, l, u)); //putting the cantusFirmus in first position
     for(int i = 0; i < splist.size(); i++){
         parts.push_back(Part(*this, s,l,u,species,cantusFirmus,pcost,mtricost,splist,con,obl,dir,var_cost, voice_types[i], 
-            tone_offset, scale, b_scale, b_mode)); //adding the counterpoints
+            tone_offset, scale, b_scale, b_mode, h_triad_cost)); //adding the counterpoints
     }
 
     //lowest is the lowest stratum for each note
@@ -129,38 +130,40 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     link_motions_arrays(*this, size, con_motion_cost, obl_motion_cost, dir_motion_cost, parts, lowest);
     
-    //harmonic_intervals_consonance(*this, parts);
+    harmonic_intervals_consonance(*this, parts);
 
-    //perfect_consonance_constraints(*this, size, parts, speciesList.size());
+    perfect_consonance_constraints(*this, size, parts, speciesList.size());
 
-    //imperfect_consonances_are_preferred(*this, size, parts, costpcons);
+    imperfect_consonances_are_preferred(*this, size, parts, costpcons);
 
-    //key_tone_tuned_to_cantusfirmus(*this, size, parts);
+    key_tone_tuned_to_cantusfirmus(*this, size, parts);
 
-    //voices_cannot_play_same_note(*this, size, parts);
+    voices_cannot_play_same_note(*this, size, parts);
 
-    //penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
+    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
 
-    //no_tritonic_intervals(*this, size, costtritone, parts);
+    no_tritonic_intervals(*this, size, costtritone, parts);
 
-    //melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
+    melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
 
-    //no_direct_perfect_consonance(*this, size, parts, speciesList.size());
+    no_direct_perfect_consonance(*this, size, parts, speciesList.size());
 
-    //no_battuta(*this, size, parts);
+    no_battuta(*this, size, parts);
 
     if(speciesList.size()==2){
 
-        //no_tenth_in_last_chord(*this, size, parts, upper, lowest);
+        no_tenth_in_last_chord(*this, size, parts, upper, lowest);
 
-        //variety_cost_constraint(*this, size, parts);
+        variety_cost_constraint(*this, size, parts);
 
-        //avoid_perfect_consonances(*this, size, parts);
+        avoid_perfect_consonances(*this, size, parts);
+
+        prefer_harmonic_triads(*this, size, parts);
     }
 
-    //no_same_direction(*this, size, parts, speciesList.size());
+    no_same_direction(*this, size, parts, speciesList.size());
 
-    //no_successive_ascending_sixths(*this, size, parts, speciesList.size());
+    no_successive_ascending_sixths(*this, size, parts, speciesList.size());
     //todo add other constraints
     
 
@@ -200,6 +203,7 @@ Problem::Problem(Problem& s): Space(s){
     scale = s.scale;
     borrow_mode = s.borrow_mode;
     cost_factors = s.cost_factors;
+    h_triad_cost = s.h_triad_cost;
 
     parts[0].home = s.parts[0].home;
     parts[0].size = s.parts[0].size;
@@ -240,6 +244,7 @@ Problem::Problem(Problem& s): Space(s){
         parts[p].borrowed_scale = s.parts[p].borrowed_scale;
         parts[p].cp_range = s.parts[p].cp_range;
         parts[p].union_b_scale = s.parts[p].union_b_scale;
+        parts[p].h_triad_cost = s.parts[p].h_triad_cost;
 
         parts[p].notes.update(*this, s.parts[p].notes);
         parts[p].m_intervals.update(*this, s.parts[p].m_intervals);
@@ -253,6 +258,7 @@ Problem::Problem(Problem& s): Space(s){
         parts[p].motions.update(*this, s.parts[p].motions);
         parts[p].direct_move_cost.update(*this, s.parts[p].direct_move_cost);
         parts[p].succ_cost.update(*this, s.parts[p].succ_cost);
+        parts[p].triad_costs.update(*this, s.parts[p].triad_costs);
     }
     for(int p = 0; p < sorted_voices.size(); p++){
         sorted_voices[p].update(*this, s.sorted_voices[p]);

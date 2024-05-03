@@ -40,6 +40,7 @@ protected:
     int variety_cost;
     int tone_offset;
     int borrow_mode;
+    int h_triad_cost;
 
     vector<int> cantusFirmus;
     vector<int> speciesList;
@@ -82,7 +83,7 @@ public:
      * @param u the upper bound of the domain of the variables
      */
     Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir,
-        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode);
+        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, int triad);
 
     /**
      * Copy constructor

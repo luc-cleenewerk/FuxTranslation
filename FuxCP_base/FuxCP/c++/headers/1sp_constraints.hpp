@@ -60,6 +60,8 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
 */
 void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, vector<Part> parts);
 
+void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts);
+
 /**
  * Constraint M1 : Tritone melodic intervals are forbidden
 */

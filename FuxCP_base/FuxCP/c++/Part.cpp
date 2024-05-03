@@ -4,8 +4,8 @@
 Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u):home(hme){
     home = hme;
     size = s;
-    lower_bound = (6 * voice_type - 6) + cf_notes[0];
-    upper_bound = (6 * voice_type + 12) + cf_notes[0];
+    lower_bound = l;
+    upper_bound = u;
     notes = IntVarArray(home, size, 0, 127);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
     for(int i = 0; i < size; i++){
@@ -23,7 +23,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u):home(hme)
 }
 
 Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir, 
-    int var_cost, int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode):home(hme){
+    int var_cost, int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad):home(hme){
     voice_type = v_type;
     home = hme;
     size = s;
@@ -37,6 +37,7 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     con_motion_cost = con;
     obl_motion_cost = obl;
     dir_motion_cost = dir;
+    h_triad_cost = triad;
     variety_cost = var_cost;
     tone_offset = t_off;
     scale = scle;
@@ -87,6 +88,7 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     varietyArray = IntVarArray(home, 3*(size-2), IntSet({0, variety_cost}));
     direct_move_cost = IntVarArray(home, size-2, 0, 8);
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
+    triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
 }
 
 IntVarArray Part::getNotes(){

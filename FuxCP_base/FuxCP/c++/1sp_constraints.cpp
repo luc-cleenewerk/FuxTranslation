@@ -19,7 +19,7 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
     vector<Stratum> upper){
     for(int j = 0; j < parts.size(); j++){
         for(int i = 0; i < size; i++){
-            rel(home, parts[j].hIntervalsCpCf[i] == abs(parts[j].notes[i] - lowest[0].notes[i])); //assigns the hIntervals
+            rel(home, parts[j].hIntervalsCpCf[i] == abs(parts[j].notes[i] - lowest[0].notes[i])%12); //assigns the hIntervals
         }
     }
 
@@ -275,5 +275,16 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
                 }
             }
         }
+    }
+}
+
+void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts){
+    for(int i = 0; i < size; i++){
+        rel(home, (((parts[1].notes[i]==3 || parts[1].notes[i]==4) && parts[2].notes[i]==7) || 
+            ((parts[2].notes[i]==3 || parts[2].notes[i]==4) && parts[1].notes[i]==7)) >> 
+            (parts[1].triad_costs[i]==0 && parts[2].triad_costs[i]==0));
+            rel(home, (((parts[1].notes[i]!=3 && parts[1].notes[i]!=4) || parts[2].notes[i]!=7) && 
+            ((parts[2].notes[i]!=3 && parts[2].notes[i]!=4) || parts[1].notes[i]!=7)) >> (parts[1].triad_costs[i]==parts[1].h_triad_cost && 
+            parts[2].triad_costs[i]==parts[2].h_triad_cost));
     }
 }

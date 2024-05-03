@@ -26,6 +26,7 @@ public:
     int variety_cost;
     int voice_type;
     int tone_offset;
+    int h_triad_cost;
 
     Home home;
 
@@ -53,11 +54,12 @@ public:
     IntVarArray varietyArray;
     IntVarArray direct_move_cost;
     IntVarArray succ_cost;
+    IntVarArray triad_costs;
 
     Part(const Home &sp, const vector<int> cf_notes, int s, int l, int u);
 
     Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, 
-        int dir, int var_cost, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode);
+        int dir, int var_cost, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad);
 
     IntVarArray getNotes();
 };
