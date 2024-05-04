@@ -57,13 +57,13 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
     //lowest is the lowest stratum for each note
     
-    lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
+    lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, triad));
     lowest[0].notes = IntVarArray(*this, size, l, u);
 
     //upper contains the upper strata for each note
 
     for(int j = 0; j < parts.size()-1; j++){
-        upper.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain));
+        upper.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, triad));
         upper[j].notes = IntVarArray(*this, size, l, u);
     }
 
@@ -158,7 +158,7 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtr
 
         avoid_perfect_consonances(*this, size, parts);
 
-        prefer_harmonic_triads(*this, size, parts);
+        prefer_harmonic_triads(*this, size, parts, lowest, upper);
     }
 
     no_same_direction(*this, size, parts, speciesList.size());
@@ -268,22 +268,26 @@ Problem::Problem(Problem& s): Space(s){
     lowest[0].size = s.lowest[0].size;
     lowest[0].lower_bound = s.lowest[0].lower_bound;
     lowest[0].upper_bound = s.lowest[0].upper_bound;
+    lowest[0].h_triad_cost = s.lowest[0].h_triad_cost;
     lowest[0].hIntervalsBrut.update(*this, s.lowest[0].hIntervalsBrut);
     lowest[0].hIntervalsAbs.update(*this, s.lowest[0].hIntervalsAbs);
     lowest[0].notes.update(*this, s.lowest[0].notes);
     lowest[0].hIntervals.update(*this, s.lowest[0].hIntervals);
     lowest[0].m_intervals_brut.update(*this, s.lowest[0].m_intervals_brut);
+    lowest[0].triad_costs.update(*this, s.lowest[0].triad_costs);
 
     for(int p = 0; p < upper.size(); p++){
         upper[p].home = s.upper[p].home;
         upper[p].size = s.upper[p].size;
         upper[p].lower_bound = s.upper[p].lower_bound;
         upper[p].upper_bound = s.upper[p].upper_bound;
+        upper[p].h_triad_cost = s.upper[p].h_triad_cost;
 
         upper[p].hIntervals.update(*this, s.upper[p].hIntervals);
         upper[p].notes.update(*this, s.upper[p].notes);
         upper[p].hIntervalsBrut.update(*this, s.upper[p].hIntervalsBrut);
         upper[p].hIntervalsAbs.update(*this, s.upper[p].hIntervalsAbs);
+        upper[p].triad_costs.update(*this, s.upper[p].triad_costs);
     }
 }
 
@@ -484,11 +488,21 @@ string Problem::toString(){
         }
     }
     message += "]\n";
-    message += "current values for succ cost : [";
+    message += "current values for succ_cost : [";
     for(int p = 0; p < parts.size(); p++){
         for(int i = 0; i < size-2; i++){
             if (parts[p].succ_cost[i].assigned())
                 message += to_string(parts[p].succ_cost[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+    }
+    message += "]\n";
+    message += "current values for TRIAD : [";
+    for(int p = 0; p < upper.size(); p++){
+        for(int i = 0; i < size; i++){
+            if (upper[p].triad_costs[i].assigned())
+                message += to_string(upper[p].triad_costs[i].val()) + " ";
             else
                 message += "<not assigned> ";
         }
@@ -504,6 +518,14 @@ string Problem::toString(){
         }
     }
     message += "]\n";
+    message += "current values for LOWEST BRUT: [";
+        for(int i = 0; i < size; i++){
+            if (lowest[0].hIntervalsAbs[i].assigned())
+                message += to_string(lowest[0].hIntervalsAbs[i].val()) + " ";
+            else
+                message += "<not assigned> ";
+        }
+        message += "]\n";
     message += "UPPER BRUT : [";
     for(int k = 0; k < upper.size(); k++){
         message += "current values for UPPER BRUT: [";

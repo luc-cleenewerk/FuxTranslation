@@ -25,7 +25,9 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
 
     for(int p = 0; p < parts.size()-1; p++){
         for(int i = 0; i < size; i++){
-            rel(home, expr(home, lowest[0].notes[i]-upper[p].notes[i]), IRT_EQ, upper[p].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
+            rel(home, expr(home, (lowest[0].notes[i]-lowest[0].notes[i])%12), IRT_EQ, lowest[0].hIntervalsBrut[i]);
+            abs(home, lowest[0].hIntervalsBrut[i], lowest[0].hIntervalsAbs[i]);
+            rel(home, expr(home, (lowest[0].notes[i]-upper[p].notes[i])%12), IRT_EQ, upper[p].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
             abs(home, upper[p].hIntervalsBrut[i], upper[p].hIntervalsAbs[i]); //also creates the absolute hInterval
         }
     }
@@ -278,13 +280,15 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
     }
 }
 
-void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts){
-    for(int i = 0; i < size; i++){
-        rel(home, (((parts[1].notes[i]==3 || parts[1].notes[i]==4) && parts[2].notes[i]==7) || 
-            ((parts[2].notes[i]==3 || parts[2].notes[i]==4) && parts[1].notes[i]==7)) >> 
-            (parts[1].triad_costs[i]==0 && parts[2].triad_costs[i]==0));
-            rel(home, (((parts[1].notes[i]!=3 && parts[1].notes[i]!=4) || parts[2].notes[i]!=7) && 
-            ((parts[2].notes[i]!=3 && parts[2].notes[i]!=4) || parts[1].notes[i]!=7)) >> (parts[1].triad_costs[i]==parts[1].h_triad_cost && 
-            parts[2].triad_costs[i]==parts[2].h_triad_cost));
+void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper){
+    for(int p = 0; p < upper.size(); p++){
+        for(int i = 0; i < size; i++){
+            rel(home, (((lowest[0].hIntervalsAbs[i]==3 || lowest[0].hIntervalsAbs[i]==4) && upper[p].hIntervalsAbs[i]==7) || 
+                ((upper[p].hIntervalsAbs[i]==3 || upper[p].hIntervalsAbs[i]==4) && lowest[0].hIntervalsAbs[i]==7)) >> 
+                (upper[p].triad_costs[i]==0));
+                rel(home, (((lowest[0].hIntervalsAbs[i]!=3 && lowest[0].hIntervalsAbs[i]!=4) || upper[p].hIntervalsAbs[i]!=7) && 
+                ((upper[p].hIntervalsAbs[i]!=3 && upper[p].hIntervalsAbs[i]!=4) || lowest[0].hIntervalsAbs[i]!=7)) >> 
+                (upper[p].triad_costs[i]==upper[p].h_triad_cost));
+        }
     }
 }
