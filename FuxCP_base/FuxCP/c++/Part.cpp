@@ -23,7 +23,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u):home(hme)
 }
 
 Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir, 
-    int var_cost, int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad):home(hme){
+    int var_cost, int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off):home(hme){
     voice_type = v_type;
     home = hme;
     size = s;
@@ -43,6 +43,16 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     scale = scle;
     borrowed_scale = b_scale;
 
+    step_cost = 0;
+    third_cost = 1;
+    octave_cost = 1;
+    fourth_cost = 2;
+    tritone_cost = 2;
+    fifth_cost = 2;
+    sixth_cost = 2;
+    seventh_cost = 2;
+    
+
     //cp_range : WORKS
     //extended : INVERTED BUT SHOULD WORK THE SAME
     
@@ -61,6 +71,10 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     }
     
     const vector<int> extended = intersection(cp_range, union_b_scale);
+
+    const vector<int> off_key = intersection(cp_range, off);
+
+    off_scale = off_key;
 
     /// variable initialization todo depends on the species
     notes = IntVarArray(home, size, IntSet(extended));
@@ -89,6 +103,21 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     direct_move_cost = IntVarArray(home, size-2, 0, 8);
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
+    is_off = BoolVarArray(home, size, 0, 1 );
+    off_costs = IntVarArray(home, size, 0, 1); //cost here is 1 for now
+    m_degrees_cost = IntVarArray(home, size, IntSet({0,1,2}));
+    fifth_costs = IntVarArray(home, size, IntSet(0,1));
+    octave_costs = IntVarArray(home, size, IntSet(0,1));
+
+    for(int i = 0; i < size; i++){
+        BoolVar memb = BoolVar(home, 0, 1);
+        for(int k = 0; k < off_scale.size(); k++){
+            rel(home, notes[i], IRT_EQ, off_scale[k], Reify(memb));
+        }
+        rel(home, is_off[i]==memb);
+    }
+
+
 }
 
 IntVarArray Part::getNotes(){

@@ -27,6 +27,14 @@ public:
     int voice_type;
     int tone_offset;
     int h_triad_cost;
+    int step_cost;
+    int third_cost;
+    int fourth_cost;
+    int tritone_cost;
+    int fifth_cost;
+    int sixth_cost;
+    int seventh_cost;
+    int octave_cost;
 
     Home home;
 
@@ -36,6 +44,7 @@ public:
     vector<int> borrowed_scale;
     vector<int> cp_range;
     vector<int> union_b_scale;
+    vector<int> off_scale;
 
     IntVarArray notes; 
     IntVarArray hIntervalsCpCf;
@@ -55,11 +64,16 @@ public:
     IntVarArray direct_move_cost;
     IntVarArray succ_cost;
     IntVarArray triad_costs;
+    BoolVarArray is_off;
+    IntVarArray off_costs;
+    IntVarArray m_degrees_cost;
+    IntVarArray fifth_costs;
+    IntVarArray octave_costs;
 
     Part(const Home &sp, const vector<int> cf_notes, int s, int l, int u);
 
     Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, 
-        int dir, int var_cost, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad);
+        int dir, int var_cost, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off);
 
     IntVarArray getNotes();
 };

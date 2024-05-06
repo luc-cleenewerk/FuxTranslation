@@ -25,7 +25,7 @@ enum {
 /*****************
  * Problem class *
  *****************/
-class Problem: public Space {
+class Problem: public IntLexMinimizeSpace {
 protected:
     /// Input data
     int size;                       // The size of the variable array of interest
@@ -41,11 +41,15 @@ protected:
     int tone_offset;
     int borrow_mode;
     int h_triad_cost;
+    int n_unique_costs;
+
+    unordered_map<string, int> prefs;
 
     vector<int> cantusFirmus;
     vector<int> speciesList;
     vector<int> voice_types;
     vector<int> scale;
+    vector<string> cost_names;
 
     vector<IntVarArray> counterpoints;
     vector<IntVarArray> hIntervals;
@@ -54,11 +58,13 @@ protected:
     vector<BoolVarArray> cp_is_P_cons;
     vector<IntVarArray> sorted_voices;
     vector<IntVarArray> cost_factors;
-
+    IntVarArray ordered_factors;
     vector<Part> parts;
 
     vector<Stratum> upper;
     vector<Stratum> lowest;
+
+    vector<vector<string>> ordered_costs;
  
     /// variables
     IntVarArray cp;                 // The variables for the counterpoint
@@ -73,6 +79,9 @@ protected:
     IntVarArray motions_cost;
     BoolVarArray is_P_cons;
 
+    IntVarArray vars;
+    IntVarArray solution_array;
+
 public:
     /**
      * Constructor
@@ -83,7 +92,8 @@ public:
      * @param u the upper bound of the domain of the variables
      */
     Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir,
-        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, int triad);
+        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, int triad, vector<int> off, 
+        unordered_map<string, int>);
 
     /**
      * Copy constructor
@@ -109,14 +119,16 @@ public:
      * Copy method
      * @return a copy of the current instance of the Problem class. Calls the copy constructor
      */
-    virtual Space *copy(void);
+    virtual IntLexMinimizeSpace *copy(void);
 
     /**
      * Constrain method for bab search
      * @todo modify this function if you want to use branch and bound
      * @param _b a space to constrain the current instance of the Problem class with upon finding a solution
      */
-    virtual void constrain(const Space& _b);
+    virtual void constrain(const IntLexMinimizeSpace& _b);
+
+    virtual IntVarArgs cost(void) const;
 
     /**
      * Prints the solution in the console

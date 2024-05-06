@@ -101,12 +101,14 @@ void perfect_consonance_constraints(const Home &home, int size, vector<Part> par
     }
 }
 
-void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, int costpcons){
+void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, int costpcons, IntVarArray P_cons){
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size; i++){
             //the two constraints set the cost : if it is either a unisson or a perfect fifth, the cost is set. else, it is 0
-            rel(home, (parts[p].hIntervalsCpCf[i]==UNISSON || parts[p].hIntervalsCpCf[i]==PERFECT_FIFTH) >> (parts[p].P_cons_cost[i]==costpcons));
-            rel(home, (parts[p].hIntervalsCpCf[i]!=UNISSON && parts[p].hIntervalsCpCf[i]!=PERFECT_FIFTH) >> (parts[p].P_cons_cost[i]==0));
+            rel(home, (parts[p].hIntervalsCpCf[i]==UNISSON) >> (parts[p].octave_costs[i]==1));
+            rel(home, (parts[p].hIntervalsCpCf[i]==PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==1));
+            rel(home, (parts[p].hIntervalsCpCf[i]!=UNISSON) >> (parts[p].octave_costs[i]==0));
+            rel(home, (parts[p].hIntervalsCpCf[i]!=PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==0));
         }
     }
 }
@@ -289,6 +291,30 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
                 rel(home, (((lowest[0].hIntervalsAbs[i]!=3 && lowest[0].hIntervalsAbs[i]!=4) || upper[p].hIntervalsAbs[i]!=7) && 
                 ((upper[p].hIntervalsAbs[i]!=3 && upper[p].hIntervalsAbs[i]!=4) || lowest[0].hIntervalsAbs[i]!=7)) >> 
                 (upper[p].triad_costs[i]==upper[p].h_triad_cost));
+        }
+    }
+}
+
+void set_off_costs(const Home &home, int size, vector<Part> parts){
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size; i++){
+            rel(home, (parts[p].is_off[i]==1) >> (parts[p].off_costs[i]==1));
+            rel(home, (parts[p].is_off[i]==0) >> (parts[p].off_costs[i]==0));
+        }
+    }
+}
+
+void set_step_costs(const Home &home, int size, vector<Part> parts){
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            rel(home, (parts[p].m_intervals[i]<3) >> (parts[p].m_degrees_cost[i]==parts[p].step_cost));
+            rel(home, (parts[p].m_intervals[i]==3 || parts[p].m_intervals[i]==4) >> (parts[p].m_degrees_cost[i]==parts[p].third_cost));
+            rel(home, (parts[p].m_intervals[i]==5) >> (parts[p].m_degrees_cost[i]==parts[p].fourth_cost));
+            rel(home, (parts[p].m_intervals[i]==6) >> (parts[p].m_degrees_cost[i]==parts[p].tritone_cost));
+            rel(home, (parts[p].m_intervals[i]==7) >> (parts[p].m_degrees_cost[i]==parts[p].fifth_cost));
+            rel(home, (parts[p].m_intervals[i]==8 || parts[p].m_intervals[i]==9) >> (parts[p].m_degrees_cost[i]==parts[p].sixth_cost));
+            rel(home, (parts[p].m_intervals[i]==10 || parts[p].m_intervals[i]==11) >> (parts[p].m_degrees_cost[i]==parts[p].seventh_cost));
+            rel(home, (parts[p].m_intervals[i]==12) >> (parts[p].m_degrees_cost[i]==parts[p].octave_cost));
         }
     }
 }
