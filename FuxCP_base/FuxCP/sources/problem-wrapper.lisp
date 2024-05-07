@@ -91,3 +91,6 @@
         )
     )
 )
+
+
+(print "finished loading gecode-wrapper")

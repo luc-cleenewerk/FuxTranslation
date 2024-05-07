@@ -286,7 +286,7 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
             rel(home, (((lowest[0].hIntervalsAbs[i]==3 || lowest[0].hIntervalsAbs[i]==4) && upper[p].hIntervalsAbs[i]==7) || 
                 ((upper[p].hIntervalsAbs[i]==3 || upper[p].hIntervalsAbs[i]==4) && lowest[0].hIntervalsAbs[i]==7)) >> 
                 (upper[p].triad_costs[i]==0));
-                rel(home, (((lowest[0].hIntervalsAbs[i]!=3 && lowest[0].hIntervalsAbs[i]!=4) || upper[p].hIntervalsAbs[i]!=7) && 
+            rel(home, (((lowest[0].hIntervalsAbs[i]!=3 && lowest[0].hIntervalsAbs[i]!=4) || upper[p].hIntervalsAbs[i]!=7) && 
                 ((upper[p].hIntervalsAbs[i]!=3 && upper[p].hIntervalsAbs[i]!=4) || lowest[0].hIntervalsAbs[i]!=7)) >> 
                 (upper[p].triad_costs[i]==upper[p].h_triad_cost));
         }
