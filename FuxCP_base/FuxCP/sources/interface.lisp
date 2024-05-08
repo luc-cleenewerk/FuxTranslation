@@ -54,6 +54,8 @@
 ; To access the melodizer object, (om::object self)
 (defmethod initialize-instance ((self params-editor) &rest args)
     ;;; do what needs to be done by default
+    (print "hi from initialize-instance")
+    (print (test-cffi 3))
     (call-next-method) ; start the search by default?
     (make-interface self)
 )
@@ -558,7 +560,7 @@
                 ;; (print species-integer-list)
                 ;; (error "pipou")
                 (setf *voices-types (convert-to-voice-integer-list (voice-type-param (om::object editor))))
-                (setf (current-csp (om::object editor)) (fux-cp species-integer-list))
+                (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
             )
 

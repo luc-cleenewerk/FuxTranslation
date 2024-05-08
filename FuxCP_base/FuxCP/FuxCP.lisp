@@ -23,9 +23,8 @@
 )
        
 
-
-(compile&load (make-pathname :directory (pathname-directory *fuxcp-sources-dir*) :name "problem-wrapper" :type "lisp"))
 (compile&load (make-pathname :directory (pathname-directory *fuxcp-sources-dir*) :name "package" :type "lisp"))
+(compile&load (make-pathname :directory (pathname-directory *fuxcp-sources-dir*) :name "problem-wrapper" :type "lisp"))
 (compile&load (make-pathname :directory (pathname-directory *fuxcp-sources-dir*) :name "interface" :type "lisp"))
 
 

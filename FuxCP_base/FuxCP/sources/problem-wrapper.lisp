@@ -3,6 +3,7 @@
    (:use common-lisp :cl-user :cl :cffi))
 
 (in-package :gilf)
+(in-package :fuxcp)
 
 (print "Loading gecode-wrapper...")
 
@@ -20,6 +21,8 @@
 ;; Problem methods ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+
+;; This function is used to convert lisp lists into int pointers so they can be passed to c++
 (defun new-ctp-problem (lb ub sp cf pc mtc spl con obl dir var)
     (let (
         (x (cffi::foreign-alloc :int :initial-contents cf))
@@ -49,6 +52,11 @@
 (cffi::defcfun ("get_size" get-size) :int
     "Returns the size of the space."
     (sp :pointer) ; a void* cast of a Problem*
+)
+
+(cffi::defcfun ("test_cffi" test-cffi) :int
+    "Returns n+1."
+    (n :int) ; an integer
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;

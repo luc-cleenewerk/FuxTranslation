@@ -25,6 +25,8 @@ void* create_new_problem(int size, int lower_bound_domain, int upper_bound_domai
  */
 int get_size(void* sp);
 
+int test_cffi(int n);
+
 /**
  * returns the values of the variables for a solution
  * @param sp a void* pointer to a Problem object
