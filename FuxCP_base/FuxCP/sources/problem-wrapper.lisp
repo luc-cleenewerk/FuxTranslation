@@ -59,6 +59,20 @@
     (n :int) ; an integer
 )
 
+;; ;; try passing hashmaps to c++
+;; (cffi:defcfunction my-cpp-function
+;;     (:arguments (params :pointer)
+;;                 (cost-preferences :pointer))
+;;     (:return-type :void)
+;;     (:name "my_cpp_function"))
+
+
+(cffi::defcfun ("test_hashmap_cffi" test-hashmap-cffi) :int
+    "trying to give a hashmap to c++"
+    (params           :pointer)
+    (cost-preferences :pointer)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search engine methods ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;

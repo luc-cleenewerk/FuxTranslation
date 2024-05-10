@@ -560,6 +560,16 @@
                 ;; (print species-integer-list)
                 ;; (error "pipou")
                 (setf *voices-types (convert-to-voice-integer-list (voice-type-param (om::object editor))))
+
+                ;; Call the CFFI function with marshaled data
+                (print "calling cffi with hashmaps")
+                (let ((params *params*)
+                    (cost-preferences *cost-preferences*))
+                    (multiple-value-bind (params-ptr cost-pref-ptr)
+                        (marshal-hash-maps params cost-preferences)
+                        (my-cpp-function params-ptr cost-pref-ptr)))
+
+
                 (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
             )
@@ -810,3 +820,119 @@
     ; *N-COUNTERPOINTS is the number of counterpoints in the counterpoint
     (defparameter *N-COUNTERPOINTS -1) ; will be defined when parsing the input
 )
+
+; return the tone offset of the voice
+; => [0, ...,  11]
+; 0 = C, 1 = C#, 2 = D, 3 = D#, 4 = E, 5 = F, 6 = F#, 7 = G, 8 = G#, 9 = A, 10 = A#, 11 = B
+(defun get-tone-offset (voice)
+    (let (
+        (tone (om::tonalite voice))
+    )
+        (if (eq tone nil)
+            ; then default to C major
+            0
+            ; else check if the mode is major or minor
+            (let (
+                (mode (om::mode tone))
+            )
+                (if (eq (third mode) 300)
+                    (midicent-to-midi-offset (+ (om::tonmidi tone) 300))
+                    (midicent-to-midi-offset (om::tonmidi tone))
+                )
+            )
+        )
+    )
+)
+
+
+; build the list of acceptable pitch based on the scale and a key offset
+(defun build-scaleset (scale offset)
+    (let ((major-modified (adapt-scale scale))
+          (scaleset (list)))
+        (loop :for octave :from -1 :below 11 :by 1 append
+              (setq scaleset (nconc scaleset (mapcar (lambda (n) (+ (+ n (* octave 12)) offset)) major-modified)))
+        )
+        (setq scaleset (remove-if 'minusp scaleset))
+        ;; tibo: remove notes higher than 127
+        (setq scaleset (remove 127 scaleset :test #'<))
+    )
+)
+
+; reformat a scale to be a canvas of pitch and not intervals
+(defun adapt-scale (scale)
+    (let ((major-modified (list (first scale))))
+         (loop :for i :from 1 :below (length scale) :by 1 :do
+            (setq major-modified (nconc major-modified (list (+ (nth i scale) (nth (- i 1) major-modified)))))
+         )
+    (return-from adapt-scale major-modified)
+    )
+)
+
+; returns the list of intervals defining a given mode
+(defun get-scale (&optional (mode "ionian (major)"))
+    (cond
+        ((string-equal mode "ionian (major)")
+            (list 2 2 1 2 2 2 1)
+        )
+        ((string-equal mode "dorian")
+            (list 2 1 2 2 2 1 2)
+        )
+        ((string-equal mode "phrygian")
+            (list 1 2 2 2 1 2 2)
+        )
+        ((string-equal mode "lydian")
+            (list 2 2 2 1 2 2 1)
+        )
+        ((string-equal mode "mixolydian")
+            (list 2 2 1 2 2 1 2)
+        )
+        ((string-equal mode "aeolian (natural minor)")
+            (list 2 1 2 2 1 2 2)
+        )
+        ((string-equal mode "locrian")
+            (list 1 2 2 1 2 2 2)
+        )
+        ((string-equal mode "harmonic minor")
+            (list 2 1 2 2 1 3 1)
+        )
+        ((string-equal mode "pentatonic")
+            (list 2 2 3 2 3)
+        )
+        ((string-equal mode "chromatic")
+            (list 1 1 1 1 1 1 1 1 1 1 1 1)
+        )
+        ((string-equal mode "borrowed")
+            (list 5 4 2 1)
+        )
+    )
+)
+
+; <chords> a list of chord object
+; Return the list of pitch contained in chords in midi format
+(defun to-pitch-list (chords)
+     (loop :for n :from 0 :below (length chords) :by 1 collect (to-midi (om::lmidic (nth n chords))))
+)
+
+; convert from MIDIcent to MIDI
+(defun to-midi (l)
+    (if (null l)
+        nil
+        (cons (/ (first l) 100) (to-midi (rest l)))
+    )
+)
+
+
+;; Define function to marshal Lisp hash maps to C++ unordered_map pointers
+(defun marshal-hash-maps (params cost-preferences)
+    (let ((params-ptr (cffi:foreign-alloc :pointer))
+          (cost-pref-ptr (cffi:foreign-alloc :pointer)))
+        (cffi:with-foreign-object (params-hash '(:hash-table :test string=))
+            (cffi:with-foreign-object (cost-hash '(:hash-table :test string=))
+                ;; Populate params-hash and cost-hash from Lisp hash maps
+                ;; Code for populating hash maps goes here
+                ;; ...
+                ;; Assign pointers to foreign memory
+                (setf (cffi:foreign-pointer params-hash) params-ptr)
+                (setf (cffi:foreign-pointer cost-hash) cost-pref-ptr)
+                ;; Return pointers to foreign memory
+                (values params-ptr cost-pref-ptr)))))
