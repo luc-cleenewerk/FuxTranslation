@@ -34,6 +34,29 @@ int test_cffi(int n){
     return n+1;
 }
 
+# include <iostream>
+# include <unordered_map>
+
+int test_hashmap_cffi(std::unordered_map<std::string, int> params,
+                     std::unordered_map<std::string, int> cost_preferences) {
+    // Your C++ code here
+    // Access the map elements using params["key"] or cost_preferences["key"]
+    // For demonstration, just print the elements
+    // Construct message string
+    string message = "Params:\n";
+    for (const auto& pair : params) {
+        message += pair.first + ": " + std::to_string(pair.second) + "\n";
+    }
+    message += "Cost Preferences:\n";
+    for (const auto& pair : cost_preferences) {
+        message += pair.first + ": " + std::to_string(pair.second) + "\n";
+    }
+
+    // Write message to log file
+    writeToLogFile(message.c_str());
+    return 0;
+}
+
 /**
  * returns the values of the variables for a solution
  * @param sp a void* pointer to a Problem object
