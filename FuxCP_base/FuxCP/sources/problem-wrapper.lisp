@@ -43,6 +43,13 @@
     (obl-motion-cost    :int)
     (dir-motion-cost    :int)
     (variety-cost       :int)
+    (voice-type         :pointer :int)
+    (offset             :int)
+    (scale              :pointer :int)
+    (borrow             :pointer :int)
+    (borrow-mode        :int)
+    (tri-cost           :int)
+    (off-scale          :pointer :int)
     ; TODO add here any additional arguments that your Problem constructor takes
 )
 

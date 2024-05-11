@@ -12,10 +12,17 @@
  * @return A pointer to a Problem object casted as a void*
  */
 void* create_new_problem(int size, int lower_bound_domain, int upper_bound_domain, int species, int* cantusFirmus, int pcost, int mtricost, 
-    int* splist, int con, int obl, int dir, int var_cost){
+    int* splist, int con, int obl, int dir, int var_cost, int* voice_type, int offset, int* scale, int* borrowed, 
+    int borrow_mode, int tri_cost, int* off_scale){
     vector<int> cf(int_pointer_to_vector(cantusFirmus, size));
     vector<int> sp(int_pointer_to_vector(splist, sizeof(splist)));
-    return (void*) new Problem(size, lower_bound_domain, upper_bound_domain, species, cf, pcost, mtricost, sp, con, obl, dir, var_cost);
+    vector<int> vt(int_pointer_to_vector(voice_type, sizeof(voice_type)));
+    vector<int> scle(int_pointer_to_vector(scale, sizeof(scale)));
+    vector<int> brw(int_pointer_to_vector(borrowed, sizeof(borrowed)));
+    vector<int> ofscle(int_pointer_to_vector(off_scale, sizeof(off_scale)));
+    unordered_map<string, int> pr = {{"fifth", 7},{"borrow", 8},{"octave", 5},{"succ", 2},{"variety", 9},{"triad", 3},{"motion", 12},{"melodic", 13}};
+    return (void*) new Problem(size, lower_bound_domain, upper_bound_domain, species, cf, pcost, mtricost, sp, con, obl, dir, var_cost, 
+        vt, offset, scle, brw, borrow_mode, tri_cost, ofscle, pr);
 }
 
 /**
