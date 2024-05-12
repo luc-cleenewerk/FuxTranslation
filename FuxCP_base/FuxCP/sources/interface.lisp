@@ -56,6 +56,7 @@
     ;;; do what needs to be done by default
     (print "hi from initialize-instance")
     (print (test-cffi 3))
+    (print (test-cffi 3))
     (call-next-method) ; start the search by default?
     (make-interface self)
 )
@@ -502,73 +503,179 @@
                     (cf-voice (om::object editor))
                     (borrow-mode-param (om::object editor))
                 )
-                (defparameter *params* (make-hash-table))
-                ;; set melodic parameters
-                (dolist (subcost melodic-subcosts)
-                    (setparam-cost (getf subcost :param) (getf subcost :value))
-                )
+                ;; (defparameter *params* (make-hash-table))
+                ;; ;; set melodic parameters
+                ;; (dolist (subcost melodic-subcosts)
+                ;;     (setparam-cost (getf subcost :param) (getf subcost :value))
+                ;; )
 
-                ;; set general costs
+                ;; ;; set general costs
+                ;; (dolist (cost general-preferences)
+                ;;     (if (equal (getf cost :param) 'motions-cost)
+                ;;         nil ; motions-cost is treated by the subcosts
+                ;;         (if (equal (getf cost :param) 'penult-rule-check)
+                ;;             (setparam-yes-no (getf cost :param) (getf cost :value)) ; penult-rule-check is a yes no
+                ;;             (setparam-cost (getf cost :param) (getf cost :value)) ; else
+                ;;         )
+                ;;     )
+                ;; )
+
+                ;; ;; set motions costs
+                ;; (dolist (subcost motion-subcosts)
+                ;;     (setparam-cost (getf subcost :param) (getf subcost :value))
+                ;; )
+
+                ;; ;; set species specific costs
+                ;; (dolist (cost specific-preferences)
+                ;;     (if (equal (getf cost :param) 'pref-species-slider)
+                ;;         (setparam-slider (getf cost :param) (getf cost :value)) ; it is a slider
+                ;;         (if (equal (getf cost :param) 'con-m-after-skip-check)
+                ;;             (setparam-yes-no (getf cost :param) (getf cost :value)) ; it is a yes-no
+                ;;             (setparam-cost (getf cost :param) (getf cost :value)) ; else
+                ;;         ) 
+                ;;     )
+                ;; )
+
+                ;; ;; set search parameters
+                ;; (setparam-slider 'min-skips-slider (min-skips-slider-param (om::object editor)))
+                ;; (setparam 'borrow-mode (borrow-mode-param (om::object editor)))
+
+
+                ;; ;; preferences for the cost order
+                ;; (defparameter *cost-preferences* (make-hash-table))
+                ;; (dolist (current-list (list general-preferences specific-preferences melodic-preferences))
+                ;;     (dolist (cost current-list)
+                ;;         (if (getf cost :importance)
+                ;;             (setf (gethash (getf cost :param) *cost-preferences*) (getf cost :importance))
+                ;;         )   
+                ;;     )
+                ;; )
+
+                ;; (if (string= "Linear combination" (linear-combination (om::object editor))) 
+                ;;     (setf *linear-combination t)
+                ;;     (setf *linear-combination nil)
+                ;; )
+
+                (defvar melodic-params-list nil)
+                (defvar melodic-values-list nil)
+                (setq melodic-params-list nil)
+                (setq melodic-values-list nil)
+
+                (dolist (subcost melodic-subcosts)
+                    (setq melodic-params-list (append melodic-params-list (list (getf subcost :param))))
+                    (setq melodic-values-list (append melodic-values-list (list (convert-to-cost-integer (getf subcost :value))))))
+
+                (print "melodic lists params then values: ")
+                (print melodic-params-list)
+                (print melodic-values-list)
+                (print (length melodic-values-list))
+
+
+                (defvar general-params-list nil)
+                (defvar general-values-list nil)
+                (setq general-params-list nil)
+                (setq general-values-list nil)
+
                 (dolist (cost general-preferences)
                     (if (equal (getf cost :param) 'motions-cost)
                         nil ; motions-cost is treated by the subcosts
                         (if (equal (getf cost :param) 'penult-rule-check)
-                            (setparam-yes-no (getf cost :param) (getf cost :value)) ; penult-rule-check is a yes no
-                            (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                        )
-                    )
-                )
+                            (progn ; Use progn to group multiple expressions
+                                (setq general-params-list (append general-params-list (list (getf cost :param))))
+                                (setq general-values-list (append general-values-list (list (convertparam-yes-no (getf cost :value)))))) ; penult-rule-check is a yes no
+                            (progn ; Use progn to group multiple expressions
+                                (setq general-params-list (append general-params-list (list (getf cost :param))))
+                                (setq general-values-list (append general-values-list (list (convert-to-cost-integer (getf cost :value))))))))) ; else
 
-                ;; set motions costs
+                (print "general lists params then values: ")
+                (print general-params-list)
+                (print general-values-list)
+                (print (length general-values-list))
+
+
+                (defvar motion-params-list nil)
+                (defvar motion-values-list nil)
+                (setq motion-params-list nil)
+                (setq motion-values-list nil)
+
                 (dolist (subcost motion-subcosts)
-                    (setparam-cost (getf subcost :param) (getf subcost :value))
-                )
+                    (setq motion-params-list (append motion-params-list (list (getf subcost :param))))
+                    (setq motion-values-list (append motion-values-list (list (convert-to-cost-integer (getf subcost :value))))))
 
-                ;; set species specific costs
+                (print "motion lists params then values: ")
+                (print motion-params-list)
+                (print motion-values-list)
+                (print (length motion-values-list))
+
+
+                (defvar specific-params-list nil)
+                (defvar specific-values-list nil)
+                (setq specific-params-list nil)
+                (setq specific-values-list nil)
+
                 (dolist (cost specific-preferences)
                     (if (equal (getf cost :param) 'pref-species-slider)
-                        (setparam-slider (getf cost :param) (getf cost :value)) ; it is a slider
+                        (progn ; Use progn to group multiple expressions
+                            (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                            (setq specific-values-list (append specific-values-list (list (getf cost :value))))) ; slider
                         (if (equal (getf cost :param) 'con-m-after-skip-check)
-                            (setparam-yes-no (getf cost :param) (getf cost :value)) ; it is a yes-no
-                            (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                        ) 
-                    )
-                )
+                            (progn ; Use progn to group multiple expressions
+                                (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                                (setq specific-values-list (append specific-values-list (list (convertparam-yes-no (getf cost :value)))))) ; con-m-after-skip-check is a yes no
+                            (progn ; Use progn to group multiple expressions
+                                (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                                (setq specific-values-list (append specific-values-list (list (convert-to-cost-integer (getf cost :value))))))))) ; else
 
-                ;; set search parameters
-                (setparam-slider 'min-skips-slider (min-skips-slider-param (om::object editor)))
-                (setparam 'borrow-mode (borrow-mode-param (om::object editor)))
+                (print "specific lists params then values: ")
+                (print specific-params-list)
+                (print specific-values-list)
+                (print (length specific-values-list))
 
+
+
+                (defvar cost-params-list nil)
+                (defvar cost-values-list nil)
+                (setq cost-params-list nil)
+                (setq cost-values-list nil)
 
                 ;; preferences for the cost order
                 (defparameter *cost-preferences* (make-hash-table))
                 (dolist (current-list (list general-preferences specific-preferences melodic-preferences))
                     (dolist (cost current-list)
                         (if (getf cost :importance)
-                            (setf (gethash (getf cost :param) *cost-preferences*) (getf cost :importance))
+                            (progn ; 
+                                (setq cost-params-list (append cost-params-list (list (getf cost :name))))
+                                (setq cost-values-list (append cost-values-list (list (parse-integer (getf cost :importance))))))
                         )   
                     )
                 )
 
-                (if (string= "Linear combination" (linear-combination (om::object editor))) 
-                    (setf *linear-combination t)
-                    (setf *linear-combination nil)
-                )
+                (print "cost name then values: ")
+                (print cost-params-list)
+                (print cost-values-list)
+                (print (length cost-values-list))
 
-                
+
+                (setf borrow-mode-int (map-mode-to-int (borrow-mode-param (om::object editor))))
+                (setf min-skips-slider (min-skips-slider-param (om::object editor)))
+
+                (print (borrow-mode-param (om::object editor)))
+                (print (map-mode-to-int (borrow-mode-param (om::object editor))))
+                (print borrow-mode-int)
+                (print min-skips-slider)
+
                 (setf species-integer-list (convert-to-species-integer-list (species-param (om::object editor))))
                 ;; (print species-integer-list)
                 ;; (error "pipou")
                 (setf *voices-types (convert-to-voice-integer-list (voice-type-param (om::object editor))))
+                
+                (print species-integer-list)
+                (print *voices-types)
 
-                ;; Call the CFFI function with marshaled data
-                (print "calling cffi with hashmaps")
-                (let ((params *params*)
-                    (cost-preferences *cost-preferences*))
-                    (multiple-value-bind (params-ptr cost-pref-ptr)
-                        (marshal-hash-maps params cost-preferences)
-                        (my-cpp-function params-ptr cost-pref-ptr)))
+                (print "calling new problem")
+                ;; (new-ctp-problem 0 5 1 *cf 0 0 (list 11 1 2 3 4 5 6 7 8 9 10 11 12 1777) 0 0 0 0)
 
+                (new-ctp-problem *cf species-integer-list *voices-types borrow-mode-int min-skips-slider general-values-list motion-values-list melodic-values-list specific-values-list cost-values-list *tonalite-offset *scale *chromatic-scale *borrowed-scale)
 
                 (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
@@ -921,18 +1028,19 @@
     )
 )
 
+(defun map-mode-to-int (mode)
+  (cond
+    ((equal mode "None") 0)
+    ((equal mode "Major") 1)
+    ((equal mode "Minor") 2)
+    )
+)
 
-;; Define function to marshal Lisp hash maps to C++ unordered_map pointers
-(defun marshal-hash-maps (params cost-preferences)
-    (let ((params-ptr (cffi:foreign-alloc :pointer))
-          (cost-pref-ptr (cffi:foreign-alloc :pointer)))
-        (cffi:with-foreign-object (params-hash '(:hash-table :test string=))
-            (cffi:with-foreign-object (cost-hash '(:hash-table :test string=))
-                ;; Populate params-hash and cost-hash from Lisp hash maps
-                ;; Code for populating hash maps goes here
-                ;; ...
-                ;; Assign pointers to foreign memory
-                (setf (cffi:foreign-pointer params-hash) params-ptr)
-                (setf (cffi:foreign-pointer cost-hash) cost-pref-ptr)
-                ;; Return pointers to foreign memory
-                (values params-ptr cost-pref-ptr)))))
+
+; TODO : check
+(defun convertparam-yes-no (v)
+    (cond
+    ((equal v "Yes") 1)
+    ((equal v "No")  0)
+    )
+)

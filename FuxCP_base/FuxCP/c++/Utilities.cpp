@@ -151,6 +151,7 @@ string intVar_to_string(const IntVar &var, bool absolute) {
  * @return a string representing the values of the variables
  */
 string intVarArray_to_string(IntVarArray vars){
+    write_to_log_file("entered utilities.cpp");
     int s = vars.size();
     string res = "{";
     for(int i = 0; i < s; i++){
@@ -213,15 +214,18 @@ string time(){
  * Useful for debugging in the OM environment
  * @param message the text to write
  */
-void write_to_log_file(const char *message, const string& filename) {
+void write_to_log_file(const char *message) {
+    std::time_t currentTime = std::time(nullptr); // Get the current time
+    std::string timeString = std::asctime(std::localtime(&currentTime)); // Convert to string
+
     const char* homeDir = std::getenv("HOME"); // Get the user's home directory
     if (homeDir) {
         std::string filePath(homeDir);
-        filePath += "/Documents/Libraries/MusicConstraints/out/" + filename; // Specify the desired file path, such as $HOME/log.txt
+        filePath += "/log.txt"; // Specify the desired file path, such as $HOME/log.txt
 
         std::ofstream myfile(filePath, std::ios::app); // append mode
         if (myfile.is_open()) {
-            myfile << message << endl;
+            myfile <<timeString<< endl << message << endl;
             myfile.close();
         }
     }

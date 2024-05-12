@@ -23,29 +23,47 @@
 
 
 ;; This function is used to convert lisp lists into int pointers so they can be passed to c++
-(defun new-ctp-problem (lb ub sp cf pc mtc spl con obl dir var)
+(defun new-ctp-problem (cf splist voicetypes borrowmode minskips generalcst motioncst melodiccst specificcst costimp toffset scale chromscale borscale)
     (let (
-        (x (cffi::foreign-alloc :int :initial-contents cf))
-        (y (cffi::foreign-alloc :int :initial-contents spl))
+        (cfi (cffi::foreign-alloc :int :initial-contents cf))
+        (spl (cffi::foreign-alloc :int :initial-contents splist))
+        (vt (cffi::foreign-alloc :int :initial-contents voicetypes))
+        (gen (cffi::foreign-alloc :int :initial-contents generalcst))
+        (mot (cffi::foreign-alloc :int :initial-contents motioncst))
+        (mel (cffi::foreign-alloc :int :initial-contents melodiccst))
+        (spe (cffi::foreign-alloc :int :initial-contents specificcst))
+        (cst (cffi::foreign-alloc :int :initial-contents costimp))
+        (sca (cffi::foreign-alloc :int :initial-contents scale))
+        (chr (cffi::foreign-alloc :int :initial-contents chromscale))
+        (bor (cffi::foreign-alloc :int :initial-contents borscale))
     )
-    (new-problem (length cf) lb ub sp x pc mtc y con obl dir var)
+    (test-cffi 4)
+    (new-problem cfi (length cf) (length splist) spl vt borrowmode minskips gen mot mel spe cst toffset sca (length scale) chr (length chromscale) bor (length borscale))
     )
 )
 
 (cffi::defcfun ("create_new_problem" new-problem) :pointer
     "Creates a new instance of the problem. Returns a void* cast of a Problem*."
-    (size               :int) ; an integer representing the size
-    (lower-bound-domain :int) ; an integer representing the lower bound of the domain
-    (upper-bound-domain :int) ; an integer representing the upper bound of the domain
-    (species            :int)
-    (cantus-firmus      :pointer :int)
-    (pcost              :int)
-    (mtricost           :int)
-    (species-list       :pointer :int)
-    (con-motion-cost    :int)
-    (obl-motion-cost    :int)
-    (dir-motion-cost    :int)
-    (variety-cost       :int)
+
+    (cantus-firmus          :pointer :int)  ; the cantus firmus, in MIDI values
+    (cf-size                :int)           ; the size of the cantus firmus
+    (n-counterpoints        :int)           ; number of counterpoints
+    (species-list           :pointer :int)  ; list of the species of the counterpoints (size=n-counterpoints)
+    (voice-types            :pointer :int)  ; list of the voice types of the counterpoints (size=n-counterpoints)
+    (borrow-mode            :int)           ; borrowing mode : 0 if "None", 1 if "Major", 2 if "Minor"
+    (min-skips-percent      :int)           ; min skips slider
+    (general-cost-values    :pointer :int)  ; size = 8
+    (motion-cost-values     :pointer :int)  ; size = 3
+    (melodic-cost-values    :pointer :int)  ; size = 8
+    (specific-cost-values   :pointer :int)  ; size = 7
+    (cost-importances       :pointer :int)  ; size = 14
+    (tonalite-offset        :int)
+    (scale                  :pointer :int)  
+    (scale-size             :int)
+    (chromatic-scale        :pointer :int)
+    (chromatic-scale-size   :int)
+    (borrowed-scale         :pointer :int)
+    (borrowed-scale-size    :int)
     ; TODO add here any additional arguments that your Problem constructor takes
 )
 
@@ -59,19 +77,7 @@
     (n :int) ; an integer
 )
 
-;; ;; try passing hashmaps to c++
-;; (cffi:defcfunction my-cpp-function
-;;     (:arguments (params :pointer)
-;;                 (cost-preferences :pointer))
-;;     (:return-type :void)
-;;     (:name "my_cpp_function"))
 
-
-(cffi::defcfun ("test_hashmap_cffi" test-hashmap-cffi) :int
-    "trying to give a hashmap to c++"
-    (params           :pointer)
-    (cost-preferences :pointer)
-)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search engine methods ;;

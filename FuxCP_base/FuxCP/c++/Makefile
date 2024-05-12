@@ -2,7 +2,7 @@ all: so dylib
 
 #compile the dynamic library for linux
 so:
-	g++ -fPIC problem_wrapper.cpp gecode_problem.cpp -std=c++11 -shared -lgecodedriver -lgecodeflatzinc -lgecodefloat -lgecodeint -lgecodekernel -lgecodeminimodel -lgecodesearch -lgecodeset -lgecodesupport -o ../sources/libgecode.so -O3 -ffast-math
+	g++ -fPIC problem_wrapper.cpp gecode_problem.cpp Utilities.cpp -std=c++11 -shared -lgecodedriver -lgecodeflatzinc -lgecodefloat -lgecodeint -lgecodekernel -lgecodeminimodel -lgecodesearch -lgecodeset -lgecodesupport -o ../sources/libgecode.so -O3 -ffast-math
 
 #compile the dynamic library for macOS
 dylib: problem_wrapper.cpp

@@ -16,6 +16,9 @@
  */
 Problem::Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir,
     int var_cost, vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad){
+
+    writeToLogFile("entered gecode_problem.cpp");
+
     string message = "WSpace object created. ";
     size = s;
     lower_bound_domain = l;
