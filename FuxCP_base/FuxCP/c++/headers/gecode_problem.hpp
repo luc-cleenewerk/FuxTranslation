@@ -29,6 +29,8 @@ class Problem: public IntLexMinimizeSpace {
 protected:
     /// Input data
     int size;                       // The size of the variable array of interest
+    int lower_bound_domain;
+    int upper_bound_domain;
     int species;
     int costpcons;
     int costtritone;

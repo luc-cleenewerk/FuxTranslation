@@ -74,9 +74,9 @@ public:
     IntVarArray fifth_costs;
     IntVarArray octave_costs;
 
-    Part(const Home &sp, const vector<int> cf_notes, int s, int l, int u, int succ_cst);
+    Part(const Home &sp, const vector<int> cf_notes, int s, int succ_cst);
 
-    Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 
+    Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 
         int dir, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off, vector<int> melodic
         , vector<int> general_params);
 

@@ -1,11 +1,11 @@
 #include "headers/Part.hpp"
 #include "headers/Utilities.hpp"
 
-Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u, int succ_cst):home(hme){
+Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst):home(hme){
     home = hme;
     size = s;
-    lower_bound = l;
-    upper_bound = u;
+    lower_bound = 1;
+    upper_bound = 127;
     species = 0;
     succ = succ_cst;
     notes = IntVarArray(home, size, 0, 127);
@@ -28,7 +28,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u, int succ_
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
 }
 
-Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, vector<int> splist, int con, int obl, int dir, 
+Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, int con, int obl, int dir, 
     int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off, vector<int> melodic, 
     vector<int> general_parameters):home(hme){
     voice_type = v_type;
