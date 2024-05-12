@@ -19,7 +19,11 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
     vector<Stratum> upper){
     for(int j = 0; j < parts.size(); j++){
         for(int i = 0; i < size; i++){
-            rel(home, parts[j].hIntervalsCpCf[i] == abs(parts[j].notes[i] - lowest[0].notes[i])%12); //assigns the hIntervals
+            if(j==0){
+                rel(home, parts[j].hIntervalsCpCf[0][i] == abs(parts[j].notes[i] - lowest[0].notes[i])%12); //assigns the hIntervals
+            } else {
+                rel(home, parts[j].hIntervalsCpCf[0][i] == abs(parts[j].vector_notes[0][i] - lowest[0].notes[i])%12); //assigns the hIntervals
+            }
         }
     }
 
@@ -36,7 +40,7 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
 void link_cfb_arrays_1st_species(const Home &home, int size, vector<Part> parts){
     for(int k = 1; k < parts.size(); k++){
         for(int i = 0; i < size; i++){
-            rel(home, parts[k].notes[i], IRT_GQ, parts[0].notes[i], Reify(parts[k].isCFB[i], RM_EQV)); //links the CFB values in the array
+            rel(home, parts[k].vector_notes[0][i], IRT_GQ, parts[0].notes[i], Reify(parts[k].isCFB[i], RM_EQV)); //links the CFB values in the array
         }
     }
 }
@@ -45,8 +49,13 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
     //works
     for(int k = 0; k < parts.size(); k++){
         for(int i = 0; i < size-1; i++){
-            rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[i]); //assigns the melodic interval (brut)
-            abs(home, parts[k].m_intervals_brut[i], parts[k].m_intervals[i]); //assigns the melodic interval (absolute)
+            if(k==0){
+                rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[i]); //assigns the melodic interval (brut)
+                abs(home, parts[k].m_intervals_brut[i], parts[k].m_intervals[i]); //assigns the melodic interval (absolute)
+            } else {
+                rel(home, expr(home, parts[k].vector_notes[0][i]-parts[k].vector_notes[0][i+1]), IRT_EQ, parts[k].m_intervals_brut[i]); //assigns the melodic interval (brut)
+                abs(home, parts[k].m_intervals_brut[i], parts[k].m_intervals[i]); //assigns the melodic interval (absolute)
+            }
         }
     }
 }
@@ -101,22 +110,22 @@ void perfect_consonance_constraints(const Home &home, int size, vector<Part> par
     }
 }
 
-void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, int costpcons, IntVarArray P_cons){
+void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, IntVarArray P_cons){
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size; i++){
             //the two constraints set the cost : if it is either a unisson or a perfect fifth, the cost is set. else, it is 0
-            rel(home, (parts[p].hIntervalsCpCf[i]==UNISSON) >> (parts[p].octave_costs[i]==1));
-            rel(home, (parts[p].hIntervalsCpCf[i]==PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==1));
-            rel(home, (parts[p].hIntervalsCpCf[i]!=UNISSON) >> (parts[p].octave_costs[i]==0));
-            rel(home, (parts[p].hIntervalsCpCf[i]!=PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==0));
+            rel(home, (parts[p].hIntervalsCpCf[0][i]==UNISSON) >> (parts[p].octave_costs[i]==parts[p].h_octave));
+            rel(home, (parts[p].hIntervalsCpCf[0][i]==PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==parts[p].h_fifth));
+            rel(home, (parts[p].hIntervalsCpCf[0][i]!=UNISSON) >> (parts[p].octave_costs[i]==0));
+            rel(home, (parts[p].hIntervalsCpCf[0][i]!=PERFECT_FIFTH) >> (parts[p].fifth_costs[i]==0));
         }
     }
 }
 
 void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
-        rel(home, (parts[p].isCFB[0] == 0) >> (parts[p].hIntervalsCpCf[0]==0)); //tuning the first to the key tune (if the cf is the bass)
-        rel(home, (parts[p].isCFB[size-1] == 0) >> (parts[p].hIntervalsCpCf[size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
+        rel(home, (parts[p].isCFB[0] == 0) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune (if the cf is the bass)
+        rel(home, (parts[p].isCFB[size-1] == 0) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
     }
 }
 
@@ -125,7 +134,15 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
         for(int p2 = 0; p2 < parts.size(); p2++){
             if(p2!=p1){
                 for(int i = 1; i < size-1; i++){
-                    rel(home, parts[p1].notes[i], IRT_NQ, parts[p2].notes[i]); //constraint that notes are different
+                    if(p1==0 && p2==0){
+                        rel(home, parts[p1].notes[i], IRT_NQ, parts[p2].notes[i]); //constraint that notes are different
+                    } else if(p1==0 && p2!=0){
+                        rel(home, parts[p1].notes[i], IRT_NQ, parts[p2].vector_notes[0][i]); //constraint that notes are different
+                    } else if(p1!=0 && p2==0){
+                        rel(home, parts[p1].vector_notes[0][i], IRT_NQ, parts[p2].notes[i]); //constraint that notes are different
+                    } else {
+                        rel(home, parts[p1].vector_notes[0][i], IRT_NQ, parts[p2].vector_notes[0][i]); //constraint that notes are different
+                    }
                 }
             }
         }
@@ -145,15 +162,15 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
             }
         }
     } else { //else 2 voice constraints
-        rel(home, parts[1].hIntervalsCpCf[p], IRT_EQ, 3, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : minor third
-        rel(home, parts[1].hIntervalsCpCf[p], IRT_EQ, 9, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : major sixth
+        rel(home, parts[1].hIntervalsCpCf[0][p], IRT_EQ, 3, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : minor third
+        rel(home, parts[1].hIntervalsCpCf[0][p], IRT_EQ, 9, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : major sixth
     }
 }
 
-void no_tritonic_intervals(const Home &home, int size, int costtri, vector<Part> parts){
+void no_tritonic_intervals(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int j = 0; j < size-1; j++){
-            rel(home, (parts[p].m_intervals[j]==6) >> (parts[p].M_deg_cost[j]==costtri)); //if it is a tritone : set a cost
+            rel(home, (parts[p].m_intervals[j]==6) >> (parts[p].M_deg_cost[j]==parts[p].tritone_cost)); //if it is a tritone : set a cost
             rel(home, (parts[p].m_intervals[j]!=6) >> (parts[p].M_deg_cost[j]==0)); //if not, the cost is 0
         }
     }
@@ -171,15 +188,15 @@ void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts
     if(n_species==1){ //if 2 voices
         for(int j = 0; j < size-1; j++){
             //it cannot go from either unisson or a perfect fifth to another one of these, then it is prohibited
-            rel(home, (parts[1].hIntervalsCpCf[j]==0 || parts[1].hIntervalsCpCf[j]==7 || parts[1].hIntervalsCpCf[j+1]==0 || parts[1].hIntervalsCpCf[j+1]==7) >> 
+            rel(home, (parts[1].hIntervalsCpCf[0][j]==0 || parts[1].hIntervalsCpCf[0][j]==7 || parts[1].hIntervalsCpCf[0][j+1]==0 || parts[1].hIntervalsCpCf[0][j+1]==7) >> 
             (parts[1].motions[j]!=2));
         }
     } else { //else if 3 voices
         for(int p = 1; p < parts.size(); p++){
             for(int j = 0; j < size-2; j++){
                 //set a cost when it is reached through direct motion, it is 0 when not
-                rel(home, (parts[p].motions[j]==2&&(parts[p].hIntervalsCpCf[j+1]==0||parts[p].hIntervalsCpCf[j+1]==7))>>(parts[p].direct_move_cost[j]==8));
-                rel(home, (parts[p].motions[j]!=2||(parts[p].hIntervalsCpCf[j+1]!=0&&parts[p].hIntervalsCpCf[j+1]!=7))>>(parts[p].direct_move_cost[j]==0));
+                rel(home, (parts[p].motions[j]==2&&(parts[p].hIntervalsCpCf[0][j+1]==0||parts[p].hIntervalsCpCf[0][j+1]==7))>>(parts[p].direct_move_cost[j]==parts[p].direct_move));
+                rel(home, (parts[p].motions[j]!=2||(parts[p].hIntervalsCpCf[0][j+1]!=0&&parts[p].hIntervalsCpCf[0][j+1]!=7))>>(parts[p].direct_move_cost[j]==0));
             }
         }
     }
@@ -189,8 +206,8 @@ void no_battuta(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
             for(int j = 0; j < size-1; j++){
             //constraints avoiding a battuta kind of motion
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[j+1]==0)&&(parts[p].motions[j]==0)&&(parts[p].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==1))));
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[j+1]==0)&&(parts[p].motions[j]==0)&&(parts[0].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==0))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[j]==0)&&(parts[p].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==1))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[j]==0)&&(parts[0].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==0))));
         }
     }
 }
@@ -225,8 +242,8 @@ void variety_cost_constraint(const Home &home, int size, vector<Part> parts){
             } else {upbnd = size;}
             for(int k = j+1; k < upbnd;k++){
                 //setting a cost if notes inside a window are the same in a part
-                rel(home, (parts[p].notes[j]==parts[p].notes[k])>>(parts[p].varietyArray[temp]==1));
-                rel(home, (parts[p].notes[j]!=parts[p].notes[k])>>(parts[p].varietyArray[temp]==0));
+                rel(home, (parts[p].vector_notes[0][j]==parts[p].vector_notes[0][k])>>(parts[p].varietyArray[temp]==parts[p].variety_cost));
+                rel(home, (parts[p].vector_notes[0][j]!=parts[p].vector_notes[0][k])>>(parts[p].varietyArray[temp]==0));
                 temp++;
             }
         }
@@ -239,15 +256,15 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts){
             if(p1!=p2){
                 for(int j = 0; j < size-2;j++){
                     //constraint adding a cost if a perfect consonance is detected in successive order
-                    rel(home, ((parts[p1].hIntervalsCpCf[j]==0||parts[p1].hIntervalsCpCf[j]==7) && 
-                        (parts[p2].hIntervalsCpCf[j]==0||parts[p2].hIntervalsCpCf[j]==7) &&
-                        (parts[p1].hIntervalsCpCf[j+1]==0||parts[p1].hIntervalsCpCf[j+1]==7) &&
-                        (parts[p2].hIntervalsCpCf[j+1]==0||parts[p2].hIntervalsCpCf[j+1]==7)) >> (parts[p1].succ_cost[j]==2));
+                    rel(home, ((parts[p1].hIntervalsCpCf[0][j]==0||parts[p1].hIntervalsCpCf[0][j]==7) && 
+                        (parts[p2].hIntervalsCpCf[0][j]==0||parts[p2].hIntervalsCpCf[0][j]==7) &&
+                        (parts[p1].hIntervalsCpCf[0][j+1]==0||parts[p1].hIntervalsCpCf[0][j+1]==7) &&
+                        (parts[p2].hIntervalsCpCf[0][j+1]==0||parts[p2].hIntervalsCpCf[0][j+1]==7)) >> (parts[p1].succ_cost[j]==parts[p1].succ));
                     //cost is 0 if it is not the case
-                    rel(home, ((parts[p1].hIntervalsCpCf[j]!=0&&parts[p1].hIntervalsCpCf[j]!=7) || 
-                        (parts[p2].hIntervalsCpCf[j]!=0&&parts[p2].hIntervalsCpCf[j]!=7) ||
-                        (parts[p1].hIntervalsCpCf[j+1]!=0&&parts[p1].hIntervalsCpCf[j+1]!=7) ||
-                        (parts[p2].hIntervalsCpCf[j+1]!=0&&parts[p2].hIntervalsCpCf[j+1]!=7)) >> (parts[p1].succ_cost[j]==0));
+                    rel(home, ((parts[p1].hIntervalsCpCf[0][j]!=0&&parts[p1].hIntervalsCpCf[0][j]!=7) || 
+                        (parts[p2].hIntervalsCpCf[0][j]!=0&&parts[p2].hIntervalsCpCf[0][j]!=7) ||
+                        (parts[p1].hIntervalsCpCf[0][j+1]!=0&&parts[p1].hIntervalsCpCf[0][j+1]!=7) ||
+                        (parts[p2].hIntervalsCpCf[0][j+1]!=0&&parts[p2].hIntervalsCpCf[0][j+1]!=7)) >> (parts[p1].succ_cost[j]==0));
                 }
             }
         }
@@ -270,10 +287,10 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
                 if(v1!=v2){
                     for(int j = 1; j < size-2; j++){
                         //constraint checks successive ascending sixths
-                        rel(home, ((parts[v1].hIntervalsCpCf[j-1]!=8 && parts[v1].hIntervalsCpCf[j-1]!=9 && 
-                        parts[v2].hIntervalsCpCf[j-1]!=8 && parts[v2].hIntervalsCpCf[j-1]!=9)||
-                        (parts[v1].hIntervalsCpCf[j]!=8 && parts[v1].hIntervalsCpCf[j]!=9 &&
-                        parts[v2].hIntervalsCpCf[j]!=8 && parts[v2].hIntervalsCpCf[j]!=9))||
+                        rel(home, ((parts[v1].hIntervalsCpCf[0][j-1]!=8 && parts[v1].hIntervalsCpCf[0][j-1]!=9 && 
+                        parts[v2].hIntervalsCpCf[0][j-1]!=8 && parts[v2].hIntervalsCpCf[0][j-1]!=9)||
+                        (parts[v1].hIntervalsCpCf[0][j]!=8 && parts[v1].hIntervalsCpCf[0][j]!=9 &&
+                        parts[v2].hIntervalsCpCf[0][j]!=8 && parts[v2].hIntervalsCpCf[0][j]!=9))||
                         (parts[v1].m_intervals_brut[j]>0)||(parts[v2].m_intervals_brut[j]>0));
                     }
                 }
@@ -298,7 +315,7 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
 void set_off_costs(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size; i++){
-            rel(home, (parts[p].is_off[i]==1) >> (parts[p].off_costs[i]==1));
+            rel(home, (parts[p].is_off[i]==1) >> (parts[p].off_costs[i]==parts[p].off_cst));
             rel(home, (parts[p].is_off[i]==0) >> (parts[p].off_costs[i]==0));
         }
     }

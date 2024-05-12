@@ -1,19 +1,25 @@
 #include "headers/Part.hpp"
 #include "headers/Utilities.hpp"
 
-Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u):home(hme){
+Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u, int succ_cst):home(hme){
     home = hme;
     size = s;
     lower_bound = l;
     upper_bound = u;
+    species = 0;
+    succ = succ_cst;
     notes = IntVarArray(home, size, 0, 127);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
     for(int i = 0; i < size; i++){
         notes[i] = IntVar(home, cf_notes[i], cf_notes[i]);
     }
+    vector_notes = {IntVarArray(home, size, 0, 127), IntVarArray(home, size, 0, 127), IntVarArray(home, size, 0, 127), IntVarArray(home, size, 0, 127)};
+    for(int i = 0; i < size; i++){
+        vector_notes[0][i] = IntVar(home, cf_notes[i], cf_notes[i]);
+    }
     m_intervals = IntVarArray(home, size-1, 0, 12);
     m_intervals_brut = IntVarArray(home, size-1, -12, 12);
-    hIntervalsCpCf = IntVarArray(home, size, 0, 11);
+    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11)};
     isCFB = BoolVarArray(home, size, 0, 1);
     hIntervalsBrut = IntVarArray(home, size, -127, 127);
     motions = IntVarArray(home, size-1, -1, 2);
@@ -22,8 +28,9 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int l, int u):home(hme)
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
 }
 
-Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> splist, int con, int obl, int dir, 
-    int var_cost, int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off):home(hme){
+Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, vector<int> splist, int con, int obl, int dir, 
+    int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off, vector<int> melodic, 
+    vector<int> general_parameters):home(hme){
     voice_type = v_type;
     home = hme;
     size = s;
@@ -31,26 +38,29 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     upper_bound = (6 * voice_type + 12) + cf[0];
     species = sp;
     cantusFirmus = cf;
-    costpcons = pcost;
-    costtritone = mtricost;
     speciesList = splist;
     con_motion_cost = con;
     obl_motion_cost = obl;
     dir_motion_cost = dir;
     h_triad_cost = triad;
-    variety_cost = var_cost;
+    variety_cost = general_parameters[4];
     tone_offset = t_off;
     scale = scle;
     borrowed_scale = b_scale;
+    succ = general_parameters[3];
+    h_fifth = general_parameters[1];
+    h_octave = general_parameters[2];
+    direct_move = general_parameters[6];
+    off_cst = general_parameters[0];
 
-    step_cost = 0;
-    third_cost = 1;
-    octave_cost = 1;
-    fourth_cost = 2;
-    tritone_cost = 2;
-    fifth_cost = 2;
-    sixth_cost = 2;
-    seventh_cost = 2;
+    step_cost = melodic[0];
+    third_cost = melodic[1];
+    octave_cost = melodic[7];
+    fourth_cost = melodic[2];
+    tritone_cost = melodic[3];
+    fifth_cost = melodic[4];
+    sixth_cost = melodic[5];
+    seventh_cost = melodic[6];
     
 
     //cp_range : WORKS
@@ -87,7 +97,20 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
         }
     }
 
-    hIntervalsCpCf = IntVarArray(home, size, 0, 11);
+    vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size, IntSet(extended))};
+
+    if(species==1){
+        if(b_mode!=0){
+            vector_notes[0][size-2] = IntVar(home, IntSet(chrom_scale));
+        }
+    }
+    if(species==2){
+        if(b_mode!=0){
+            vector_notes[2][size-2] = IntVar(home, IntSet(chrom_scale));
+        }
+    }
+
+    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11)};
     isCFB = BoolVarArray(home, size, 0, 1);
     m_intervals = IntVarArray(home, size-1, 0, 12);
     m_intervals_brut = IntVarArray(home, size-1, -12, 12);
@@ -98,7 +121,6 @@ Part::Part(const Home &hme, int s, int l, int u, int sp, vector<int> cf, int pco
     motions_cost = IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost}));
     is_P_cons = BoolVarArray(home, size, 0, 1);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
-    hIntervalsBrut = IntVarArray(home, size, -127, 127);
     varietyArray = IntVarArray(home, 3*(size-2), IntSet({0, variety_cost}));
     direct_move_cost = IntVarArray(home, size-2, 0, 8);
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));

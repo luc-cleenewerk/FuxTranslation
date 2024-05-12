@@ -8,13 +8,6 @@ int main(int argc, char* argv[]) {
     int upper_bound_domain = 127;
     int lower_bound_domain = 1;
     int species = 0;
-    int pconscst = 32;
-    int tricst = 64;
-    int con = 1;
-    int obl = 2;
-    int dir = 3;
-    int var_cost = 1;
-    int tri = 1;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
     vector<int> speciesList = {1, 1};
     vector<int> voice_types = {3, 1};
@@ -28,9 +21,17 @@ int main(int argc, char* argv[]) {
     }
     int b_mode = 0;
     unordered_map<string, int> pr = {{"fifth", 7},{"borrow", 8},{"octave", 5},{"succ", 2},{"variety", 9},{"triad", 3},{"motion", 12},{"melodic", 13}};
+    //step_cost, 3rd, 4th, tritone, 5th, 6th, 7th, octave (CHECKED)
+    vector<int> melodic_params = {0, 1, 1, 64*sizeof(cantusFirmus), 2, 2, 2, 1};
+    //borrow, h-5th, h-octave, succ, variety, triad, direct move, penult rule check
+    vector<int> general_params = {4, 1, 1, 2, 2, 2, 8, 1};
+    //dir motion, obl motion, con motion (CHECKED)
+    vector<int> motion_params = {2, 1, 0};
+    //penult sixth, non-ciambata, con m after skip, h triad 3rd species, m2 eq zero, no syncopation, pref species slider
+    vector<int> specific_params = {0,0,0,0,0,0,0};
     // create a new problem
-    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus, pconscst, tricst, speciesList, con, obl, dir, 
-        var_cost, voice_types, t_off, scale, b_scale, b_mode, tri, off, pr);
+    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus, speciesList, motion_params, 
+        voice_types, t_off, scale, b_scale, b_mode, off, pr, melodic_params, general_params);
 
     // create a new search engine
     Search::Base<Problem>* e = make_solver(p, bab_solver);

@@ -36,20 +36,16 @@
     (upper-bound-domain :int) ; an integer representing the upper bound of the domain
     (species            :int)
     (cantus-firmus      :pointer :int)
-    (pcost              :int)
-    (mtricost           :int)
     (species-list       :pointer :int)
-    (con-motion-cost    :int)
-    (obl-motion-cost    :int)
-    (dir-motion-cost    :int)
-    (variety-cost       :int)
+    (motions            :pointer :int)
     (voice-type         :pointer :int)
     (offset             :int)
     (scale              :pointer :int)
     (borrow             :pointer :int)
     (borrow-mode        :int)
-    (tri-cost           :int)
     (off-scale          :pointer :int)
+    (melodic            :pointer :int)
+    (general            :pointer :int)
     ; TODO add here any additional arguments that your Problem constructor takes
 )
 

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Part.hpp"
+
 using namespace std;
 using namespace Gecode;
 
@@ -365,5 +367,7 @@ string time();
  * @param message the text to write
  */
 void write_to_log_file(const char *message, const string& filename);
+
+void create_solution_array(int size, IntVarArray sol, vector<Part> parts);
 
 #endif

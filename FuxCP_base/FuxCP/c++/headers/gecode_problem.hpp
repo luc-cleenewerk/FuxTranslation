@@ -91,9 +91,9 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int l, int u, int sp, vector<int> cf, int pcost, int mtricost, vector<int> speciesList, int con, int obl, int dir,
-        int var_cost, vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, int triad, vector<int> off, 
-        unordered_map<string, int>);
+    Problem(int s, int l, int u, int sp, vector<int> cf, vector<int> speciesList, vector<int> motion_params,
+        vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, vector<int> off, 
+        unordered_map<string, int> pr, vector<int> melodic, vector<int> general_params);
 
     /**
      * Copy constructor
