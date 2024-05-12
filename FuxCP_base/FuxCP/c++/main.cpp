@@ -5,8 +5,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     int size = 9;
-    int upper_bound_domain = 127;
-    int lower_bound_domain = 1;
     int species = 0;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
     vector<int> speciesList = {1, 1};
@@ -30,7 +28,7 @@ int main(int argc, char* argv[]) {
     //penult sixth, non-ciambata, con m after skip, h triad 3rd species, m2 eq zero, no syncopation, pref species slider
     vector<int> specific_params = {0,0,0,0,0,0,0};
     // create a new problem
-    Problem* p = new Problem(size, lower_bound_domain, upper_bound_domain, species, cantusFirmus, speciesList, motion_params, 
+    Problem* p = new Problem(size, species, cantusFirmus, speciesList, motion_params, 
         voice_types, t_off, scale, b_scale, b_mode, off, pr, melodic_params, general_params);
 
     // create a new search engine

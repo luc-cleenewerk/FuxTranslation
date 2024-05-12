@@ -1,16 +1,14 @@
 #include "headers/Stratum.hpp"
 
-Stratum::Stratum(const Home &sp, int s, int l, int u, int triad):home(sp){
+Stratum::Stratum(const Home &sp, int s, int triad):home(sp){
 
     home = sp;
     size = s;
-    lower_bound = l;
-    upper_bound = u;
     h_triad_cost = triad;
 
 
     /// variable initialization todo depends on the species
-    notes = IntVarArray(home, size, l, u);
+    notes = IntVarArray(home, size, 0, 127);
     hIntervalsBrut = IntVarArray(home, size, -127, 127);
     hIntervalsAbs = IntVarArray(home, size, -127, 127);
     hIntervals = IntVarArray(home, size, 0, 11);

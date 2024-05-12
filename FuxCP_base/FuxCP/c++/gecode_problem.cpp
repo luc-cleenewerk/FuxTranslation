@@ -15,14 +15,12 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int l, int u, int sp, vector<int> cf, vector<int> splist, vector<int> motion_params,
+Problem::Problem(int s, int sp, vector<int> cf, vector<int> splist, vector<int> motion_params,
     vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, vector<int> off, 
     unordered_map<string, int> pr, vector<int> melodic, vector<int> general_params){
     string message = "WSpace object created. ";
     size = s;
     n_unique_costs = 0;
-    lower_bound_domain = l;
-    upper_bound_domain = u;
     species = sp;
     cantusFirmus = cf;
     speciesList = splist;
@@ -62,9 +60,9 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, vector<int> splist
     }
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
-    parts.push_back(Part(*this, cf, s, l, u, general_params[3])); //putting the cantusFirmus in first position
+    parts.push_back(Part(*this, cf, s, 0, 127, general_params[3])); //putting the cantusFirmus in first position
     for(int i = 0; i < splist.size(); i++){
-        parts.push_back(Part(*this, s,l,u,splist[i],cantusFirmus,splist,con_motion_cost,obl_motion_cost,dir_motion_cost, voice_types[i], 
+        parts.push_back(Part(*this, s,0,127,splist[i],cantusFirmus,splist,con_motion_cost,obl_motion_cost,dir_motion_cost, voice_types[i], 
             tone_offset, scale, b_scale, b_mode, general_params[5], off, melodic, general_params)); //adding the counterpoints
     }
 
@@ -143,14 +141,14 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, vector<int> splist
 
     //lowest is the lowest stratum for each note
     
-    lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, general_params[5]));
-    lowest[0].notes = IntVarArray(*this, size, l, u);
+    lowest.push_back(Stratum(*this, size, general_params[5]));
+    lowest[0].notes = IntVarArray(*this, size);
 
     //upper contains the upper strata for each note
 
     for(int j = 0; j < parts.size()-1; j++){
-        upper.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, general_params[5]));
-        upper[j].notes = IntVarArray(*this, size, l, u);
+        upper.push_back(Stratum(*this, size, general_params[5]));
+        upper[j].notes = IntVarArray(*this, size);
     }
 
     //creation of the strata and putting the correct notes in each strata
@@ -317,8 +315,6 @@ Problem::Problem(int s, int l, int u, int sp, vector<int> cf, vector<int> splist
 Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     //IntVars update
     size = s.size;
-    lower_bound_domain = s.lower_bound_domain;
-    upper_bound_domain = s.upper_bound_domain;
     species = s.species;
     cantusFirmus = s.cantusFirmus;
     speciesList = s.speciesList;
@@ -435,8 +431,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
 
     lowest[0].home = s.lowest[0].home;
     lowest[0].size = s.lowest[0].size;
-    lowest[0].lower_bound = s.lowest[0].lower_bound;
-    lowest[0].upper_bound = s.lowest[0].upper_bound;
     lowest[0].h_triad_cost = s.lowest[0].h_triad_cost;
     lowest[0].hIntervalsBrut.update(*this, s.lowest[0].hIntervalsBrut);
     lowest[0].hIntervalsAbs.update(*this, s.lowest[0].hIntervalsAbs);
@@ -448,8 +442,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     for(int p = 0; p < upper.size(); p++){
         upper[p].home = s.upper[p].home;
         upper[p].size = s.upper[p].size;
-        upper[p].lower_bound = s.upper[p].lower_bound;
-        upper[p].upper_bound = s.upper[p].upper_bound;
         upper[p].h_triad_cost = s.upper[p].h_triad_cost;
 
         upper[p].hIntervals.update(*this, s.upper[p].hIntervals);
@@ -524,7 +516,7 @@ IntVarArgs Problem::cost(void) const{
 string Problem::toString(){
     string message = "Problem object. \n";
     message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
-            to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
+            to_string(0) + "\n" + "upper bound for the domain : " + to_string(127)
              + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
     message += "Parts : [";

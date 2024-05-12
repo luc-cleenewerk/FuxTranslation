@@ -13,8 +13,6 @@ using namespace std;
 class Stratum{
 public:
     int size;
-    int lower_bound;
-    int upper_bound;
     int h_triad_cost;
 
     Home home;
@@ -26,7 +24,7 @@ public:
     IntVarArray m_intervals_brut;
     IntVarArray triad_costs;
 
-    Stratum(const Home &sp, int s, int l, int u, int triad);
+    Stratum(const Home &sp, int s, int triad);
 
 };
 

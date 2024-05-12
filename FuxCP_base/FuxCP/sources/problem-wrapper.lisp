@@ -32,8 +32,6 @@
 (cffi::defcfun ("create_new_problem" new-problem) :pointer
     "Creates a new instance of the problem. Returns a void* cast of a Problem*."
     (size               :int) ; an integer representing the size
-    (lower-bound-domain :int) ; an integer representing the lower bound of the domain
-    (upper-bound-domain :int) ; an integer representing the upper bound of the domain
     (species            :int)
     (cantus-firmus      :pointer :int)
     (species-list       :pointer :int)

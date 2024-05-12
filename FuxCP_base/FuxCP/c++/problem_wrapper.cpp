@@ -11,7 +11,7 @@
  * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
  * @return A pointer to a Problem object casted as a void*
  */
-void* create_new_problem(int size, int lower_bound_domain, int upper_bound_domain, int species, int* cantusFirmus, 
+void* create_new_problem(int size, int species, int* cantusFirmus, 
     int* splist, int* motions, int* voice_type, int offset, int* scale, int* borrowed, 
     int borrow_mode, int* off_scale, int* melodic, int* general){
     vector<int> cf(int_pointer_to_vector(cantusFirmus, size));
@@ -24,7 +24,7 @@ void* create_new_problem(int size, int lower_bound_domain, int upper_bound_domai
     vector<int> mel(int_pointer_to_vector(melodic, sizeof(melodic)));
     vector<int> gen(int_pointer_to_vector(general, sizeof(general)));
     unordered_map<string, int> pr = {{"fifth", 7},{"borrow", 8},{"octave", 5},{"succ", 2},{"variety", 9},{"triad", 3},{"motion", 12},{"melodic", 13}};
-    return (void*) new Problem(size, lower_bound_domain, upper_bound_domain, species, cf, sp, mot, 
+    return (void*) new Problem(size, species, cf, sp, mot, 
         vt, offset, scle, brw, borrow_mode, ofscle, pr, mel, gen);
 }
 
