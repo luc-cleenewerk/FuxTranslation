@@ -29,8 +29,8 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst):home(hme)
 }
 
 Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, int con, int obl, int dir, 
-    int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off, vector<int> melodic, 
-    vector<int> general_parameters):home(hme){
+    int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> melodic, 
+    vector<int> general_parameters, vector<int> chrom):home(hme){
     voice_type = v_type;
     home = hme;
     size = s;
@@ -82,14 +82,14 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     
     const vector<int> extended = intersection(cp_range, union_b_scale);
 
-    const vector<int> off_key = intersection(cp_range, off);
+    const vector<int> chrom_scale = chrom;
+
+    const vector<int> off_key = intersection(cp_range, chrom_scale);
 
     off_scale = off_key;
 
     /// variable initialization todo depends on the species
     notes = IntVarArray(home, size, IntSet(extended));
-
-    const vector<int> chrom_scale = cp_range;
 
     if(species==1){
         if(b_mode!=0){

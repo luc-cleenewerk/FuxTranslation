@@ -11,21 +11,21 @@
  * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
  * @return A pointer to a Problem object casted as a void*
  */
-void* create_new_problem(int size, int species, int* cantusFirmus, 
-    int* splist, int* motions, int* voice_type, int offset, int* scale, int* borrowed, 
-    int borrow_mode, int* off_scale, int* melodic, int* general){
+void* create_new_problem(int* cantusFirmus, int size, int n_cp, int* splist, int* v_types, int b_mode, int min_skips, int* general_params, 
+        int* motion_params, int* melodic, int* specific, int* importance, int t_off, int* scle, int scale_size, 
+        int* chromatic, int chrom_size, int* borrow, int borrow_size){
     vector<int> cf(int_pointer_to_vector(cantusFirmus, size));
-    vector<int> sp(int_pointer_to_vector(splist, sizeof(splist)));
-    vector<int> mot(int_pointer_to_vector(motions, sizeof(motions)));
-    vector<int> vt(int_pointer_to_vector(voice_type, sizeof(voice_type)));
-    vector<int> scle(int_pointer_to_vector(scale, sizeof(scale)));
-    vector<int> brw(int_pointer_to_vector(borrowed, sizeof(borrowed)));
-    vector<int> ofscle(int_pointer_to_vector(off_scale, sizeof(off_scale)));
+    vector<int> sp(int_pointer_to_vector(splist, n_cp));
+    vector<int> mot(int_pointer_to_vector(motion_params, sizeof(motion_params)));
+    vector<int> vt(int_pointer_to_vector(v_types, n_cp));
+    vector<int> sc(int_pointer_to_vector(scle, scale_size));
+    vector<int> chr(int_pointer_to_vector(chromatic, chrom_size));
+    vector<int> brw(int_pointer_to_vector(borrow, borrow_size));
     vector<int> mel(int_pointer_to_vector(melodic, sizeof(melodic)));
-    vector<int> gen(int_pointer_to_vector(general, sizeof(general)));
-    unordered_map<string, int> pr = {{"fifth", 7},{"borrow", 8},{"octave", 5},{"succ", 2},{"variety", 9},{"triad", 3},{"motion", 12},{"melodic", 13}};
-    return (void*) new Problem(size, species, cf, sp, mot, 
-        vt, offset, scle, brw, borrow_mode, ofscle, pr, mel, gen);
+    vector<int> gen(int_pointer_to_vector(general_params, sizeof(general_params)));
+    vector<int> spec(int_pointer_to_vector(specific, sizeof(specific)));
+    vector<int> imp(int_pointer_to_vector(importance, 14));
+    return (void*) new Problem(cf, size, n_cp, sp, vt, b_mode, min_skips, gen, mot, mel, spec, imp, t_off, sc, scale_size, chr, chrom_size, brw, borrow_size);
 }
 
 /**

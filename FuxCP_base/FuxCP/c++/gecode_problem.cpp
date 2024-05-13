@@ -15,15 +15,14 @@
  * @param l the lower bound of the domain of the variables
  * @param u the upper bound of the domain of the variables
  */
-Problem::Problem(int s, int sp, vector<int> cf, vector<int> splist, vector<int> motion_params,
-    vector<int> v_types, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, vector<int> off, 
-    unordered_map<string, int> pr, vector<int> melodic, vector<int> general_params){
+Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int> v_types, int b_mode, int min_skips, vector<int> general_params, 
+        vector<int> motion_params, vector<int> melodic, vector<int> specific, vector<int> importance, int t_off, vector<int> scle, int scale_size, 
+        vector<int> chromatic, int chrom_size, vector<int> borrow, int borrow_size){
     string message = "WSpace object created. ";
     size = s;
     n_unique_costs = 0;
     lower_bound_domain = 1;
     upper_bound_domain = 127;
-    species = sp;
     cantusFirmus = cf;
     speciesList = splist;
     con_motion_cost = motion_params[2];
@@ -33,7 +32,9 @@ Problem::Problem(int s, int sp, vector<int> cf, vector<int> splist, vector<int> 
     tone_offset = t_off;
     scale = scle;
     borrow_mode = b_mode;
-    prefs = pr;
+    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic"};
+    prefs = {{importance_names[0], importance[0]},{importance_names[1], importance[1]},{importance_names[2], importance[2]},{importance_names[3], importance[3]}
+        ,{importance_names[4], importance[4]},{importance_names[5], importance[5]},{importance_names[6], importance[7]},{importance_names[7], importance[13]}};
     cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad"};
     ordered_factors = IntVarArray(*this, 14, 0, 100);
     for(int i = 0; i < 14; i++){
@@ -65,7 +66,7 @@ Problem::Problem(int s, int sp, vector<int> cf, vector<int> splist, vector<int> 
     parts.push_back(Part(*this, cf, s, general_params[3])); //putting the cantusFirmus in first position
     for(int i = 0; i < splist.size(); i++){
         parts.push_back(Part(*this, s,splist[i],cantusFirmus,splist,con_motion_cost,obl_motion_cost,dir_motion_cost, voice_types[i], 
-            tone_offset, scale, b_scale, b_mode, general_params[5], off, melodic, general_params)); //adding the counterpoints
+            tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic)); //adding the counterpoints
     }
 
     //for fifth cost, octave cost, off key cost, Melodic cost, motion cost, variety cost, successive cost and triad costs
@@ -319,7 +320,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     size = s.size;
     lower_bound_domain = s.lower_bound_domain;
     upper_bound_domain = s.upper_bound_domain;
-    species = s.species;
     cantusFirmus = s.cantusFirmus;
     speciesList = s.speciesList;
     con_motion_cost = s.con_motion_cost;

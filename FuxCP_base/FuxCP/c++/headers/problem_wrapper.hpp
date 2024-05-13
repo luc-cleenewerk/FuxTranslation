@@ -15,9 +15,9 @@ extern "C" {
  * @param upper_bound_domain an integer representing the upper bound of the domain of the variables
  * @return A pointer to a Problem object casted as a void*
  */
-void* create_new_problem(int size, int species, int* cantusFirmus,
-    int* splist, int* motions, int* voice_type, int offset, int* scale, int* borrowed, 
-    int borrow_mode, int* off_scale, int* melodic, int* general);
+void* create_new_problem(int* cantusFirmus, int size, int n_cp, int* splist, int* v_types, int b_mode, int min_skips, int* general_params, 
+        int* motion_params, int* melodic, int* specific, int* importance, int t_off, int* scle, int scale_size, 
+        int* chromatic, int chrom_size, int* borrow, int borrow_size);
 
 /**
  * returns the size of the problem

@@ -77,8 +77,8 @@ public:
     Part(const Home &sp, const vector<int> cf_notes, int s, int succ_cst);
 
     Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 
-        int dir, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> off, vector<int> melodic
-        , vector<int> general_params);
+        int dir, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> melodic
+        , vector<int> general_params, vector<int> chrom);
 
     IntVarArray getNotes();
 };

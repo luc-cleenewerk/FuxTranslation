@@ -91,9 +91,9 @@ public:
      * @param l the lower bound of the domain of the variables
      * @param u the upper bound of the domain of the variables
      */
-    Problem(int s, int sp, vector<int> cf, vector<int> speciesList, vector<int> motion_params,
-        vector<int> v_types, int t_off, vector<int> scale, vector<int> b_scale, int b_mode, vector<int> off, 
-        unordered_map<string, int> pr, vector<int> melodic, vector<int> general_params);
+    Problem(vector<int> cf, int size, int n_cp, vector<int> splist, vector<int> voice_types, int borrow_mode, int min_skips, vector<int> general, 
+        vector<int> motion, vector<int> melodic, vector<int> specific, vector<int> importance, int ton_off, vector<int> scale, int scale_size, 
+        vector<int> chromatic, int chrom_size, vector<int> borrow, int borrow_size);
 
     /**
      * Copy constructor
