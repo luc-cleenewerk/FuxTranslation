@@ -36,7 +36,7 @@ void harmonic_intervals_consonance(const Home &home, vector<Part> parts);
 /**
  * Constraint H6 : Imperfect consonances are preferred
 */
-void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, int costpcons);
+void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, IntVarArray P_cons);
 
 /**
  * Constraint H2 and H3 : The first and last harmonic intervals must be a perfect consonance (only 2 voices)
@@ -62,10 +62,14 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
 
 void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper);
 
+void set_off_costs(const Home &home, int size, vector<Part> parts);
+
+void set_step_costs(const Home &home, int size, vector<Part> parts);
+
 /**
  * Constraint M1 : Tritone melodic intervals are forbidden
 */
-void no_tritonic_intervals(const Home &home, int size, int costtri, vector<Part> parts);
+void no_tritonic_intervals(const Home &home, int size, vector<Part> parts);
 
 /**
  * Constraint M2 : Melodic intervals cannot exceed a minor sixth interval

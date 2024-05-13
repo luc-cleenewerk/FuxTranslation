@@ -11,6 +11,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Part.hpp"
+
 using namespace std;
 using namespace Gecode;
 
@@ -325,7 +327,7 @@ string statistics_to_csv_string(Search::Statistics stats);
  * @param absolute a boolean indicating if the value should be returned as an absolute value (default is false)
  * @return a string representing the value of the variable
  */
-string intVar_to_string(const IntVar var);
+string intVar_to_string(const IntVar &var, bool absolute = false);
 
 /**
  * Returns the values of an array of variables as a string. Calls the intVar_to_string function
@@ -364,6 +366,8 @@ string time();
  * Write a text into a log file
  * @param message the text to write
  */
-void write_to_log_file(const char *message);
+void write_to_log_file(const char *message, const string& filename);
+
+void create_solution_array(int size, IntVarArray sol, vector<Part> parts);
 
 #endif
