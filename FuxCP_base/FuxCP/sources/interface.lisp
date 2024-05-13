@@ -665,8 +665,6 @@
                 (print min-skips-slider)
 
                 (setf species-integer-list (convert-to-species-integer-list (species-param (om::object editor))))
-                ;; (print species-integer-list)
-                ;; (error "pipou")
                 (setf *voices-types (convert-to-voice-integer-list (voice-type-param (om::object editor))))
                 
                 (print species-integer-list)
