@@ -16,14 +16,14 @@ void* create_new_problem(int* cantusFirmus, int size, int n_cp, int* splist, int
         int* chromatic, int chrom_size, int* borrow, int borrow_size){
     vector<int> cf(int_pointer_to_vector(cantusFirmus, size));
     vector<int> sp(int_pointer_to_vector(splist, n_cp));
-    vector<int> mot(int_pointer_to_vector(motion_params, sizeof(motion_params)));
+    vector<int> mot(int_pointer_to_vector(motion_params, 3));
     vector<int> vt(int_pointer_to_vector(v_types, n_cp));
     vector<int> sc(int_pointer_to_vector(scle, scale_size));
     vector<int> chr(int_pointer_to_vector(chromatic, chrom_size));
     vector<int> brw(int_pointer_to_vector(borrow, borrow_size));
-    vector<int> mel(int_pointer_to_vector(melodic, sizeof(melodic)));
-    vector<int> gen(int_pointer_to_vector(general_params, sizeof(general_params)));
-    vector<int> spec(int_pointer_to_vector(specific, sizeof(specific)));
+    vector<int> mel(int_pointer_to_vector(melodic, 8));
+    vector<int> gen(int_pointer_to_vector(general_params, 8));
+    vector<int> spec(int_pointer_to_vector(specific, 7));
     vector<int> imp(int_pointer_to_vector(importance, 14));
     return (void*) new Problem(cf, size, n_cp, sp, vt, b_mode, min_skips, gen, mot, mel, spec, imp, t_off, sc, scale_size, chr, chrom_size, brw, borrow_size);
 }
