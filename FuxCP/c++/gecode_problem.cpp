@@ -22,6 +22,37 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     writeToLogFile("entered gecode_problem.cpp");
 
     string message = "WSpace object created. ";
+    message += "\n";
+    message += int_vector_to_string(cf);
+    message += "\n";
+    message += to_string(s);
+    message += "\n";
+    message += to_string(n_cp);
+    message += "\n";
+    message += int_vector_to_string(splist);
+    message += "\n";
+    message += int_vector_to_string(v_types);
+    message += "\n";
+    message += to_string(b_mode);
+    message += "\n";
+    message += to_string(min_skips);
+    message += "\n";
+    message += int_vector_to_string(general_params);
+    message += "\n";
+    message += int_vector_to_string(motion_params);
+    message += "\n";
+    message += int_vector_to_string(melodic);
+    message += "\n";
+    message += int_vector_to_string(specific);
+    message += "\n";
+    message += int_vector_to_string(importance);
+    message += "\n";
+    message += to_string(t_off);
+    message += "\n";
+    message += int_vector_to_string(scle);
+
+
+
     size = s;
     n_unique_costs = 0;
     lower_bound_domain = 1;
@@ -45,7 +76,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         ordered_costs.push_back(tmp);
     }
 
-    writeToLogFile("initialized costs");
 
     P_cons_cost = IntVarArray(*this, size, 0, 1000);
     vars = IntVarArray(*this, 14, 0, 100);
@@ -148,7 +178,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     rel(*this, cost_factors[0][6], IRT_EQ, expr(*this, sum(scc)));
 
 
-    writeToLogFile("put costs in lists");
 
     //lowest is the lowest stratum for each note
     
@@ -220,7 +249,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     }
 
-    writeToLogFile("created strata");
 
     IntVarArgs tr(upper.size()*size);
     index = 0;
@@ -253,7 +281,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
 
 
-    writeToLogFile("pushing constraints...");
 
     
     /// constraints

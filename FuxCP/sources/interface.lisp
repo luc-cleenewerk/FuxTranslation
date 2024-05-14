@@ -11,6 +11,9 @@
 
 (print "Loading cp-params object...")
 
+(defparameter DFS 0)
+(defparameter BAB 1)
+
 (om::defclass! cp-params ()
 ;attributes
 (
@@ -670,12 +673,18 @@
                 (print species-integer-list)
                 (print *voices-types)
 
+                (print *scale)
+
                 (print "calling new problem")
-                ;; (new-ctp-problem 0 5 1 *cf 0 0 (list 11 1 2 3 4 5 6 7 8 9 10 11 12 1777) 0 0 0 0)
 
-                (new-ctp-problem *cf species-integer-list *voices-types borrow-mode-int min-skips-slider general-values-list motion-values-list melodic-values-list specific-values-list cost-values-list *tonalite-offset *scale *chromatic-scale *borrowed-scale)
+                (defparameter problem-pointer (new-ctp-problem *cf species-integer-list *voices-types borrow-mode-int min-skips-slider general-values-list motion-values-list melodic-values-list specific-values-list cost-values-list *tonalite-offset *scale *chromatic-scale *borrowed-scale))
+                (print problem-pointer)
 
-                (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
+                (setf (current-csp (om::object editor)) (create-solver problem-pointer BAB))
+                (print (current-csp (om::object editor)))
+                
+                (print "Base<Problem>* (search engine) stored in current-csp object variable")
+                ;; (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
             )
 
@@ -752,6 +761,72 @@
         search-buttons
     )
 )
+
+
+;; (defun search-next-fux-cp (l)
+;;     (print "Searching next solution...")
+;;     ;; (print l)
+;;     ;; (#<|gil|::bab-engine 40100D21DB> (#<|gil|::int-var 40D038C6BB> #<|gil|::int-var 40D038C9CB> #<|gil|::int-var 40D038CD93> #<|gil|::int-var 40D038D233> #<|gil|::int-var 40D038D71B> #<|gil|::int-var 40D038DC03> #<|gil|::int-var 40D038E0EB> #<|gil|::int-var 40D038E5D3> #<|gil|::int-var 40D038E993> #<|gil|::int-var 40D038C59B> #<|gil|::int-var 40D038CB53> #<|gil|::int-var 40D038C81B> #<|gil|::int-var 40D038CF63> #<|gil|::int-var 40D038CB3B> #<|gil|::int-var 40D038D44B> #<|gil|::int-var 40D038CF4B> #<|gil|::int-var 40D038D933> #<|gil|::int-var 40D038D433> #<|gil|::int-var 40D038DE1B> #<|gil|::int-var 40D038D91B> #<|gil|::int-var 40D038E303> #<|gil|::int-var 40D038DE03> #<|gil|::int-var 40D038E753> #<|gil|::int-var 40D038E2EB> #<|gil|::int-var 40D038EAB3> #<|gil|::int-var 40D03974D3>) #<|gil|::time-stop 40100D16A3> #<|gil|::search-options 40100D1BC3> (1 2))
+;;     (let (
+;;         (se (first l))
+;;         (the-cp (second l))
+;;         (tstop (third l))
+;;         (sopts (fourth l))
+;;         (species-list (fifth l))
+;;         (check t)
+;;         sol sol-pitches sol-species
+;;         )
+
+;;         (time (om::while check :do
+;;             ; reset the tstop timer before launching the search
+;;             (gil::time-stop-reset tstop)
+;;             ; try to find a solution
+;;             (time (setq sol (try-find-solution se)))
+;;             (if (null sol)
+;;                 ; then check if there are solutions left and if the user wishes to continue searching
+;;                 (stopped-or-ended (gil::stopped se) (getparam 'is-stopped))   ; TODO check git damien
+;;                 ; else we have found a solution so break fthe loop
+;;                 (setf check nil)
+;;             )
+;;         ))
+
+;;         ; print the solution from GiL
+;;         (print "Solution: ")
+;;         (handler-case
+;;             (progn 
+;;                 (print (list "*cost-factors" (gil::g-values sol *cost-factors)))
+;;                 (print (list "sum of all costs = " (reduce #'+ (gil::g-values sol *cost-factors) :initial-value 0)))
+;;             ) 
+;;             (error (c)
+;;                 (dotimes (i *N-COST-FACTORS)
+;;                     (handler-case (gil::g-values sol (nth i *cost-factors)) (error (c) (print (list "Cost" i "had a problem."))))
+;;                 )
+;;                 (error "All costs are not set correctly. Correct this problem before trying to find a solution.")
+;;             )
+;;         )
+        
+;;         (print (list "species = " species-list))
+        
+;;         (print "The solution can now be retrieved by evaluating the third output of cp-params.")
+;;         (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
+;;         (let (
+;;             (basic-rythmics (get-basic-rythmics species-list *cf-len sol-pitches counterpoints sol))
+;;             (sol-voices (make-list *N-COUNTERPOINTS :initial-element nil))
+;;             )
+
+;;             (loop for i from 0 below *N-COUNTERPOINTS do (progn
+;;                 (setq rythmic+pitches (nth i basic-rythmics)) ; get the rythmic correpsonding to the species
+;;                 (setq rythmic-om (first rythmic+pitches))
+;;                 (setq pitches-om (second rythmic+pitches))
+;;             )
+
+;;                 (setf (nth i sol-voices) (make-instance 'voice :chords (to-midicent pitches-om) :tree (om::mktree rythmic-om '(4 4)) :tempo *cf-tempo))
+;;             )
+;;             (make-instance 'poly :voices sol-voices)
+;;         )
+;;     )
+;; )
+
 
 (defun make-slider (cost y-position)
     (om::om-make-dialog-item
