@@ -57,9 +57,6 @@
 ; To access the melodizer object, (om::object self)
 (defmethod initialize-instance ((self params-editor) &rest args)
     ;;; do what needs to be done by default
-    (print "hi from initialize-instance")
-    (print (test-cffi 3))
-    (print (test-cffi 3))
     (call-next-method) ; start the search by default?
     (make-interface self)
 )
@@ -506,58 +503,8 @@
                     (cf-voice (om::object editor))
                     (borrow-mode-param (om::object editor))
                 )
-                ;; (defparameter *params* (make-hash-table))
-                ;; ;; set melodic parameters
-                ;; (dolist (subcost melodic-subcosts)
-                ;;     (setparam-cost (getf subcost :param) (getf subcost :value))
-                ;; )
 
-                ;; ;; set general costs
-                ;; (dolist (cost general-preferences)
-                ;;     (if (equal (getf cost :param) 'motions-cost)
-                ;;         nil ; motions-cost is treated by the subcosts
-                ;;         (if (equal (getf cost :param) 'penult-rule-check)
-                ;;             (setparam-yes-no (getf cost :param) (getf cost :value)) ; penult-rule-check is a yes no
-                ;;             (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                ;;         )
-                ;;     )
-                ;; )
-
-                ;; ;; set motions costs
-                ;; (dolist (subcost motion-subcosts)
-                ;;     (setparam-cost (getf subcost :param) (getf subcost :value))
-                ;; )
-
-                ;; ;; set species specific costs
-                ;; (dolist (cost specific-preferences)
-                ;;     (if (equal (getf cost :param) 'pref-species-slider)
-                ;;         (setparam-slider (getf cost :param) (getf cost :value)) ; it is a slider
-                ;;         (if (equal (getf cost :param) 'con-m-after-skip-check)
-                ;;             (setparam-yes-no (getf cost :param) (getf cost :value)) ; it is a yes-no
-                ;;             (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                ;;         ) 
-                ;;     )
-                ;; )
-
-                ;; ;; set search parameters
-                ;; (setparam-slider 'min-skips-slider (min-skips-slider-param (om::object editor)))
-                ;; (setparam 'borrow-mode (borrow-mode-param (om::object editor)))
-
-
-                ;; ;; preferences for the cost order
-                ;; (defparameter *cost-preferences* (make-hash-table))
-                ;; (dolist (current-list (list general-preferences specific-preferences melodic-preferences))
-                ;;     (dolist (cost current-list)
-                ;;         (if (getf cost :importance)
-                ;;             (setf (gethash (getf cost :param) *cost-preferences*) (getf cost :importance))
-                ;;         )   
-                ;;     )
-                ;; )
-
-                ;; (if (string= "Linear combination" (linear-combination (om::object editor))) 
-                ;;     (setf *linear-combination t)
-                ;;     (setf *linear-combination nil)
-                ;; )
+                (defparameter *is-stopped nil)
 
                 (defvar melodic-params-list nil)
                 (defvar melodic-values-list nil)
@@ -673,6 +620,8 @@
                 (print species-integer-list)
                 (print *voices-types)
 
+                (defparameter *species-list species-integer-list)
+
                 (print *scale)
 
                 (print "calling new problem")
@@ -699,7 +648,7 @@
                 )
                 (print "Searching for the next solution")
                 ;reset the boolean because we want to continue the search
-                (setparam 'is-stopped nil)
+                (setq *is-stopped nil)
                 ;get the next solution
                 (mp:process-run-function ; start a new thread for the execution of the next method
                     "solver-thread" ; name of the thread, not necessary but useful for debugging
@@ -728,7 +677,7 @@
                 )
                 (print "Searching for the best solution")
                 ;reset the boolean because we want to continue the search
-                (setparam 'is-stopped nil)
+                (setq *is-stopped nil)
                 ;get the next solution
                 (mp:process-run-function ; start a new thread for the execution of the next method
                     "solver-thread" ; name of the thread, not necessary but useful for debugging
@@ -754,7 +703,9 @@
             (om::om-make-point 160 20) ; size (horizontal, vertical)
             "Stop"
             :di-action #'(lambda (b)
-                (setparam 'is-stopped t)
+                (setq *is-stopped t)
+                (print "search stopped. *is-stopped parameter :" )
+                (print *is-stopped)
             )
             )
         )
@@ -763,69 +714,185 @@
 )
 
 
-;; (defun search-next-fux-cp (l)
-;;     (print "Searching next solution...")
-;;     ;; (print l)
-;;     ;; (#<|gil|::bab-engine 40100D21DB> (#<|gil|::int-var 40D038C6BB> #<|gil|::int-var 40D038C9CB> #<|gil|::int-var 40D038CD93> #<|gil|::int-var 40D038D233> #<|gil|::int-var 40D038D71B> #<|gil|::int-var 40D038DC03> #<|gil|::int-var 40D038E0EB> #<|gil|::int-var 40D038E5D3> #<|gil|::int-var 40D038E993> #<|gil|::int-var 40D038C59B> #<|gil|::int-var 40D038CB53> #<|gil|::int-var 40D038C81B> #<|gil|::int-var 40D038CF63> #<|gil|::int-var 40D038CB3B> #<|gil|::int-var 40D038D44B> #<|gil|::int-var 40D038CF4B> #<|gil|::int-var 40D038D933> #<|gil|::int-var 40D038D433> #<|gil|::int-var 40D038DE1B> #<|gil|::int-var 40D038D91B> #<|gil|::int-var 40D038E303> #<|gil|::int-var 40D038DE03> #<|gil|::int-var 40D038E753> #<|gil|::int-var 40D038E2EB> #<|gil|::int-var 40D038EAB3> #<|gil|::int-var 40D03974D3>) #<|gil|::time-stop 40100D16A3> #<|gil|::search-options 40100D1BC3> (1 2))
-;;     (let (
-;;         (se (first l))
-;;         (the-cp (second l))
-;;         (tstop (third l))
-;;         (sopts (fourth l))
-;;         (species-list (fifth l))
-;;         (check t)
-;;         sol sol-pitches sol-species
-;;         )
 
-;;         (time (om::while check :do
-;;             ; reset the tstop timer before launching the search
-;;             (gil::time-stop-reset tstop)
-;;             ; try to find a solution
-;;             (time (setq sol (try-find-solution se)))
-;;             (if (null sol)
-;;                 ; then check if there are solutions left and if the user wishes to continue searching
-;;                 (stopped-or-ended (gil::stopped se) (getparam 'is-stopped))   ; TODO check git damien
-;;                 ; else we have found a solution so break fthe loop
-;;                 (setf check nil)
-;;             )
-;;         ))
 
-;;         ; print the solution from GiL
-;;         (print "Solution: ")
-;;         (handler-case
-;;             (progn 
-;;                 (print (list "*cost-factors" (gil::g-values sol *cost-factors)))
-;;                 (print (list "sum of all costs = " (reduce #'+ (gil::g-values sol *cost-factors) :initial-value 0)))
-;;             ) 
-;;             (error (c)
-;;                 (dotimes (i *N-COST-FACTORS)
-;;                     (handler-case (gil::g-values sol (nth i *cost-factors)) (error (c) (print (list "Cost" i "had a problem."))))
-;;                 )
-;;                 (error "All costs are not set correctly. Correct this problem before trying to find a solution.")
-;;             )
-;;         )
+(defun search-next-fux-cp (se)
+    (print "Searching next solution...")
+    ;; (print l)
+    ;; (#<|gil|::bab-engine 40100D21DB> (#<|gil|::int-var 40D038C6BB> #<|gil|::int-var 40D038C9CB> #<|gil|::int-var 40D038CD93> #<|gil|::int-var 40D038D233> #<|gil|::int-var 40D038D71B> #<|gil|::int-var 40D038DC03> #<|gil|::int-var 40D038E0EB> #<|gil|::int-var 40D038E5D3> #<|gil|::int-var 40D038E993> #<|gil|::int-var 40D038C59B> #<|gil|::int-var 40D038CB53> #<|gil|::int-var 40D038C81B> #<|gil|::int-var 40D038CF63> #<|gil|::int-var 40D038CB3B> #<|gil|::int-var 40D038D44B> #<|gil|::int-var 40D038CF4B> #<|gil|::int-var 40D038D933> #<|gil|::int-var 40D038D433> #<|gil|::int-var 40D038DE1B> #<|gil|::int-var 40D038D91B> #<|gil|::int-var 40D038E303> #<|gil|::int-var 40D038DE03> #<|gil|::int-var 40D038E753> #<|gil|::int-var 40D038E2EB> #<|gil|::int-var 40D038EAB3> #<|gil|::int-var 40D03974D3>) #<|gil|::time-stop 40100D16A3> #<|gil|::search-options 40100D1BC3> (1 2))
+    (let (
+        (check t)
+        sol sol-pitches sol-species
+        )
+
+        (time (om::while check :do
+            (print "search next loop")
+            ;; ; reset the tstop timer before launching the search
+            ;; (gil::time-stop-reset tstop)                             ; Done on Gecode side
+            ; try to find a solution
+            (time (setq sol (try-find-solution se)))    ; "sol" will contain a void* cast of a Problem* pointer (the solution space)
+            (if (null sol)
+                ; then check if there are solutions left and if the user wishes to continue searching
+                (stopped-or-ended (search-stopped se) (getparam 'is-stopped))   ; TODO check git damien
+                ; else we have found a solution so break fthe loop
+                (setf check nil)
+            )
+        ))
+
+        (print sol)
         
-;;         (print (list "species = " species-list))
-        
-;;         (print "The solution can now be retrieved by evaluating the third output of cp-params.")
-;;         (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
-;;         (let (
-;;             (basic-rythmics (get-basic-rythmics species-list *cf-len sol-pitches counterpoints sol))
-;;             (sol-voices (make-list *N-COUNTERPOINTS :initial-element nil))
-;;             )
+                
+        (print "The solution can now be retrieved by evaluating the third output of cp-params.")
+        ;; (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
+        (setq sol-pitches (solution-to-int-array sol)) ; store the values of the solution
+        (print sol-pitches)
+        (let (
+            (basic-rythmics (get-basic-rythmics *species-list *cf-len sol-pitches))
+            (sol-voices (make-list *N-COUNTERPOINTS :initial-element nil))
+            )
 
-;;             (loop for i from 0 below *N-COUNTERPOINTS do (progn
-;;                 (setq rythmic+pitches (nth i basic-rythmics)) ; get the rythmic correpsonding to the species
-;;                 (setq rythmic-om (first rythmic+pitches))
-;;                 (setq pitches-om (second rythmic+pitches))
-;;             )
+            (loop for i from 0 below *N-COUNTERPOINTS do (progn
+                (setq rythmic+pitches (nth i basic-rythmics)) ; get the rythmic correpsonding to the species
+                (setq rythmic-om (first rythmic+pitches))
+                (setq pitches-om (second rythmic+pitches))
+            )
 
-;;                 (setf (nth i sol-voices) (make-instance 'voice :chords (to-midicent pitches-om) :tree (om::mktree rythmic-om '(4 4)) :tempo *cf-tempo))
-;;             )
-;;             (make-instance 'poly :voices sol-voices)
-;;         )
-;;     )
-;; )
+                (setf (nth i sol-voices) (make-instance 'voice :chords (to-midicent pitches-om) :tree (om::mktree rythmic-om '(4 4)) :tempo *cf-tempo))
+            )
+            (make-instance 'poly :voices sol-voices)
+        )
+    )
+)
+
+; try to find a solution, catch errors from Gecode
+(defun try-find-solution (se)
+    (print "try-find-solution")
+    (handler-case
+        (return-next-solution-space se) ; search the next solution, sol is the space of the solution
+        (error (c)
+            (error "Error on Gecode side when calling return-next-solution-space")
+            ;(try-find-solution se)
+        )
+    )
+)
+
+; determines if the search has been stopped by the solver because there are no more solutions or if the user has stopped the search
+(defun stopped-or-ended (stopped-se stop-user)
+    (print (list "stopped-se" stopped-se "stop-user" stop-user))
+    (if (= stopped-se 0); if the search has not been stopped by the TimeStop object, there is no more solutions
+        (error "The search was stopped because no more solution was found. Either the best solution was found or none exist.")
+    )
+    ;otherwise, check if the user wants to keep searching or not
+    (if stop-user
+        (error "The search was stopped. Press next to continue the search.")
+    )
+)
+
+
+; get the basic rythmic pattern and the corresponding notes the given species
+; - species-list: the species [1 2 3 4]
+; - len: the length of the cantus-firmus
+; - sol-pitches: the whole solution array
+; - counterpoints: the counterpoints we are working with (only useful for the 5th species as it needs the extended-cp-domain)
+; - sol: the solutino space (only useful for the 5th species)
+; return format = '('(rythmics-1 pitches-1) '(rythmics-2 pitches-2) ... '(rythmics-n pitches-n))
+; examples:
+; ((1) 5) -> (((1 1 1 1 1) (60 62 64 65 60)))
+; ((1 2) 5) -> (((1 1 1 1 1) (60 62 64 65 60)) ((1/2 1/2 1/2 1/2 1/2 1/2 1/2 1/2 1) (60 62 64 65 64 62 60 62 60)))
+; ((2) 5) -> ((1/2 1/2 1/2 1/2 1/2 1/2 1/2 1/2 1 (pitches))
+; ((3) 5) -> ((1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1 (pitches))
+; ((4) 5) -> ~((-1/2 1 1 1 1/2 1/2 1 (pitches)) depending on the counterpoint
+
+(defun get-basic-rythmics (species-list len sol-pitches)
+    (setq len-1 (- len 1))
+    (setq len-2 (- len 2))
+    (let (
+        (rythmic+pitches (make-list *N-COUNTERPOINTS :initial-element nil))
+        )
+        (loop for i from 0 below *N-COUNTERPOINTS do (progn
+            (case (nth i species-list)
+                (1 (progn 
+                    (setf (nth i rythmic+pitches) (list
+                        ; rythm
+                        (make-list len :initial-element 1)
+                        ; pitches
+                        (subseq sol-pitches 0 len)
+                    ))
+                    (setf sol-pitches (subseq sol-pitches len))
+                ))
+                (2 (let (
+                        (rythmic (append (make-list (* 2 len-1) :initial-element 1/2) '(1)))
+                        (pitches (subseq sol-pitches 0 (- (* 2 len) 1)))
+                        )
+                        (if (eq (car (last pitches 4)) (car (last pitches 3))) (progn ; if the first note in the penult bar is the same as the last in the 2nd-to last
+                            ; then ligature them 
+                            (setf rythmic (append (butlast rythmic 4) '(1) (last rythmic 2)))
+                            (loop
+                                for i from (- (length pitches) 4) below (- (length pitches) 1)
+                                do (setf (nth i pitches) (nth (+ i 1) pitches))
+                            )
+                        ))
+                        (if (eq (car (last pitches 3)) (car (last pitches 2))) (progn ; same but for 3rd-to-last and 2nd-to-last
+                            (setf rythmic (append (butlast rythmic 3) '(1) (last rythmic 1)))
+                            (loop
+                                for i from (- (length pitches) 3) below (- (length pitches) 1)
+                                do (setf (nth i pitches) (nth (+ i 1) pitches))
+                            )
+                        ))
+                        (setf (nth i rythmic+pitches) (list
+                            rythmic
+                            pitches
+                        ))
+                        ; remove all the notes we've just considered from sol-pitches
+                        (setf sol-pitches (subseq sol-pitches (length pitches)))
+                    )                    
+                )
+                (3 (progn
+                    (setf (nth i rythmic+pitches) (list 
+                        ; rhythm
+                        (append (make-list (* 4 len-1) :initial-element 1/4) '(1))
+                        ; pitches
+                        (subseq sol-pitches 0 (- (* 4 len) 3))
+                    ))
+                    ; remove all the notes we've just considered from sol-pitches
+                    (setf sol-pitches (subseq sol-pitches (- (* 4 len) 3)))
+                ))
+                (4 (error "The fifth species is not implemented yet in get-basic-rythmics function.")
+                ;; (progn 
+                ;;     (setf (nth i rythmic+pitches) (build-rythmic-pattern
+                ;;         (get-4th-species-array len-2)
+                ;;         (get-4th-notes-array (subseq sol-pitches 0 (* 2 len-1)) (+ (* 4 len-1) 1))
+                ;;     ))
+                ;;     (setf j 0)
+                ;;     (dotimes (k *cf-penult-index)
+                ;;         (setf j (+ j 2))
+                ;;         ; if we have a note that creates a hidden fifth (direct motion to a fifth), then remove the note
+                ;;         (if (and
+                ;;             (eq 7 (nth (+ 1 j) (gil::g-values sol (first (h-intervals (nth i counterpoints))))))
+                ;;             (eq DIRECT (nth j (gil::g-values sol (first (motions (nth i counterpoints))))))
+                ;;             )
+                ;;             (setf (nth j (first (nth i rythmic+pitches))) -1/2)
+                ;;         )
+                ;;     )
+                ;;     (setf sol-pitches (subseq sol-pitches (* 2 len-1)))
+                ;; )
+                )
+                (5 (error "The fifth species is not implemented yet in get-basic-rythmics function.")
+                ;; (let (
+                ;;         (sol-species (gil::g-values sol (species-arr (nth i counterpoints)))) ; store the values of the solution
+                ;;     )                    
+                ;;     (setf (nth i rythmic+pitches) 
+                ;;         (parse-species-to-om-rythmic sol-species sol-pitches (extended-cp-domain (nth i counterpoints)))
+                ;;     )
+                ;;     (setf sol-pitches (subseq sol-pitches (solution-len (nth i counterpoints))))
+                ;; )
+                )
+            )
+        ))
+        (assert (eql sol-pitches nil) (sol-pitches) "Assertion failed: sol-pitches should be nil at the end of function get-basic-rythmics.")
+        rythmic+pitches
+    )
+)
 
 
 (defun make-slider (cost y-position)
@@ -861,38 +928,38 @@
     (mapcar #'(lambda (x) (format nil "~A" x)) (loop for i from 1 to 14 collect i))
 )
 
-; set the value @v in the hash table @h with key @k
-(defun seth (h k v)
-    (setf (gethash k h) v)
-)
+;; ; set the value @v in the hash table @h with key @k
+;; (defun seth (h k v)
+;;     (setf (gethash k h) v)
+;; )
 
-; set the value @v in the parameters with key @k
-(defun setparam (k v)
-    (seth *params* k v)
-)
+;; ; set the value @v in the parameters with key @k
+;; (defun setparam (k v)
+;;     (seth *params* k v)
+;; )
 
-(defun setparam-yes-no (k v)
-    (let ((converted (if (string= "Yes" v)
-                    t
-                    nil)))
-        (setparam k converted)
-    )
-)
+;; (defun setparam-yes-no (k v)
+;;     (let ((converted (if (string= "Yes" v)
+;;                     t
+;;                     nil)))
+;;         (setparam k converted)
+;;     )
+;; )
 
-; set the cost-converted value @of v in the parameters with key @k
-(defun setparam-cost (k v)
-    (setparam k (convert-to-cost-integer v))
-)
+;; ; set the cost-converted value @of v in the parameters with key @k
+;; (defun setparam-cost (k v)
+;;     (setparam k (convert-to-cost-integer v))
+;; )
 
-; set the species-converted value @of v in the parameters with key @k
-(defun setparam-species (k v)
-    (setparam k (convert-to-species-integer v))
-)
+;; ; set the species-converted value @of v in the parameters with key @k
+;; (defun setparam-species (k v)
+;;     (setparam k (convert-to-species-integer v))
+;; )
 
-; set the slider-converted value @of v in the parameters with key @k
-(defun setparam-slider (k v)
-    (setparam k (convert-to-percent v))
-)
+;; ; set the slider-converted value @of v in the parameters with key @k
+;; (defun setparam-slider (k v)
+;;     (setparam k (convert-to-percent v))
+;; )
 
 ; convert a cost to an integer
 (defun convert-to-cost-integer (param)

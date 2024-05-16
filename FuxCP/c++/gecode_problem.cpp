@@ -842,6 +842,8 @@ string Problem::toString(){
  * Search engine methods *
  *************************/
 
+Gecode::Search::TimeStop global_timeout(5000);
+
 /**
  * Creates a search engine for the given problem
  * Should only be used when using OM, otherwise you can create the solver etc in the main file
@@ -854,8 +856,10 @@ Search::Base<Problem>* make_solver(Problem* pb, int type){
     string message = "make_solver function called. type of solver :\n" + to_string(type) + "\n";
     writeToLogFile(message.c_str());
 
-    Gecode::Search::Options opts;   // TODO : definir un timestop object et mettre dans les search options (+ les autres options)
+    Gecode::Search::Options opts;   
     /**@todo add here any options you want*/
+    // Gecode::Search::TimeStop timeout(5000); // Stops search after 5 seconds, like Anton. Do we have to reset it after calling next solution?
+    opts.stop = &global_timeout;
 
     if (type == bab_solver)
         return new BAB<Problem>(pb, opts);
@@ -871,9 +875,14 @@ Search::Base<Problem>* make_solver(Problem* pb, int type){
  */
 Problem* get_next_solution_space(Search::Base<Problem>* solver){
     string message = "get_next_solution_space function called.\n";
+    // RESET TIMEOUT OBJECT HERE
+    global_timeout.reset();
     Problem* sol_space = solver->next();
-    if (sol_space == nullptr)
+    if (sol_space == nullptr){
+        message += "solution_space was null. \n";
+        writeToLogFile(message.c_str());
         return NULL;
+    }
     message += sol_space->toString();
     writeToLogFile(message.c_str());
     return sol_space;

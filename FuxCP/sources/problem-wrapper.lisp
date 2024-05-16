@@ -94,6 +94,13 @@
     (solver :pointer) ; a void* cast of a Base<Problem>* pointer
 )
 
+
+(cffi::defcfun ("search_stopped" search-stopped) :int
+    "Returns 1 if the seach was stopped by the TimeStop object, and 1 otherwise."
+    (solver :pointer) ; a void* cast of a Base<Problem>* pointer
+)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Solution handling ;;
 ;;;;;;;;;;;;;;;;;;;;;;;

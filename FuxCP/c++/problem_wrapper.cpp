@@ -69,5 +69,12 @@ void* create_solver(void* sp, int type){
  * @return a void* cast of a Problem* pointer
  */
 void* return_next_solution_space(void* solver){
+    writeToLogFile("return_next_solution_space function called");
     return (void*) get_next_solution_space(static_cast<DFS<Problem>*>(solver));
+}
+
+
+
+int search_stopped(void* solver){
+    return static_cast<int>(static_cast<Base<Problem>*>(solver)->stopped());
 }

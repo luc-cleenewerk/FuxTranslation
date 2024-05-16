@@ -49,6 +49,10 @@ void* create_solver(void* sp, int type);
  */
 void* return_next_solution_space(void* solver);
 
+
+int search_stopped(void* solver);
+
+
 #ifdef __cplusplus
 };
 #endif
