@@ -527,28 +527,18 @@ string Problem::toString(){
             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
              + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
-    message += "Parts : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for cp : [";
-        for(int i = 0; i < size; i++){
-            if (parts[k].notes[i].assigned())
-                message += to_string(parts[k].notes[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "]\n";
     message += "H intervals : [";
     for(int k = 0; k < parts.size(); k++){
         message += "current values for hInterVal : [";
         for(int i = 0; i < 4; i++){
+            message += " [ ";
             for(int h = 0; h < size; h++){
                 if (parts[k].hIntervalsCpCf[i][h].assigned())
                     message += to_string(parts[k].hIntervalsCpCf[i][h].val()) + " ";
                 else
-                    message += "<not assigned> ";
+                    message += "... ";
             }
+            message += " ] ";
         }
         message += "]\n";
     }
@@ -785,7 +775,7 @@ string Problem::toString(){
                 if (parts[k].vector_notes[i][n].assigned())
                     message += to_string(parts[k].vector_notes[i][n].val()) + " ";
                 else
-                    message += "<not assigned> ";     
+                    message += "... ";     
             }
             message += " ] ";
         }
