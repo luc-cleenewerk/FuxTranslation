@@ -49,7 +49,11 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     message += "\n";
     message += to_string(t_off);
     message += "\n";
-    message += int_vector_to_string(scle);
+    message += int_vector_to_string(scle);    
+    message += "\n";
+    message += int_vector_to_string(chromatic);
+    message += "\n";
+    message += int_vector_to_string(borrow);
 
 
 
@@ -81,7 +85,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     vars = IntVarArray(*this, 14, 0, 100);
     int solution_len = 0;
     for(int p = 0; p < splist.size(); p++){
-        solution_len+=splist[p]*size;
+        solution_len+=splist[p]*size;           // TODO change for species >2
     }
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     //initializing the cost_factors list
