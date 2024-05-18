@@ -544,6 +544,18 @@ string Problem::toString(){
         message += "]\n";
     }
     message += "]\n\n";
+     message += "IS OFF : [";
+    for(int k = 1; k < parts.size(); k++){
+        message += "current values for IS OFF: [";
+            for(int n = 0; n < parts[k].off_costs.size(); n++){
+                if (parts[k].off_costs[n].assigned())
+                    message += to_string(parts[k].off_costs[n].val()) + " ";
+                else
+                    message += "... ";     
+            }
+        message += "]\n";
+    }
+    message += "]\n\n";
     writeToLogFile(message.c_str());
     return message;
 }

@@ -84,7 +84,22 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
 
     const vector<int> chrom_scale = chrom;
 
-    const vector<int> off_key = intersection(cp_range, chrom_scale);
+    vector<int> o = {};
+
+    for(int c = 0; c < chrom_scale.size(); c++){
+        int t = 0;
+        for(int sc = 0; sc < scale.size(); sc++){
+            if(chrom_scale[c]==scale[sc]){
+                t = 1;
+                break;
+            }
+        }
+        if(t==0){
+            o.push_back(chrom_scale[c]);
+        }
+    }
+
+    const vector<int> off_key = intersection(cp_range, o);
 
     off_scale = off_key;
 
@@ -131,15 +146,23 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     fifth_costs = IntVarArray(home, size, IntSet(0,1));
     octave_costs = IntVarArray(home, size, IntSet(0,1));
 
+    //corresponds to the is_member from lisp
     for(int i = 0; i < size; i++){
-        BoolVar memb = BoolVar(home, 0, 1);
-        for(int k = 0; k < off_scale.size(); k++){
-            rel(home, notes[i], IRT_EQ, off_scale[k], Reify(memb));
+        IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
+        IntVar sm = IntVar(home, 0, off_scale.size());
+        for(int l = 0; l < off_scale.size(); l++){
+            BoolVar b1 = BoolVar(home, 0, 1);
+            rel(home, vector_notes[0][i], IRT_EQ, off_scale[l], Reify(b1));
+            rel(home, (b1==0)>>(res[l]==0));
+            rel(home, (b1==1)>>(res[l]==1));
         }
-        rel(home, is_off[i]==memb);
+        IntVarArgs x(res.size());
+        for(int t = 0; t < off_scale.size(); t++){
+            x[t] = res[t];
+        }
+        rel(home, sm, IRT_EQ, expr(home, sum(x)));
+        rel(home, sm, IRT_GR, 0, Reify(is_off[i]));
     }
-
-
 }
 
 IntVarArray Part::getNotes(){
