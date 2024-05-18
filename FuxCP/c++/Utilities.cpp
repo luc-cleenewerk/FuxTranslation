@@ -81,7 +81,7 @@ string int_vector_to_string(vector<int> vector){
     for (int i = 0; i < vector.size(); ++i) {
         s += to_string(vector[i]);
         if(i != vector.size() - 1)
-            s += " , ";
+            s += ", ";
     }
     return s;
 }
