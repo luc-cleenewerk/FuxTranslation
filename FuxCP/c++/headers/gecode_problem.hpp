@@ -144,6 +144,8 @@ public:
      */
     string toString();
 
+    void create_strata();
+
 };
 
 /*************************

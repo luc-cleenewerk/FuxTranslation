@@ -12,6 +12,7 @@
 #include <fstream>
 
 #include "Part.hpp"
+#include "Stratum.hpp"
 
 using namespace std;
 using namespace Gecode;
@@ -369,5 +370,21 @@ string time();
 void write_to_log_file(const char *message, const string& filename);
 
 void create_solution_array(int size, IntVarArray sol, vector<Part> parts);
+
+void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_succ_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Stratum> upper);
 
 #endif

@@ -241,3 +241,101 @@ void create_solution_array(int size, IntVarArray sol, vector<Part> parts){
         }
     }
 }
+
+void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs y(splist.size()*size);
+    int index = 0;
+
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size; i++){
+            y[index] = parts[p].fifth_costs[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(y)));
+}
+
+void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs oc(splist.size()*size);
+    int index = 0;
+
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size; i++){
+            oc[index] = parts[p].octave_costs[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(oc)));
+}
+
+void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs z(splist.size()*size);
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size; i++){
+            z[index] = parts[p].off_costs[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(z)));
+}
+
+void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs x((splist.size()*size)-splist.size());
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            x[index] = parts[p].m_degrees_cost[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(x)));
+}
+
+void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs pc((splist.size()*size)-splist.size());
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            pc[index] = parts[p].motions_cost[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(pc)));
+}
+
+void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs v((splist.size()*size)-splist.size());
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-1; i++){
+            v[index] = parts[p].varietyArray[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(v)));
+}
+
+void add_succ_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    IntVarArgs scc((splist.size()*size)-2*splist.size());
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-2; i++){
+            scc[index] = parts[p].succ_cost[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(scc)));
+}
+
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Stratum> upper){
+    IntVarArgs tr(upper.size()*size);
+    int index = 0;
+    for(int p = 0; p < upper.size(); p++){
+        for(int i = 0; i < size; i++){
+            tr[index] = upper[p].triad_costs[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(tr)));
+}
