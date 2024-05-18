@@ -18,9 +18,12 @@
 Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int> v_types, int b_mode, int min_skips, vector<int> general_params, 
         vector<int> motion_params, vector<int> melodic, vector<int> specific, vector<int> importance, int t_off, vector<int> scle, int scale_size, 
         vector<int> chromatic, int chrom_size, vector<int> borrow, int borrow_size){
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
 
     writeToLogFile("entered gecode_problem.cpp");
 
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     string message = "WSpace object created. ";
     message += "\n";
     message += int_vector_to_string(cf);
@@ -76,7 +79,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         ordered_costs.push_back(tmp);
     }
 
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
 
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     P_cons_cost = IntVarArray(*this, size, 0, 1000);
     vars = IntVarArray(*this, 14, 0, 100);
     int solution_len = 0;
@@ -177,8 +183,11 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
     rel(*this, cost_factors[0][6], IRT_EQ, expr(*this, sum(scc)));
 
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
 
 
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     //lowest is the lowest stratum for each note
     
     lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, general_params[5]));
@@ -249,7 +258,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     }
 
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
 
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     IntVarArgs tr(upper.size()*size);
     index = 0;
     for(int p = 0; p < upper.size(); p++){
@@ -279,10 +291,13 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             }
         }
     }
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
 
 
 
     
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     /// constraints
 
     link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
@@ -569,6 +584,7 @@ string Problem::toString(){
             to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
              + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
     message += "Parts : [";
     for(int k = 0; k < parts.size(); k++){
         message += "current values for cp : [";
@@ -581,16 +597,28 @@ string Problem::toString(){
         message += "]\n";
     }
     message += "]\n";
+=======
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
     message += "H intervals : [";
     for(int k = 0; k < parts.size(); k++){
         message += "current values for hInterVal : [";
         for(int i = 0; i < 4; i++){
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
+=======
+            message += " [ ";
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
             for(int h = 0; h < size; h++){
                 if (parts[k].hIntervalsCpCf[i][h].assigned())
                     message += to_string(parts[k].hIntervalsCpCf[i][h].val()) + " ";
                 else
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
                     message += "<not assigned> ";
             }
+=======
+                    message += "... ";
+            }
+            message += " ] ";
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
         }
         message += "]\n";
     }
@@ -827,7 +855,11 @@ string Problem::toString(){
                 if (parts[k].vector_notes[i][n].assigned())
                     message += to_string(parts[k].vector_notes[i][n].val()) + " ";
                 else
+<<<<<<< HEAD:FuxCP/c++/gecode_problem.cpp
                     message += "<not assigned> ";     
+=======
+                    message += "... ";     
+>>>>>>> a4998f88605dcc6c510457ce3ea67e486f10a9a2:FuxCP_base/FuxCP/c++/gecode_problem.cpp
             }
             message += " ] ";
         }
