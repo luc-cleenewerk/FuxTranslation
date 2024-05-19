@@ -18,9 +18,6 @@
 Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int> v_types, int b_mode, int min_skips, vector<int> general_params, 
         vector<int> motion_params, vector<int> melodic, vector<int> specific, vector<int> importance, int t_off, vector<int> scle, int scale_size, 
         vector<int> chromatic, int chrom_size, vector<int> borrow, int borrow_size){
-
-    writeToLogFile("entered gecode_problem.cpp");
-
     string message = "WSpace object created. ";
     message += "\n";
     message += int_vector_to_string(cf);
@@ -49,59 +46,64 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     message += "\n";
     message += to_string(t_off);
     message += "\n";
-    message += int_vector_to_string(scle);    
-    message += "\n";
-    message += int_vector_to_string(chromatic);
-    message += "\n";
-    message += int_vector_to_string(borrow);
+    message += int_vector_to_string(scle);
 
 
-    // TEMPORARY! JUST CHECKING OM
-    // chromatic = {126,123,121,118,116,114,111,109,106,104,102,99,97,94,92,90,87,85,82,80,78,75,73,70,68,66,63,61,58,56,54,51,49,46,44,42,39,37,34,32,30,27,25,22,20,18,15,13,10,8,6,3,1};
 
+    size = s;                               //amount of measures
+    n_unique_costs = 0;                     //amount of unique costs with the species
+    lower_bound_domain = 1;                 //lower bound for the strata
+    upper_bound_domain = 127;               //upper bound for the strata
+    cantusFirmus = cf;                      //the cantusfirmus
+    speciesList = splist;                   //list of species for each counterpoint
+    con_motion_cost = motion_params[2];     //cost of contrary motion
+    obl_motion_cost = motion_params[1];     //cost of oblique motion
+    dir_motion_cost = motion_params[0];     //cost of direct motion
+    voice_types = v_types;                  //voice type, by far above / below the cantusfirmus a counterpoint should be
+    tone_offset = t_off;                    //tonality offset
+    scale = scle;                           //scale
+    borrow_mode = b_mode;                   //is borrowing allowed
 
-    size = s;
-    n_unique_costs = 0;
-    lower_bound_domain = 1;
-    upper_bound_domain = 127;
-    cantusFirmus = cf;
-    speciesList = splist;
-    con_motion_cost = motion_params[2];
-    obl_motion_cost = motion_params[1];
-    dir_motion_cost = motion_params[0];
-    voice_types = v_types;
-    tone_offset = t_off;
-    scale = scle;
-    borrow_mode = b_mode;
+    //creating the map with the names of the costs and their importance
+
     vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic"};
     prefs = {{importance_names[0], importance[0]},{importance_names[1], importance[1]},{importance_names[2], importance[2]},{importance_names[3], importance[3]}
         ,{importance_names[4], importance[4]},{importance_names[5], importance[5]},{importance_names[6], importance[7]},{importance_names[7], importance[13]}};
+    
+    //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
+
     cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad"};
+
+    //initializing the ordered costs list, aka the list containing the costs according to their importance
+
     ordered_factors = IntVarArray(*this, 14, 0, 100);
     for(int i = 0; i < 14; i++){
         vector<string> tmp = {};
         ordered_costs.push_back(tmp);
     }
 
-
     P_cons_cost = IntVarArray(*this, size, 0, 1000);
-    vars = IntVarArray(*this, 14, 0, 100);
+    
+    //creating the solution array which will contain the notes of the counterpoint
+
     int solution_len = 0;
     for(int p = 0; p < splist.size(); p++){
-        solution_len+=splist[p]*size;           // TODO change for species >2
+        solution_len+=splist[p]*size;           //todo, this only works for species 1 or 2
     }
     solution_array = IntVarArray(*this, solution_len, 0, 127);
+
     //initializing the cost_factors list
+
     int highest_species = 0;
     for(int s = 0; s < splist.size(); s++){
         if(splist[s]>highest_species){
             highest_species = s;
         }
     }
-    if(s==1){ //if the cp is of species 1
+    if(highest_species==1){ //if the cp is of species 1
         cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
     } else {
-        cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
+        cost_factors.push_back(IntVarArray(*this, 8, 0, 100)); //TODO : this should be 9 instead of 8 later on
     }
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
@@ -110,81 +112,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         parts.push_back(Part(*this, s,splist[i],cantusFirmus,splist,con_motion_cost,obl_motion_cost,dir_motion_cost, voice_types[i], 
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic)); //adding the counterpoints
     }
-
-    //for fifth cost, octave cost, off key cost, Melodic cost, motion cost, variety cost, successive cost and triad costs
-    IntVarArgs y(splist.size()*size);
-    int index = 0;
-
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
-            y[index] = parts[p].fifth_costs[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][0], IRT_EQ, expr(*this, sum(y)));
-
-    IntVarArgs oc(splist.size()*size);
-    index = 0;
-
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
-            oc[index] = parts[p].octave_costs[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][1], IRT_EQ, expr(*this, sum(oc)));
-
-    IntVarArgs z(splist.size()*size);
-    index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
-            z[index] = parts[p].off_costs[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][2], IRT_EQ, expr(*this, sum(z)));
-
-    IntVarArgs x((splist.size()*size)-splist.size());
-    index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            x[index] = parts[p].m_degrees_cost[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][3], IRT_EQ, expr(*this, sum(x)));
-
-    IntVarArgs pc((splist.size()*size)-splist.size());
-    index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            pc[index] = parts[p].motions_cost[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][4], IRT_EQ, expr(*this, sum(pc)));
-
-    IntVarArgs v((splist.size()*size)-splist.size());
-    index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            v[index] = parts[p].varietyArray[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][5], IRT_EQ, expr(*this, sum(v)));
-
-    IntVarArgs scc((splist.size()*size)-2*splist.size());
-    index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-2; i++){
-            scc[index] = parts[p].succ_cost[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][6], IRT_EQ, expr(*this, sum(scc)));
-
-
 
     //lowest is the lowest stratum for each note
     
@@ -200,78 +127,35 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //creation of the strata and putting the correct notes in each strata
 
-    for(int i = 0; i < size; i++){
+    create_strata();
 
-        IntVarArray voices = IntVarArray(*this, parts.size(), 0, 120);
-        IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
+    //adding the costs to the list
 
-        for(int j = 0; j < parts.size(); j++){
-            if(j==0){
-                rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]); //getting the notes
-            } else {
-                rel(*this, voices[j], IRT_EQ, parts[j].vector_notes[0][i]); //getting the notes
-            }
-            rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[0][i]);
-        }
-        
-        IntVarArray order = IntVarArray(*this, parts.size(), 0, parts.size()-1);
-        sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120)); //sorting the voices
-        
-        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]); //linking the hInterval in the strata with the one in the cf / cp
+    add_fifth_cost(*this, cost_factors[0][0], size, splist, parts);
 
-        sorted(*this, voices, sorted_voices[i], order); //sorting the voices
+    add_octave_cost(*this, cost_factors[0][1], size, splist, parts);
 
-        rel(*this, lowest[0].notes[i], IRT_EQ, sorted_voices[i][0]); //putting the lowest note in the lowest stratum
+    add_off_cost(*this, cost_factors[0][2], size, splist, parts);
 
-        for(int j = 0; j < upper.size(); j++){
-            rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]); //the rest go in the upper strata
-        }
+    add_melodic_cost(*this, cost_factors[0][3], size, splist, parts);
 
-        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i])); //determmining if the cf is the lowest strata for each note
+    add_motion_cost(*this, cost_factors[0][4], size, splist, parts);
 
-        if(parts.size()==2){
-            rel(*this, parts[0].is_not_lowest[i], IRT_EQ, 0, Reify(parts[1].is_not_lowest[i]));
-        }
-        if(parts.size()==3){
-            BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].vector_notes[0][i]));
+    add_variety_cost(*this, cost_factors[0][5], size, splist, parts);
 
-            rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
-            rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
-        }
+    add_succ_cost(*this, cost_factors[0][6], size, splist, parts);
 
-        if(i > 0){
+    add_triad_cost(*this, cost_factors[0][7], size, splist, upper);
 
-            vector<IntVarArray> corresponding_m_intervals;
+    //ORDERING THE COSTS
 
-            for(int j = 0; j < parts.size(); j++){
-                corresponding_m_intervals.push_back(parts[j].m_intervals_brut);
-            }
-
-            rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[0].is_not_lowest[i]));
-            rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[1].is_not_lowest[i]));
-            if(parts.size()==3){
-                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[2].is_not_lowest[i]));
-            }
-        }
-
-    }
-
-
-    IntVarArgs tr(upper.size()*size);
-    index = 0;
-    for(int p = 0; p < upper.size(); p++){
-        for(int i = 0; i < size; i++){
-            tr[index] = upper[p].triad_costs[i];
-            index++;
-        }
-    }
-    rel(*this, cost_factors[0][7], IRT_EQ, expr(*this, sum(tr)));
-
-    for(const auto& entry : prefs){
+    //putting the name of the cost in the ordered costs list at the index of its importance
+    for(const auto& entry : prefs){ 
         int val = entry.second-1;
         ordered_costs[val].push_back(entry.first);
     }
 
+    //creating the final ordered list
     for(int i = 0; i < 14; i++){
         if(!ordered_costs[i].empty()){
             for(int k = 0; k < ordered_costs[i].size(); k++){
@@ -286,10 +170,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             }
         }
     }
-
-
-
-    
     /// constraints
 
     link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
@@ -349,7 +229,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             link_harmonic_arrays_2nd_species(*this, size, parts[p], lowest);
         }
     }
-    //todo add other constraints
     
 
     /// branching
@@ -592,12 +471,14 @@ string Problem::toString(){
     for(int k = 0; k < parts.size(); k++){
         message += "current values for hInterVal : [";
         for(int i = 0; i < 4; i++){
+            message += " [ ";
             for(int h = 0; h < size; h++){
                 if (parts[k].hIntervalsCpCf[i][h].assigned())
                     message += to_string(parts[k].hIntervalsCpCf[i][h].val()) + " ";
                 else
-                    message += "<not assigned> ";
+                    message += "... ";
             }
+            message += " ] ";
         }
         message += "]\n";
     }
@@ -614,134 +495,7 @@ string Problem::toString(){
         }
     }
     message += "]\n";
-    /*
-    message += "M intervals brut : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for M intervals : [";
-        for(int i = 0; i < size-1; i++){
-            if (parts[k].m_intervals_brut[i].assigned())
-                message += to_string(parts[k].m_intervals[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "ISCFB : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for CFB: [";
-        for(int i = 0; i < size; i++){
-            if (parts[k].isCFB[i].assigned())
-                message += to_string(parts[k].isCFB[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "LOWEST : [";
-    //for(int k = 1; k < parts.size(); k++){
-        message += "current values for LOWEST: [";
-        for(int i = 0; i < size; i++){
-            if (lowest[0].notes[i].assigned())
-                message += to_string(lowest[0].notes[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    //}
-    message += "UPPER : [";
-    for(int k = 0; k < upper.size(); k++){
-        message += "current values for UPPER : [";
-        for(int i = 0; i < upper[k].notes.size(); i++){
-            if (upper[k].notes[i].assigned())
-                message += to_string(upper[k].notes[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "IS NOT LOWEST : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for IS NOT LOWEST : [";
-        for(int i = 0; i < size; i++){
-            if (parts[k].is_not_lowest[i].assigned())
-                message += to_string(parts[k].is_not_lowest[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "VAR COST : [";
-    for(int k = 1; k < parts.size(); k++){
-        message += "current values for VAR COST : [";
-        for(int i = 0; i < parts[k].varietyArray.size(); i++){
-            if (parts[k].varietyArray[i].assigned())
-                message += to_string(parts[k].varietyArray[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "MOTIONS : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for MOTIONS : [";
-        for(int i = 0; i < parts[k].motions.size(); i++){
-            if (parts[k].motions[i].assigned())
-                message += to_string(parts[k].motions[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "current values for M_deg_cost : [";
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            if (parts[p].m_degrees_cost[i].assigned())
-                message += to_string(parts[p].m_degrees_cost[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";
-    message += "current values for variety_cost : [";
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            if (parts[p].varietyArray[i].assigned())
-                message += to_string(parts[p].varietyArray[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";
-    message += "current values for direct cost : [";
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-2; i++){
-            if (parts[p].direct_move_cost[i].assigned())
-                message += to_string(parts[p].direct_move_cost[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";
-    message += "current values for succ_cost : [";
-    for(int p = 0; p < parts.size(); p++){
-        for(int i = 0; i < size-2; i++){
-            if (parts[p].succ_cost[i].assigned())
-                message += to_string(parts[p].succ_cost[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";
-    message += "current values for TRIAD : [";
-    for(int p = 0; p < upper.size(); p++){
-        for(int i = 0; i < size; i++){
-            if (upper[p].triad_costs[i].assigned())
-                message += to_string(upper[p].triad_costs[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";*/
+    
      message += "current values for COST_FAC : [";
     for(int p = 0; p < cost_factors.size(); p++){
         for(int i = 0; i < cost_factors[p].size(); i++){
@@ -766,57 +520,6 @@ string Problem::toString(){
             }
         }
         message += "]\n";
-    /*message += "current values for P_CONS_CST: [";
-        for(int i = 0; i < size; i++){
-            if (P_cons_cost[i].assigned())
-                message += to_string(P_cons_cost[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    
-    message += "current values for LOWEST BRUT: [";
-        for(int i = 0; i < size; i++){
-            if (lowest[0].hIntervalsAbs[i].assigned())
-                message += to_string(lowest[0].hIntervalsAbs[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-     message += "IS OFF : [";
-    for(int k = 1; k < parts.size(); k++){
-        message += "current values for IS OFF : [";
-        for(int i = 0; i < size; i++){
-            if (parts[k].is_off[i].assigned())
-                message += to_string(parts[k].is_off[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "TRIAD COSTS : [";
-    for(int k = 1; k < upper.size(); k++){
-        message += "current values for IS OFF : [";
-        for(int i = 0; i < size; i++){
-            if (upper[k].triad_costs[i].assigned())
-                message += to_string(upper[k].triad_costs[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "UPPER BRUT : [";
-    for(int k = 0; k < upper.size(); k++){
-        message += "current values for UPPER BRUT: [";
-        for(int i = 0; i < upper[k].hIntervalsBrut.size(); i++){
-            if (upper[k].hIntervalsBrut[i].assigned())
-                message += to_string(upper[k].hIntervalsBrut[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "]\n\n";*/
     message += "ORDERED FACTORS : [";
         for(int i = 0; i < n_unique_costs; i++){
             if (ordered_factors[i].assigned())
@@ -834,10 +537,22 @@ string Problem::toString(){
                 if (parts[k].vector_notes[i][n].assigned())
                     message += to_string(parts[k].vector_notes[i][n].val()) + " ";
                 else
-                    message += "<not assigned> ";     
+                    message += "... ";     
             }
             message += " ] ";
         }
+        message += "]\n";
+    }
+    message += "]\n\n";
+     message += "IS OFF : [";
+    for(int k = 1; k < parts.size(); k++){
+        message += "current values for IS OFF: [";
+            for(int n = 0; n < parts[k].off_costs.size(); n++){
+                if (parts[k].off_costs[n].assigned())
+                    message += to_string(parts[k].off_costs[n].val()) + " ";
+                else
+                    message += "... ";     
+            }
         message += "]\n";
     }
     message += "]\n\n";
@@ -929,3 +644,60 @@ string int_vector_to_string(vector<int> vector){
     }
     return s;
 }*/
+void Problem::create_strata(){
+    for(int i = 0; i < size; i++){
+
+        IntVarArray voices = IntVarArray(*this, parts.size(), 0, 120);
+        IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
+
+        for(int j = 0; j < parts.size(); j++){
+            if(j==0){
+                rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]); //getting the notes
+            } else {
+                rel(*this, voices[j], IRT_EQ, parts[j].vector_notes[0][i]); //getting the notes
+            }
+            rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[0][i]);
+        }
+        
+        IntVarArray order = IntVarArray(*this, parts.size(), 0, parts.size()-1);
+        sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120)); //sorting the voices
+        
+        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]); //linking the hInterval in the strata with the one in the cf / cp
+
+        sorted(*this, voices, sorted_voices[i], order); //sorting the voices
+
+        rel(*this, lowest[0].notes[i], IRT_EQ, sorted_voices[i][0]); //putting the lowest note in the lowest stratum
+
+        for(int j = 0; j < upper.size(); j++){
+            rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]); //the rest go in the upper strata
+        }
+
+        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i])); //determmining if the cf is the lowest strata for each note
+
+        if(parts.size()==2){
+            rel(*this, parts[0].is_not_lowest[i], IRT_EQ, 0, Reify(parts[1].is_not_lowest[i]));
+        }
+        if(parts.size()==3){
+            BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].vector_notes[0][i]));
+
+            rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
+            rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
+        }
+
+        if(i > 0){
+
+            vector<IntVarArray> corresponding_m_intervals;
+
+            for(int j = 0; j < parts.size(); j++){
+                corresponding_m_intervals.push_back(parts[j].m_intervals_brut);
+            }
+
+            rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[0].is_not_lowest[i]));
+            rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[1].is_not_lowest[i]));
+            if(parts.size()==3){
+                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[2].is_not_lowest[i]));
+            }
+        }
+
+    }
+}
