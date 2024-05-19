@@ -50,62 +50,59 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
     for(int k = 0; k < parts.size(); k++){
         for(int i = 0; i < size-1; i++){
             if(k==0){
-                rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[i]); //assigns the melodic interval (brut)
-                abs(home, parts[k].m_intervals_brut[i], parts[k].m_intervals[i]); //assigns the melodic interval (absolute)
+                rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+                abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
             } else {
-                rel(home, expr(home, parts[k].vector_notes[0][i]-parts[k].vector_notes[0][i+1]), IRT_EQ, parts[k].m_intervals_brut[i]); //assigns the melodic interval (brut)
-                abs(home, parts[k].m_intervals_brut[i], parts[k].m_intervals[i]); //assigns the melodic interval (absolute)
+                rel(home, expr(home, parts[k].vector_notes[0][i]-parts[k].vector_notes[0][i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+                abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
             }
         }
     }
 }
 
-void link_motions_arrays(const Home &home, int size, int con_motion_cost, int obl_motion_cost, int dir_motion_cost, vector<Part> parts, 
-     vector<Stratum> lowest){
-        for(int p = 0; p < parts.size(); p++){
-            for(int i = 0; i < size-1; i++){
+void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx){
+            for(int i = 0; i < cf.size-1; i++){
                 //direct motions help creation
-                BoolVar both_up = expr(home, (parts[p].m_intervals_brut[i]>0)&&(parts[0].m_intervals_brut[i]>0)); //if both parts are going in the same direction
-                BoolVar both_stay = expr(home, (parts[p].m_intervals_brut[i]==0)&&(parts[0].m_intervals_brut[i]==0)); //if both parts are staying
-                BoolVar both_down = expr(home, (parts[p].m_intervals_brut[i]<0)&&(parts[0].m_intervals_brut[i]<0)); //if both parts are going down
+                BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]>0)); //if both parts are going in the same direction
+                BoolVar both_stay = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]==0)); //if both parts are staying
+                BoolVar both_down = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]<0)); //if both parts are going down
                 //oblique motions help creation
-                BoolVar cf_stays_1 = expr(home, (parts[p].m_intervals_brut[i]>0)&&(parts[0].m_intervals_brut[i]==0)); //if the lowest part stays and one goes up
-                BoolVar cf_stays_2 = expr(home, (parts[p].m_intervals_brut[i]<0)&&(parts[0].m_intervals_brut[i]==0)); //if the lowest part stays and one goes down
-                BoolVar cp_stays_1 = expr(home, (parts[p].m_intervals_brut[i]==0)&&(parts[0].m_intervals_brut[i]>0)); //if the lowest part goes up and one stays
-                BoolVar cp_stays_2 = expr(home, (parts[p].m_intervals_brut[i]==0)&&(parts[0].m_intervals_brut[i]<0)); //if the lowest part goes down and one stays
+                BoolVar cf_stays_1 = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]==0)); //if the lowest part stays and one goes up
+                BoolVar cf_stays_2 = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]==0)); //if the lowest part stays and one goes down
+                BoolVar cp_stays_1 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]>0)); //if the lowest part goes up and one stays
+                BoolVar cp_stays_2 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]<0)); //if the lowest part goes down and one stays
                 //contrary motions help creation
-                BoolVar cpd_cfu = expr(home, (parts[p].m_intervals_brut[i]<0)&&(parts[0].m_intervals_brut[i]>0)); //if the cf goes up and the cp down
-                BoolVar cpu_cfd = expr(home, (parts[p].m_intervals_brut[i]>0)&&(parts[0].m_intervals_brut[i]<0)); //if the cf goes down and the cp up
+                BoolVar cpd_cfu = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]>0)); //if the cf goes up and the cp down
+                BoolVar cpu_cfd = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]<0)); //if the cf goes down and the cp up
                 //direct constraints
-                rel(home, ((both_up || both_stay || both_down) && (parts[p].isCFB[i]==1)) >> (parts[p].motions[i]==2));
-                rel(home, ((both_up || both_stay || both_down) && (parts[p].isCFB[i]==1)) >> (parts[p].motions_cost[i]==dir_motion_cost));
+                rel(home, ((both_up || both_stay || both_down) && (part.isCFB[i]==1)) >> (part.motions[idx][i]==2));
+                rel(home, ((both_up || both_stay || both_down) && (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.dir_motion_cost));
                 //oblique constraints
-                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (parts[p].isCFB[i]==1)) >> (parts[p].motions[i]==1));
-                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (parts[p].isCFB[i]==1)) >> (parts[p].motions_cost[i]==obl_motion_cost));
+                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.isCFB[i]==1)) >> (part.motions[idx][i]==1));
+                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.obl_motion_cost));
                 //contrary constraints
-                rel(home, ((cpd_cfu || cpu_cfd)&& (parts[p].isCFB[i]==1)) >> (parts[p].motions[i]==0));
-                rel(home, ((cpd_cfu || cpu_cfd)&& (parts[p].isCFB[i]==1)) >> (parts[p].motions_cost[i]==con_motion_cost));
+                rel(home, ((cpd_cfu || cpu_cfd)&& (part.isCFB[i]==1)) >> (part.motions[idx][i]==0));
+                rel(home, ((cpd_cfu || cpu_cfd)&& (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.con_motion_cost));
                 //bass constraints
-                rel(home, (parts[p].isCFB[i]==0) >> (parts[p].motions[i]==-1));
-                rel(home, (parts[p].isCFB[i]==0) >> (parts[p].motions_cost[i]==0));
+                rel(home, (part.isCFB[i]==0) >> (part.motions[idx][i]==-1));
+                rel(home, (part.isCFB[i]==0) >> (part.motions_cost[idx][i]==0));
             }
-        }
      }
 
 void harmonic_intervals_consonance(const Home &home, vector<Part> parts){
     for(int p = 0; p < parts.size(); p++){
-        for(int i = 0; i < parts[p].hIntervalsCpCf.size()-1; i++){
-            dom(home, parts[p].hIntervalsCpCf[i], consonances); //constraint : all intervals are consonances 
+        for(int i = 0; i < parts[p].hIntervalsCpCf[0].size()-1; i++){
+            dom(home, parts[p].hIntervalsCpCf[0][i], consonances); //constraint : all intervals are consonances 
         }
-        dom(home, parts[p].hIntervalsCpCf[parts[p].hIntervalsCpCf.size()-1], major_h_triad); //major h triad constraint
+        dom(home, parts[p].hIntervalsCpCf[0][parts[p].hIntervalsCpCf[0].size()-1], major_h_triad); //major h triad constraint
     }
 }
 
 void perfect_consonance_constraints(const Home &home, int size, vector<Part> parts, int n_species){
     if(n_species==1){
         for(int p = 0; p < parts.size(); p++){
-            dom(home, parts[p].hIntervalsCpCf[0], perfect_consonance); //first is a perfect consonance
-            dom(home, parts[p].hIntervalsCpCf[size-1], perfect_consonance); //last is a perfect consonance
+            dom(home, parts[p].hIntervalsCpCf[0][0], perfect_consonance); //first is a perfect consonance
+            dom(home, parts[p].hIntervalsCpCf[0][size-1], perfect_consonance); //last is a perfect consonance
         }
     }
 }
@@ -157,7 +154,7 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
             if(parts[p].is_not_lowest[size-2].assigned()){
                 if(parts[p].is_not_lowest[size-2].val()==1){
                     //constraint that penultimate note is either a minor third, perfect fifth, major sixth or octave
-                    dom(home, parts[p].hIntervalsCpCf[size-2], MIN3_PERF5_MAJ6_OCT);
+                    dom(home, parts[p].hIntervalsCpCf[0][size-2], MIN3_PERF5_MAJ6_OCT);
                 }
             }
         }
@@ -170,8 +167,8 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
 void no_tritonic_intervals(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int j = 0; j < size-1; j++){
-            rel(home, (parts[p].m_intervals[j]==6) >> (parts[p].M_deg_cost[j]==parts[p].tritone_cost)); //if it is a tritone : set a cost
-            rel(home, (parts[p].m_intervals[j]!=6) >> (parts[p].M_deg_cost[j]==0)); //if not, the cost is 0
+            rel(home, (parts[p].m_intervals[0][j]==6) >> (parts[p].M_deg_cost[j]==parts[p].tritone_cost)); //if it is a tritone : set a cost
+            rel(home, (parts[p].m_intervals[0][j]!=6) >> (parts[p].M_deg_cost[j]==0)); //if not, the cost is 0
         }
     }
 }
@@ -179,7 +176,7 @@ void no_tritonic_intervals(const Home &home, int size, vector<Part> parts){
 void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int j = 0; j < size-1; j++){
-            rel(home, parts[p].m_intervals[j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
+            rel(home, parts[p].m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
         }
     }
 }
@@ -189,14 +186,14 @@ void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts
         for(int j = 0; j < size-1; j++){
             //it cannot go from either unisson or a perfect fifth to another one of these, then it is prohibited
             rel(home, (parts[1].hIntervalsCpCf[0][j]==0 || parts[1].hIntervalsCpCf[0][j]==7 || parts[1].hIntervalsCpCf[0][j+1]==0 || parts[1].hIntervalsCpCf[0][j+1]==7) >> 
-            (parts[1].motions[j]!=2));
+            (parts[1].motions[0][j]!=2));
         }
     } else { //else if 3 voices
         for(int p = 1; p < parts.size(); p++){
             for(int j = 0; j < size-2; j++){
                 //set a cost when it is reached through direct motion, it is 0 when not
-                rel(home, (parts[p].motions[j]==2&&(parts[p].hIntervalsCpCf[0][j+1]==0||parts[p].hIntervalsCpCf[0][j+1]==7))>>(parts[p].direct_move_cost[j]==parts[p].direct_move));
-                rel(home, (parts[p].motions[j]!=2||(parts[p].hIntervalsCpCf[0][j+1]!=0&&parts[p].hIntervalsCpCf[0][j+1]!=7))>>(parts[p].direct_move_cost[j]==0));
+                rel(home, (parts[p].motions[0][j]==2&&(parts[p].hIntervalsCpCf[0][j+1]==0||parts[p].hIntervalsCpCf[0][j+1]==7))>>(parts[p].direct_move_cost[j]==parts[p].direct_move));
+                rel(home, (parts[p].motions[0][j]!=2||(parts[p].hIntervalsCpCf[0][j+1]!=0&&parts[p].hIntervalsCpCf[0][j+1]!=7))>>(parts[p].direct_move_cost[j]==0));
             }
         }
     }
@@ -206,8 +203,8 @@ void no_battuta(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
             for(int j = 0; j < size-1; j++){
             //constraints avoiding a battuta kind of motion
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[j]==0)&&(parts[p].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==1))));
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[j]==0)&&(parts[0].m_intervals_brut[j]<-4)&&(parts[p].isCFB[j]==0))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[p].m_intervals_brut[0][j]<-4)&&(parts[p].isCFB[j]==1))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[0].m_intervals_brut[0][j]<-4)&&(parts[p].isCFB[j]==0))));
         }
     }
 }
@@ -226,7 +223,7 @@ void last_chord_no_minor_third(const Home &home, int size, vector<Part> parts){
         if(parts[p].is_not_lowest[size-1].assigned()){
             if(parts[p].is_not_lowest[size-1].val()==1){
                 //prohibiting minor thirds in the last chord
-                rel(home, parts[p].hIntervalsCpCf[size-1], IRT_NQ, 3);
+                rel(home, parts[p].hIntervalsCpCf[0][size-1], IRT_NQ, 3);
             }
         }
     }
@@ -275,7 +272,7 @@ void no_same_direction(const Home &home, int size, vector<Part> parts, int n_spe
     if(n_species==2){ //if it is 2 voices
         for(int j = 0; j < size-2; j++){
             //avoid direct motions
-            rel(home, parts[1].motions[j]!=2&&parts[2].motions[j]!=2);
+            rel(home, parts[1].motions[0][j]!=2&&parts[2].motions[0][j]!=2);
         }
     }
 }
@@ -291,7 +288,7 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
                         parts[v2].hIntervalsCpCf[0][j-1]!=8 && parts[v2].hIntervalsCpCf[0][j-1]!=9)||
                         (parts[v1].hIntervalsCpCf[0][j]!=8 && parts[v1].hIntervalsCpCf[0][j]!=9 &&
                         parts[v2].hIntervalsCpCf[0][j]!=8 && parts[v2].hIntervalsCpCf[0][j]!=9))||
-                        (parts[v1].m_intervals_brut[j]>0)||(parts[v2].m_intervals_brut[j]>0));
+                        (parts[v1].m_intervals_brut[0][j]>0)||(parts[v2].m_intervals_brut[0][j]>0));
                     }
                 }
             }
@@ -324,14 +321,14 @@ void set_off_costs(const Home &home, int size, vector<Part> parts){
 void set_step_costs(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size-1; i++){
-            rel(home, (parts[p].m_intervals[i]<3) >> (parts[p].m_degrees_cost[i]==parts[p].step_cost));
-            rel(home, (parts[p].m_intervals[i]==3 || parts[p].m_intervals[i]==4) >> (parts[p].m_degrees_cost[i]==parts[p].third_cost));
-            rel(home, (parts[p].m_intervals[i]==5) >> (parts[p].m_degrees_cost[i]==parts[p].fourth_cost));
-            rel(home, (parts[p].m_intervals[i]==6) >> (parts[p].m_degrees_cost[i]==parts[p].tritone_cost));
-            rel(home, (parts[p].m_intervals[i]==7) >> (parts[p].m_degrees_cost[i]==parts[p].fifth_cost));
-            rel(home, (parts[p].m_intervals[i]==8 || parts[p].m_intervals[i]==9) >> (parts[p].m_degrees_cost[i]==parts[p].sixth_cost));
-            rel(home, (parts[p].m_intervals[i]==10 || parts[p].m_intervals[i]==11) >> (parts[p].m_degrees_cost[i]==parts[p].seventh_cost));
-            rel(home, (parts[p].m_intervals[i]==12) >> (parts[p].m_degrees_cost[i]==parts[p].octave_cost));
+            rel(home, (parts[p].m_intervals[0][i]<3) >> (parts[p].m_degrees_cost[i]==parts[p].step_cost));
+            rel(home, (parts[p].m_intervals[0][i]==3 || parts[p].m_intervals[0][i]==4) >> (parts[p].m_degrees_cost[i]==parts[p].third_cost));
+            rel(home, (parts[p].m_intervals[0][i]==5) >> (parts[p].m_degrees_cost[i]==parts[p].fourth_cost));
+            rel(home, (parts[p].m_intervals[0][i]==6) >> (parts[p].m_degrees_cost[i]==parts[p].tritone_cost));
+            rel(home, (parts[p].m_intervals[0][i]==7) >> (parts[p].m_degrees_cost[i]==parts[p].fifth_cost));
+            rel(home, (parts[p].m_intervals[0][i]==8 || parts[p].m_intervals[0][i]==9) >> (parts[p].m_degrees_cost[i]==parts[p].sixth_cost));
+            rel(home, (parts[p].m_intervals[0][i]==10 || parts[p].m_intervals[0][i]==11) >> (parts[p].m_degrees_cost[i]==parts[p].seventh_cost));
+            rel(home, (parts[p].m_intervals[0][i]==12) >> (parts[p].m_degrees_cost[i]==parts[p].octave_cost));
         }
     }
 }

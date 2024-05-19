@@ -38,6 +38,9 @@ public:
     int h_octave;
     int direct_move;
     int off_cst;
+    int m2_len;
+    int sol_len;
+    int total_m_len;
 
     Home home;
 
@@ -53,13 +56,25 @@ public:
     vector<IntVarArray> vector_notes;
     vector<IntVarArray> hIntervalsCpCf;
     BoolVarArray isCFB;
-    IntVarArray m_intervals;
-    IntVarArray m_intervals_brut;
-    IntVarArray cf_m_intervals_brut;
+    vector<IntVarArray> m_intervals;
+    vector<IntVarArray> m_intervals_brut;
+    vector<IntVarArray> m_succ_intervals;
+    vector<IntVarArray> m_succ_intervals_brut;
+
+    IntVarArray m2_intervals;
+    IntVarArray m2_intervals_brut;
+    IntVarArray m_all_intervals;
+    IntVarArray m_all_intervals_brut;
+    IntVarArray real_motions;
+    IntVarArray real_motions_cost;
+    BoolVarArray is_ta_dim;
+
+    IntVarArray solution_array;
+
     IntVarArray P_cons_cost;
     IntVarArray M_deg_cost;
-    IntVarArray motions;
-    IntVarArray motions_cost;
+    vector<IntVarArray> motions;
+    vector<IntVarArray> motions_cost;
     BoolVarArray is_P_cons;
     BoolVarArray is_not_lowest;
     IntVarArray hIntervalsBrut;

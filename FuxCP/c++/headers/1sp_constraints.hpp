@@ -25,8 +25,7 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
 /**
  * Initialization and calculation of the motions between the notes
 */
-void link_motions_arrays(const Home &home, int size, int con_motion_cost, int obl_motion_cost, int dir_motion_cost,
-     vector<Part> parts, vector<Stratum> lowest);
+void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx);
 
 /**
  * Constraint H1 : All harmonic intervals must be consonances

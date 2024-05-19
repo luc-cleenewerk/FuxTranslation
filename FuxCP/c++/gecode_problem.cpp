@@ -83,14 +83,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
 
     P_cons_cost = IntVarArray(*this, size, 0, 1000);
-    
-    //creating the solution array which will contain the notes of the counterpoint
-
-    int solution_len = 0;
-    for(int p = 0; p < splist.size(); p++){
-        solution_len+=splist[p]*size;           //todo, this only works for species 1 or 2
-    }
-    solution_array = IntVarArray(*this, solution_len, 0, 127);
 
     //initializing the cost_factors list
 
@@ -178,7 +170,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     link_melodic_arrays_1st_species(*this, size, parts);
 
-    link_motions_arrays(*this, size, con_motion_cost, obl_motion_cost, dir_motion_cost, parts, lowest);
+    for(int p = 0; p < parts.size(); p++){
+        link_motions_arrays(*this, parts[p], parts[0], lowest, 0);
+    }
     
     harmonic_intervals_consonance(*this, parts);
 
@@ -204,6 +198,20 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     set_step_costs(*this, size, parts);
 
+    if(speciesList.size()==1){
+        for(int i = 0; i < parts[1].varietyArray.size(); i++){
+            rel(*this, parts[1].varietyArray[i], IRT_EQ, 0);
+        }
+
+        for(int i = 0; i < parts[1].succ_cost.size(); i++){
+            rel(*this, parts[1].succ_cost[i], IRT_EQ, 0);
+        }
+
+        for(int i = 0; i < upper[1].triad_costs.size(); i++){
+            rel(*this, upper[1].triad_costs[i], IRT_EQ, 0);
+        }
+    }
+
     if(speciesList.size()==2){
 
         no_tenth_in_last_chord(*this, size, parts, upper, lowest);
@@ -219,21 +227,79 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     no_successive_ascending_sixths(*this, size, parts, speciesList.size());
 
+    //create_solution_array(size, solution_array, parts);
+
     //going through parts to check for second species
+    int solution_len = 0;
     for(int p = 1; p < parts.size(); p++){
+        if(parts[p].species==1){
+            parts[p].sol_len = size;
+            solution_len+=size;
+            parts[p].solution_array = IntVarArray(*this, parts[p].sol_len, 0, 127);
+            for(int n = 0; n < size; n++){
+                parts[p].solution_array[n] = parts[p].vector_notes[0][n];
+            }
+        }
         if(parts[p].species==2){ //if it is a second species -> do modifications from the first species
+
+            parts[p].sol_len = size + (size-1);
+            parts[p].solution_array = IntVarArray(*this, parts[p].sol_len, 0, 127);
+            int idx = 0;
+            for(int n = 0; n < parts[p].sol_len; n+=2){
+                parts[p].solution_array[n] = parts[p].vector_notes[0][idx];
+                idx++;
+            }
+            idx=0;
+            for(int n = 1; n < parts[p].sol_len; n+=2){
+                parts[p].solution_array[n] = parts[p].vector_notes[2][idx];
+                idx++;
+            }
+
+            solution_len+=parts[p].sol_len;
 
             parts[p].hIntervalsAbs = IntVarArray(*this, size, 0, 127);
             parts[p].hIntervalsBrut = IntVarArray(*this, size, -127, 127);
 
             link_harmonic_arrays_2nd_species(*this, size, parts[p], lowest);
+
+            link_melodic_arrays_2nd_species_next_meas(*this, size, parts[p]);
+
+            parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
+            parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, -12, 12));
+
+            link_melodic_arrays_2nd_species_in_meas(*this, size, parts[p]);
+
+            parts[p].m2_len = 2*(size-1)-1;
+            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
+            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
+
+            link_m2_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].total_m_len = 2*(size-1);
+            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
+            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
+
+            link_melodic_self_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].real_motions = IntVarArray(*this, size-1, -1, 2);
+            parts[p].real_motions_cost = IntVarArray(*this, size-1, IntSet({0, parts[p].con_motion_cost, parts[p].dir_motion_cost, parts[p].obl_motion_cost}));
+
+            link_motions_arrays_2nd_species(*this, parts[p], parts[0], lowest);
+            link_real_motions_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
+
+            link_ta_dim_array_2nd_species(*this, parts[p]);
         }
     }
-    
 
+    //creating the solution array which will contain the notes of the counterpoint
+
+    solution_array = IntVarArray(*this, solution_len, 0, 127);
+    
+    create_solution_array(solution_array, parts);
     /// branching
     branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
-    create_solution_array(size, solution_array, parts);
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
 }
@@ -278,17 +344,20 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     parts[0].upper_bound = s.parts[0].upper_bound;
     parts[0].lower_bound = s.parts[0].lower_bound;
     parts[0].hIntervalsCpCf = s.parts[0].hIntervalsCpCf;
+    parts[0].m_intervals = s.parts[0].m_intervals;
+    parts[0].motions = s.parts[0].motions;
+    parts[0].motions_cost = s.parts[0].motions_cost;
 
     parts[0].notes.update(*this, s.parts[0].notes);
-    parts[0].m_intervals.update(*this, s.parts[0].m_intervals);
-    parts[0].m_intervals_brut.update(*this, s.parts[0].m_intervals_brut);
     parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
     for(int h = 0; h < 4; h++){
         parts[0].hIntervalsCpCf[h].update(*this, s.parts[0].hIntervalsCpCf[h]);
+        parts[0].m_intervals[h].update(*this, s.parts[0].m_intervals[h]);
+        parts[0].m_intervals_brut[h].update(*this, s.parts[0].m_intervals_brut[h]);
+        parts[0].motions[h].update(*this, s.parts[0].motions[h]);
+        parts[0].motions_cost[h].update(*this, s.parts[0].motions_cost[h]);
     }
     parts[0].succ_cost.update(*this, s.parts[0].succ_cost);
-    parts[0].motions.update(*this, s.parts[0].motions);
-    parts[0].motions_cost.update(*this, s.parts[0].motions_cost);
     parts[0].isCFB.update(*this, s.parts[0].isCFB);
 
     for(int i = 0; i < cost_factors.size(); i++){
@@ -330,21 +399,44 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].h_octave = s.parts[p].h_octave;
         parts[p].direct_move = s.parts[p].direct_move;
         parts[p].off_cst = s.parts[p].off_cst;
-
+        parts[p].m_intervals = s.parts[p].m_intervals;
+        parts[p].m_intervals_brut = s.parts[p].m_intervals_brut;
+        parts[p].sol_len = s.parts[p].sol_len;
+        parts[p].motions = s.parts[p].motions;
+        parts[p].motions_cost = s.parts[p].motions_cost;
+        //2nd species variables
+        parts[p].m_succ_intervals = s.parts[p].m_succ_intervals;
+        parts[p].m_succ_intervals_brut = s.parts[p].m_succ_intervals_brut;
+        parts[p].m2_len = s.parts[p].m2_len;
+        parts[p].total_m_len = s.parts[p].total_m_len;
+        
+        parts[p].m2_intervals.update(*this, s.parts[p].m2_intervals);
+        parts[p].m2_intervals_brut.update(*this, s.parts[p].m2_intervals_brut);
         parts[p].notes.update(*this, s.parts[p].notes);
-        parts[p].m_intervals.update(*this, s.parts[p].m_intervals);
-        parts[p].m_intervals_brut.update(*this, s.parts[p].m_intervals_brut);
         parts[p].isCFB.update(*this, s.parts[p].isCFB);
         parts[p].is_not_lowest.update(*this, s.parts[p].is_not_lowest);
         parts[p].hIntervalsAbs.update(*this, s.parts[p].hIntervalsAbs);
         parts[p].hIntervalsBrut.update(*this, s.parts[p].hIntervalsBrut);
+        parts[p].solution_array.update(*this, s.parts[p].solution_array);
+        parts[p].m_all_intervals.update(*this, s.parts[p].m_all_intervals);
+        parts[p].m_all_intervals_brut.update(*this, s.parts[p].m_all_intervals_brut);
+        parts[p].real_motions.update(*this, s.parts[p].real_motions);
+        parts[p].real_motions_cost.update(*this, s.parts[p].real_motions_cost);
+        parts[p].is_ta_dim.update(*this, s.parts[p].is_ta_dim);
         for(int h = 0; h < 4; h++){
             parts[p].hIntervalsCpCf[h].update(*this, s.parts[p].hIntervalsCpCf[h]);
+            parts[p].m_intervals[h].update(*this, s.parts[p].m_intervals[h]);
+            parts[p].m_intervals_brut[h].update(*this, s.parts[p].m_intervals_brut[h]);
+            parts[p].motions[h].update(*this, s.parts[p].motions[h]);
+            parts[p].motions_cost[h].update(*this, s.parts[p].motions_cost[h]);
+        }
+        for(int h = 0; h < parts[p].m_succ_intervals.size(); h++){
+            parts[p].m_succ_intervals[h].update(*this, s.parts[p].m_succ_intervals[h]);
+            parts[p].m_succ_intervals_brut[h].update(*this, s.parts[p].m_succ_intervals_brut[h]);
         }
         parts[p].P_cons_cost.update(*this, s.parts[p].P_cons_cost);
         parts[p].M_deg_cost.update(*this, s.parts[p].M_deg_cost);
         parts[p].varietyArray.update(*this, s.parts[p].varietyArray);
-        parts[p].motions.update(*this, s.parts[p].motions);
         parts[p].direct_move_cost.update(*this, s.parts[p].direct_move_cost);
         parts[p].succ_cost.update(*this, s.parts[p].succ_cost);
         parts[p].triad_costs.update(*this, s.parts[p].triad_costs);
@@ -472,9 +564,15 @@ string Problem::toString(){
         message += "current values for hInterVal : [";
         for(int i = 0; i < 4; i++){
             message += " [ ";
-            for(int h = 0; h < size; h++){
+            for(int h = 0; h < size-1; h++){
                 if (parts[k].hIntervalsCpCf[i][h].assigned())
                     message += to_string(parts[k].hIntervalsCpCf[i][h].val()) + " ";
+                else
+                    message += "... ";
+            }
+            if(i!=2){
+                if (parts[k].hIntervalsCpCf[i][size-1].assigned())
+                    message += to_string(parts[k].hIntervalsCpCf[i][size-1].val()) + " ";
                 else
                     message += "... ";
             }
@@ -495,7 +593,22 @@ string Problem::toString(){
         }
     }
     message += "]\n";
-    
+    message += "M intervals : [";
+    for(int k = 0; k < parts.size(); k++){
+        message += "current values for m_interval : [";
+        for(int i = 0; i < 4; i++){
+            message += " [ ";
+            for(int h = 0; h < size-1; h++){
+                if (parts[k].m_intervals[i][h].assigned())
+                    message += to_string(parts[k].m_intervals[i][h].val()) + " ";
+                else
+                    message += "... ";
+            }
+            message += " ] ";
+        }
+        message += "]\n";
+    }
+    message += "]\n\n";  
      message += "current values for COST_FAC : [";
     for(int p = 0; p < cost_factors.size(); p++){
         for(int i = 0; i < cost_factors[p].size(); i++){
@@ -689,7 +802,7 @@ void Problem::create_strata(){
             vector<IntVarArray> corresponding_m_intervals;
 
             for(int j = 0; j < parts.size(); j++){
-                corresponding_m_intervals.push_back(parts[j].m_intervals_brut);
+                corresponding_m_intervals.push_back(parts[j].m_intervals_brut[0]);
             }
 
             rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[0].is_not_lowest[i]));

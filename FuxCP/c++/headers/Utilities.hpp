@@ -369,7 +369,7 @@ string time();
  */
 void write_to_log_file(const char *message, const string& filename);
 
-void create_solution_array(int size, IntVarArray sol, vector<Part> parts);
+void create_solution_array(IntVarArray sol, vector<Part> parts);
 
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 

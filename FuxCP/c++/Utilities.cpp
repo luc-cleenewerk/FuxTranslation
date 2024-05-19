@@ -227,17 +227,12 @@ void write_to_log_file(const char *message, const string& filename) {
     }
 }
 
-void create_solution_array(int size, IntVarArray sol, vector<Part> parts){
-    int temp_index = 0;
+void create_solution_array(IntVarArray sol, vector<Part> parts){
+    int idx = 0;
     for(int p = 1; p < parts.size(); p++){
-        for(int n = 0; n < size; n++){
-            sol[temp_index] = parts[p].vector_notes[0][n];
-            temp_index++;
-            cout<<parts[p].species<<endl;
-            if(parts[p].species==2){
-                sol[temp_index] = parts[p].vector_notes[2][n];
-                temp_index++;
-            }
+        for(int i = 0; i < parts[p].sol_len; i++){
+            sol[idx] = parts[p].solution_array[i];
+            idx++;
         }
     }
 }
@@ -297,7 +292,7 @@ void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     int index = 0;
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size-1; i++){
-            pc[index] = parts[p].motions_cost[i];
+            pc[index] = parts[p].motions_cost[0][i];
             index++;
         }
     }
