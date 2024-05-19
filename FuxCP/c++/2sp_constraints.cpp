@@ -69,3 +69,14 @@ void link_ta_dim_array_2nd_species(const Home &home, Part part){
             &&(part.m_intervals[2][i]<=2)));
     }
 }
+
+void link_cfb_array_2nd_species(const Home &home, int size, Part part, Part cf){
+    link_cfb_arrays_1st_species(home, size, part, cf, 2);
+}
+
+void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Stratum> lowest){
+    //h_intervals_abs (butlast), is_not_lowest (butlast), first m_intervals_brut of lowest, neighbour array
+    for(int i = 0; i < part.size-1; i++){
+        rel(home, part.is_neighbour[i], IRT_EQ, expr(home, (part.hIntervalsAbs[i]<=4) && (part.is_not_lowest[i]==(lowest[0].m_intervals_brut[i]>=0))));
+    }
+}

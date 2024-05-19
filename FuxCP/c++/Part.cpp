@@ -20,7 +20,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst):home(hme)
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
     hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size, 0, 11)};
-    isCFB = BoolVarArray(home, size, 0, 1);
+    isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     hIntervalsBrut = IntVarArray(home, size, -127, 127);
     motions = {IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2)};
     motions_cost = {IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost})),
@@ -129,7 +129,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     }
 
     hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size, 0, 11)};
-    isCFB = BoolVarArray(home, size, 0, 1);
+    isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
     P_cons_cost = IntVarArray(home, size, 0, 64);
@@ -145,19 +145,29 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     direct_move_cost = IntVarArray(home, size-2, 0, 8);
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
-    is_off = BoolVarArray(home, size, 0, 1 );
+    is_off = {BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 )};
     off_costs = IntVarArray(home, size, 0, 1); //cost here is 1 for now
     m_degrees_cost = IntVarArray(home, size, IntSet({0,1,2}));
     fifth_costs = IntVarArray(home, size, IntSet(0,1));
     octave_costs = IntVarArray(home, size, IntSet(0,1));
+    if(species==1){
+        create_member_array(0);
+    } else if(species==2){
+        create_member_array(2);
+    }
+}
 
-    //corresponds to the is_member from lisp
-    for(int i = 0; i < size; i++){
+IntVarArray Part::getNotes(){
+    return notes;
+}
+
+void Part::create_member_array(int idx){
+    for(int i = 0; i < sol_len; i++){
         IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
         IntVar sm = IntVar(home, 0, off_scale.size());
         for(int l = 0; l < off_scale.size(); l++){
             BoolVar b1 = BoolVar(home, 0, 1);
-            rel(home, vector_notes[0][i], IRT_EQ, off_scale[l], Reify(b1));
+            rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
             rel(home, (b1==0)>>(res[l]==0));
             rel(home, (b1==1)>>(res[l]==1));
         }
@@ -166,12 +176,6 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
             x[t] = res[t];
         }
         rel(home, sm, IRT_EQ, expr(home, sum(x)));
-        rel(home, sm, IRT_GR, 0, Reify(is_off[i]));
-        //rel(home, (sm==0) >> (is_off[i]==0));
-        //rel(home, (sm >= 1) >> (is_off[i]==1));
+        rel(home, sm, IRT_GR, 0, Reify(is_off[idx][i]));
     }
-}
-
-IntVarArray Part::getNotes(){
-    return notes;
 }

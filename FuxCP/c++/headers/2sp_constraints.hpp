@@ -22,3 +22,7 @@ void link_motions_arrays_2nd_species(const Home &home, Part part, Part cf, vecto
 void link_real_motions_arrays_2nd_species(const Home &home, Part part);
 
 void link_ta_dim_array_2nd_species(const Home &home, Part part);
+
+void link_cfb_array_2nd_species(const Home &home, int size, Part part, Part cf);
+
+void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Stratum> lowest);

@@ -1,3 +1,6 @@
+#ifndef FIRST_HPP
+#define FIRST_HPP
+
 #include <vector>
 
 #include "Part.hpp"
@@ -15,7 +18,7 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
 /**
  * Initialization and calculation of the boolean array determining if the cantus firmus is the bass
 */
-void link_cfb_arrays_1st_species(const Home &home, int size, vector<Part> parts);
+void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf, int idx);
 
 /**
  * Initialization and calculation of the melodic intervals
@@ -115,3 +118,5 @@ void no_same_direction(const Home &home, int size, vector<Part> parts, int n_spe
  * Constraint P7 : It is prohibited to use successive ascending sixths on a direct upwards motion (only 3 voices)
 */
 void no_successive_ascending_sixths(const Home &home, int size, vector<Part> parts, int n_species);
+
+#endif

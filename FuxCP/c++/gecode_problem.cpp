@@ -166,11 +166,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
 
-    link_cfb_arrays_1st_species(*this, size, parts);
-
     link_melodic_arrays_1st_species(*this, size, parts);
 
     for(int p = 0; p < parts.size(); p++){
+
+        link_cfb_arrays_1st_species(*this, size, parts[p], parts[0], 0);
+
         link_motions_arrays(*this, parts[p], parts[0], lowest, 0);
     }
     
@@ -290,6 +291,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
 
             link_ta_dim_array_2nd_species(*this, parts[p]);
+
+            link_cfb_array_2nd_species(*this, parts[p].size-1, parts[p], parts[0]);
+
+            parts[p].is_neighbour = BoolVarArray(*this, parts[p].size-1, 0, 1);
+
+            link_is_neighbour_array_2nd_species(*this, parts[p], lowest);
         }
     }
 
@@ -347,6 +354,7 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     parts[0].m_intervals = s.parts[0].m_intervals;
     parts[0].motions = s.parts[0].motions;
     parts[0].motions_cost = s.parts[0].motions_cost;
+    parts[0].isCFB = s.parts[0].isCFB;
 
     parts[0].notes.update(*this, s.parts[0].notes);
     parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
@@ -356,9 +364,9 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[0].m_intervals_brut[h].update(*this, s.parts[0].m_intervals_brut[h]);
         parts[0].motions[h].update(*this, s.parts[0].motions[h]);
         parts[0].motions_cost[h].update(*this, s.parts[0].motions_cost[h]);
+        parts[0].isCFB[h].update(*this, s.parts[0].isCFB[h]);
     }
     parts[0].succ_cost.update(*this, s.parts[0].succ_cost);
-    parts[0].isCFB.update(*this, s.parts[0].isCFB);
 
     for(int i = 0; i < cost_factors.size(); i++){
         cost_factors[i].update(*this, s.cost_factors[i]);
@@ -404,6 +412,8 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].sol_len = s.parts[p].sol_len;
         parts[p].motions = s.parts[p].motions;
         parts[p].motions_cost = s.parts[p].motions_cost;
+        parts[p].isCFB = s.parts[p].isCFB;
+        parts[p].is_off = s.parts[p].is_off;
         //2nd species variables
         parts[p].m_succ_intervals = s.parts[p].m_succ_intervals;
         parts[p].m_succ_intervals_brut = s.parts[p].m_succ_intervals_brut;
@@ -413,7 +423,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].m2_intervals.update(*this, s.parts[p].m2_intervals);
         parts[p].m2_intervals_brut.update(*this, s.parts[p].m2_intervals_brut);
         parts[p].notes.update(*this, s.parts[p].notes);
-        parts[p].isCFB.update(*this, s.parts[p].isCFB);
         parts[p].is_not_lowest.update(*this, s.parts[p].is_not_lowest);
         parts[p].hIntervalsAbs.update(*this, s.parts[p].hIntervalsAbs);
         parts[p].hIntervalsBrut.update(*this, s.parts[p].hIntervalsBrut);
@@ -423,12 +432,15 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].real_motions.update(*this, s.parts[p].real_motions);
         parts[p].real_motions_cost.update(*this, s.parts[p].real_motions_cost);
         parts[p].is_ta_dim.update(*this, s.parts[p].is_ta_dim);
+        parts[p].is_neighbour.update(*this, s.parts[p].is_neighbour);
         for(int h = 0; h < 4; h++){
             parts[p].hIntervalsCpCf[h].update(*this, s.parts[p].hIntervalsCpCf[h]);
             parts[p].m_intervals[h].update(*this, s.parts[p].m_intervals[h]);
             parts[p].m_intervals_brut[h].update(*this, s.parts[p].m_intervals_brut[h]);
             parts[p].motions[h].update(*this, s.parts[p].motions[h]);
             parts[p].motions_cost[h].update(*this, s.parts[p].motions_cost[h]);
+            parts[p].isCFB[h].update(*this, s.parts[p].isCFB[h]);
+            parts[p].is_off[h].update(*this, s.parts[p].is_off[h]);
         }
         for(int h = 0; h < parts[p].m_succ_intervals.size(); h++){
             parts[p].m_succ_intervals[h].update(*this, s.parts[p].m_succ_intervals[h]);
@@ -440,7 +452,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].direct_move_cost.update(*this, s.parts[p].direct_move_cost);
         parts[p].succ_cost.update(*this, s.parts[p].succ_cost);
         parts[p].triad_costs.update(*this, s.parts[p].triad_costs);
-        parts[p].is_off.update(*this, s.parts[p].is_off);
         parts[p].off_costs.update(*this, s.parts[p].off_costs);
         parts[p].m_degrees_cost.update(*this, s.parts[p].m_degrees_cost);
         parts[p].fifth_costs.update(*this, s.parts[p].fifth_costs);
@@ -543,132 +554,23 @@ IntVarArgs Problem::cost(void) const{
  */
 string Problem::toString(){
     string message = "Problem object. \n";
-    message += "size = " + to_string(size) + "\n" + "lower bound for the domain : " +
-            to_string(lower_bound_domain) + "\n" + "upper bound for the domain : " + to_string(upper_bound_domain)
-             + "\n";
+    message += "size = " + to_string(size) + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
-    message += "Parts : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for cp : [";
-        for(int i = 0; i < size; i++){
-            if (parts[k].notes[i].assigned())
-                message += to_string(parts[k].notes[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    }
-    message += "]\n";
-    message += "H intervals : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for hInterVal : [";
-        for(int i = 0; i < 4; i++){
-            message += " [ ";
-            for(int h = 0; h < size-1; h++){
-                if (parts[k].hIntervalsCpCf[i][h].assigned())
-                    message += to_string(parts[k].hIntervalsCpCf[i][h].val()) + " ";
-                else
-                    message += "... ";
-            }
-            if(i!=2){
-                if (parts[k].hIntervalsCpCf[i][size-1].assigned())
-                    message += to_string(parts[k].hIntervalsCpCf[i][size-1].val()) + " ";
-                else
-                    message += "... ";
-            }
-            message += " ] ";
-        }
-        message += "]\n";
-    }
-    message += "]\n\n";  
-    message += "H INTERVALS BRUT : [";
-    for(int p = 1; p < parts.size(); p++){
+    
+    for(int p = 0; p < parts.size(); p++){
         if(parts[p].species==2){
-            message += " values for brut: ";
-            for(int i = 0; i < size; i++){
-                if(parts[p].hIntervalsBrut[i].assigned()){
-                    message += to_string(parts[p].hIntervalsBrut[i].val()) + " ";
+            message += "IS NEIGHBOUR : [";
+            for(int n = 0; n < parts[p].is_neighbour.size(); n++){
+                if(parts[p].is_neighbour.assigned()){
+                    message += to_string(parts[p].is_neighbour[n].val()) + " ";
+                } else {
+                    message += " NA ";
                 }
             }
+            message += "]\n";
         }
     }
-    message += "]\n";
-    message += "M intervals : [";
-    for(int k = 0; k < parts.size(); k++){
-        message += "current values for m_interval : [";
-        for(int i = 0; i < 4; i++){
-            message += " [ ";
-            for(int h = 0; h < size-1; h++){
-                if (parts[k].m_intervals[i][h].assigned())
-                    message += to_string(parts[k].m_intervals[i][h].val()) + " ";
-                else
-                    message += "... ";
-            }
-            message += " ] ";
-        }
-        message += "]\n";
-    }
-    message += "]\n\n";  
-     message += "current values for COST_FAC : [";
-    for(int p = 0; p < cost_factors.size(); p++){
-        for(int i = 0; i < cost_factors[p].size(); i++){
-            if (cost_factors[p][i].assigned())
-                message += to_string(cost_factors[p][i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-    }
-    message += "]\n";
-     message += "COST NAMES : [";
-        for(int i = 0; i < cost_names.size(); i++){
-            message += cost_names[i] + " ";
-        }
-        message += "]\n";
-    message += "SOLUTION ARRAY : [";
-        for(int i = 0; i < solution_array.size(); i++){
-            if(solution_array[i].assigned()){
-                message += to_string(solution_array[i].val()) + " ";
-            } else {
-                message += "<not assigned> ";
-            }
-        }
-        message += "]\n";
-    message += "ORDERED FACTORS : [";
-        for(int i = 0; i < n_unique_costs; i++){
-            if (ordered_factors[i].assigned())
-                message += to_string(ordered_factors[i].val()) + " ";
-            else
-                message += "<not assigned> ";
-        }
-        message += "]\n";
-    message += "PART NOTES : [";
-    for(int k = 1; k < parts.size(); k++){
-        message += "current values for NOTES: [";
-        for(int i = 0; i < parts[k].vector_notes.size(); i++){
-            message += " [ ";
-            for(int n = 0; n < parts[k].vector_notes[i].size(); n++){
-                if (parts[k].vector_notes[i][n].assigned())
-                    message += to_string(parts[k].vector_notes[i][n].val()) + " ";
-                else
-                    message += "... ";     
-            }
-            message += " ] ";
-        }
-        message += "]\n";
-    }
-    message += "]\n\n";
-     message += "IS OFF : [";
-    for(int k = 1; k < parts.size(); k++){
-        message += "current values for IS OFF: [";
-            for(int n = 0; n < parts[k].off_costs.size(); n++){
-                if (parts[k].off_costs[n].assigned())
-                    message += to_string(parts[k].off_costs[n].val()) + " ";
-                else
-                    message += "... ";     
-            }
-        message += "]\n";
-    }
-    message += "]\n\n";
+
     writeToLogFile(message.c_str());
     return message;
 }
@@ -802,7 +704,19 @@ void Problem::create_strata(){
             vector<IntVarArray> corresponding_m_intervals;
 
             for(int j = 0; j < parts.size(); j++){
-                corresponding_m_intervals.push_back(parts[j].m_intervals_brut[0]);
+                if(parts[j].species==0){
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[0]);
+                } else if(parts[j].species==1){
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[0]);
+                } else if(parts[j].species==2){
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[2]);
+                } else if(parts[j].species==3){
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[3]);
+                } else if(parts[j].species==4){
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[2]);
+                } else{
+                    corresponding_m_intervals.push_back(parts[j].m_intervals_brut[2]);
+                }
             }
 
             rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[0].is_not_lowest[i]));

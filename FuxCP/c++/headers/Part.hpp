@@ -55,7 +55,7 @@ public:
     IntVarArray notes; 
     vector<IntVarArray> vector_notes;
     vector<IntVarArray> hIntervalsCpCf;
-    BoolVarArray isCFB;
+    vector<BoolVarArray> isCFB;
     vector<IntVarArray> m_intervals;
     vector<IntVarArray> m_intervals_brut;
     vector<IntVarArray> m_succ_intervals;
@@ -68,6 +68,7 @@ public:
     IntVarArray real_motions;
     IntVarArray real_motions_cost;
     BoolVarArray is_ta_dim;
+    BoolVarArray is_neighbour;
 
     IntVarArray solution_array;
 
@@ -83,7 +84,7 @@ public:
     IntVarArray direct_move_cost;
     IntVarArray succ_cost;
     IntVarArray triad_costs;
-    BoolVarArray is_off;
+    vector<BoolVarArray> is_off;
     IntVarArray off_costs;
     IntVarArray m_degrees_cost;
     IntVarArray fifth_costs;
@@ -96,6 +97,8 @@ public:
         , vector<int> general_params, vector<int> chrom);
 
     IntVarArray getNotes();
+
+    void create_member_array(int idx);
 };
 
 #endif

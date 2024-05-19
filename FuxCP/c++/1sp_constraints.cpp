@@ -37,12 +37,10 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
     }
 }
 
-void link_cfb_arrays_1st_species(const Home &home, int size, vector<Part> parts){
-    for(int k = 1; k < parts.size(); k++){
+void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf, int idx){
         for(int i = 0; i < size; i++){
-            rel(home, parts[k].vector_notes[0][i], IRT_GQ, parts[0].notes[i], Reify(parts[k].isCFB[i], RM_EQV)); //links the CFB values in the array
+            rel(home, part.vector_notes[idx][i], IRT_GQ, cf.notes[i], Reify(part.isCFB[idx][i])); //links the CFB values in the array
         }
-    }
 }
 
 void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> parts){
@@ -75,17 +73,17 @@ void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> l
                 BoolVar cpd_cfu = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]>0)); //if the cf goes up and the cp down
                 BoolVar cpu_cfd = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]<0)); //if the cf goes down and the cp up
                 //direct constraints
-                rel(home, ((both_up || both_stay || both_down) && (part.isCFB[i]==1)) >> (part.motions[idx][i]==2));
-                rel(home, ((both_up || both_stay || both_down) && (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.dir_motion_cost));
+                rel(home, ((both_up || both_stay || both_down) && (part.is_not_lowest[i]==1)) >> (part.motions[idx][i]==2));
+                rel(home, ((both_up || both_stay || both_down) && (part.is_not_lowest[i]==1)) >> (part.motions_cost[idx][i]==part.dir_motion_cost));
                 //oblique constraints
-                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.isCFB[i]==1)) >> (part.motions[idx][i]==1));
-                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.obl_motion_cost));
+                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.is_not_lowest[i]==1)) >> (part.motions[idx][i]==1));
+                rel(home, ((cf_stays_1 || cf_stays_2 || cp_stays_1 || cp_stays_2) && (part.is_not_lowest[i]==1)) >> (part.motions_cost[idx][i]==part.obl_motion_cost));
                 //contrary constraints
-                rel(home, ((cpd_cfu || cpu_cfd)&& (part.isCFB[i]==1)) >> (part.motions[idx][i]==0));
-                rel(home, ((cpd_cfu || cpu_cfd)&& (part.isCFB[i]==1)) >> (part.motions_cost[idx][i]==part.con_motion_cost));
+                rel(home, ((cpd_cfu || cpu_cfd)&& (part.is_not_lowest[i]==1)) >> (part.motions[idx][i]==0));
+                rel(home, ((cpd_cfu || cpu_cfd)&& (part.is_not_lowest[i]==1)) >> (part.motions_cost[idx][i]==part.con_motion_cost));
                 //bass constraints
-                rel(home, (part.isCFB[i]==0) >> (part.motions[idx][i]==-1));
-                rel(home, (part.isCFB[i]==0) >> (part.motions_cost[idx][i]==0));
+                rel(home, (part.is_not_lowest[i]==0) >> (part.motions[idx][i]==-1));
+                rel(home, (part.is_not_lowest[i]==0) >> (part.motions_cost[idx][i]==0));
             }
      }
 
@@ -119,10 +117,10 @@ void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part
     }
 }
 
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts){
+void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts){ //check this
     for(int p = 1; p < parts.size(); p++){
-        rel(home, (parts[p].isCFB[0] == 0) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune (if the cf is the bass)
-        rel(home, (parts[p].isCFB[size-1] == 0) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
+        rel(home, (parts[p].isCFB[0][0] == 0) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune (if the cf is the bass)
+        rel(home, (parts[p].isCFB[0][size-1] == 0) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
     }
 }
 
@@ -203,8 +201,8 @@ void no_battuta(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
             for(int j = 0; j < size-1; j++){
             //constraints avoiding a battuta kind of motion
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[p].m_intervals_brut[0][j]<-4)&&(parts[p].isCFB[j]==1))));
-            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[0].m_intervals_brut[0][j]<-4)&&(parts[p].isCFB[j]==0))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[p].m_intervals_brut[0][j]<-4)&&(parts[p].is_not_lowest[j]==1))));
+            rel(home, expr(home, !((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[0].m_intervals_brut[0][j]<-4)&&(parts[p].is_not_lowest[j]==0))));
         }
     }
 }
@@ -312,8 +310,8 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
 void set_off_costs(const Home &home, int size, vector<Part> parts){
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size; i++){
-            rel(home, (parts[p].is_off[i]==1) >> (parts[p].off_costs[i]==parts[p].off_cst));
-            rel(home, (parts[p].is_off[i]==0) >> (parts[p].off_costs[i]==0));
+            rel(home, (parts[p].is_off[0][i]==1) >> (parts[p].off_costs[i]==parts[p].off_cst));
+            rel(home, (parts[p].is_off[0][i]==0) >> (parts[p].off_costs[i]==0));
         }
     }
 }
