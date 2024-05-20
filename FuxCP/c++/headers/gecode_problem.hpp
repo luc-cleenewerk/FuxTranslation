@@ -81,6 +81,7 @@ protected:
 
     IntVarArray vars;
     IntVarArray solution_array;
+    IntVar empty;
 
 public:
     /**

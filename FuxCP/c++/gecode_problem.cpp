@@ -92,10 +92,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             highest_species = s;
         }
     }
-    if(highest_species==1){ //if the cp is of species 1
+    if(speciesList.size()>1){
+        if(highest_species==1){ //if the cp is of species 1
         cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
-    } else {
-        cost_factors.push_back(IntVarArray(*this, 8, 0, 100)); //TODO : this should be 9 instead of 8 later on
+        } else {
+            cost_factors.push_back(IntVarArray(*this, 8, 0, 100)); //TODO : this should be 9 instead of 8 later on
+        }
     }
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
@@ -123,45 +125,48 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //adding the costs to the list
 
-    add_fifth_cost(*this, cost_factors[0][0], size, splist, parts);
+    if(speciesList.size()>1){
+        add_fifth_cost(*this, cost_factors[0][0], size, splist, parts);
 
-    add_octave_cost(*this, cost_factors[0][1], size, splist, parts);
+        add_octave_cost(*this, cost_factors[0][1], size, splist, parts);
 
-    add_off_cost(*this, cost_factors[0][2], size, splist, parts);
+        add_off_cost(*this, cost_factors[0][2], size, splist, parts);
 
-    add_melodic_cost(*this, cost_factors[0][3], size, splist, parts);
+        add_melodic_cost(*this, cost_factors[0][3], size, splist, parts);
 
-    add_motion_cost(*this, cost_factors[0][4], size, splist, parts);
+        add_motion_cost(*this, cost_factors[0][4], size, splist, parts);
 
-    add_variety_cost(*this, cost_factors[0][5], size, splist, parts);
+        add_variety_cost(*this, cost_factors[0][5], size, splist, parts);
 
-    add_succ_cost(*this, cost_factors[0][6], size, splist, parts);
+        add_succ_cost(*this, cost_factors[0][6], size, splist, parts);
 
-    add_triad_cost(*this, cost_factors[0][7], size, splist, upper);
+        add_triad_cost(*this, cost_factors[0][7], size, splist, upper);
 
-    //ORDERING THE COSTS
+        //ORDERING THE COSTS
 
-    //putting the name of the cost in the ordered costs list at the index of its importance
-    for(const auto& entry : prefs){ 
-        int val = entry.second-1;
-        ordered_costs[val].push_back(entry.first);
-    }
+        //putting the name of the cost in the ordered costs list at the index of its importance
+        for(const auto& entry : prefs){ 
+            int val = entry.second-1;
+            ordered_costs[val].push_back(entry.first);
+        }
 
-    //creating the final ordered list
-    for(int i = 0; i < 14; i++){
-        if(!ordered_costs[i].empty()){
-            for(int k = 0; k < ordered_costs[i].size(); k++){
-                IntVar to_add;
-                for(int t = 0; t < cost_names.size(); t++){
-                    if(cost_names[t]==ordered_costs[i][k]){
-                        to_add = cost_factors[0][t];
+        //creating the final ordered list
+        for(int i = 0; i < 14; i++){
+            if(!ordered_costs[i].empty()){
+                for(int k = 0; k < ordered_costs[i].size(); k++){
+                    IntVar to_add;
+                    for(int t = 0; t < cost_names.size(); t++){
+                        if(cost_names[t]==ordered_costs[i][k]){
+                            to_add = cost_factors[0][t];
+                        }
                     }
+                    ordered_factors[n_unique_costs] = to_add;
+                    n_unique_costs++;
                 }
-                ordered_factors[n_unique_costs] = to_add;
-                n_unique_costs++;
             }
         }
     }
+
     /// constraints
 
     link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
@@ -199,19 +204,19 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     set_step_costs(*this, size, parts);
 
-    if(speciesList.size()==1){
-        for(int i = 0; i < parts[1].varietyArray.size(); i++){
-            rel(*this, parts[1].varietyArray[i], IRT_EQ, 0);
-        }
+    //if(speciesList.size()==1){
+    //    for(int i = 0; i < parts[1].varietyArray.size(); i++){
+    //        rel(*this, parts[1].varietyArray[i], IRT_EQ, 0);
+    //    }
 
-        for(int i = 0; i < parts[1].succ_cost.size(); i++){
-            rel(*this, parts[1].succ_cost[i], IRT_EQ, 0);
-        }
+    //    for(int i = 0; i < parts[1].succ_cost.size(); i++){
+    //        rel(*this, parts[1].succ_cost[i], IRT_EQ, 0);
+    //    }
 
-        for(int i = 0; i < upper[1].triad_costs.size(); i++){
-            rel(*this, upper[1].triad_costs[i], IRT_EQ, 0);
-        }
-    }
+    //    for(int i = 0; i < upper[1].triad_costs.size(); i++){
+    //        rel(*this, upper[1].triad_costs[i], IRT_EQ, 0);
+    //    }
+    //}
 
     if(speciesList.size()==2){
 
@@ -227,8 +232,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     no_same_direction(*this, size, parts, speciesList.size());
 
     no_successive_ascending_sixths(*this, size, parts, speciesList.size());
-
-    //create_solution_array(size, solution_array, parts);
 
     //going through parts to check for second species
     int solution_len = 0;
@@ -570,6 +573,38 @@ string Problem::toString(){
             message += "]\n";
         }
     }
+    for(int n = 0; n < size; n++){
+        if(parts[1].vector_notes[0][n].assigned()){
+            message += to_string(parts[1].vector_notes[0][n].val()) + " ";
+        }
+    }
+    message += "\n";
+    for(int n = 0; n < cost_factors.size(); n++){
+        if(cost_factors[n].assigned()){
+            message += to_string(parts[1].vector_notes[0][n].val()) + " ";
+        } else{
+            message += "... ";
+        }
+    }
+    message += "\n";
+    message += "H INTERVAL : [";
+    for(int n = 0; n < size; n++){
+        if(parts[1].hIntervalsCpCf[0][n].assigned()){
+            message += to_string(parts[1].hIntervalsCpCf[0][n].val()) + " ";
+        } else{
+            message += "... ";
+        }
+    }
+    message += "]\n";
+    message += "LOWEST : [";
+    for(int n = 0; n < size; n++){
+        if(lowest[0].notes[n].assigned()){
+            message += to_string(lowest[0].notes[n].val()) + " ";
+        } else{
+            message += "... ";
+        }
+    }
+    message += "]\n";
     writeToLogFile(message.c_str());
     return message;
 }

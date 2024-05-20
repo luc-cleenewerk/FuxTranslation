@@ -129,9 +129,7 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
         for(int p2 = 0; p2 < parts.size(); p2++){
             if(p2!=p1){
                 for(int i = 1; i < size-1; i++){
-                    if(p1==0 && p2==0){
-                        rel(home, parts[p1].notes[i], IRT_NQ, parts[p2].notes[i]); //constraint that notes are different
-                    } else if(p1==0 && p2!=0){
+                    if(p1==0 && p2!=0){
                         rel(home, parts[p1].notes[i], IRT_NQ, parts[p2].vector_notes[0][i]); //constraint that notes are different
                     } else if(p1!=0 && p2==0){
                         rel(home, parts[p1].vector_notes[0][i], IRT_NQ, parts[p2].notes[i]); //constraint that notes are different
@@ -145,7 +143,7 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
 }
 
 void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, vector<Part> parts){
-    int p = size-1;
+    int p = size-2;
     
     if(parts.size()==3){ //if it is 3 voices
         for(int p = 0; p < parts.size(); p++){
@@ -157,8 +155,8 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int s
             }
         }
     } else { //else 2 voice constraints
-        rel(home, parts[1].hIntervalsCpCf[0][p], IRT_EQ, 3, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : minor third
-        rel(home, parts[1].hIntervalsCpCf[0][p], IRT_EQ, 9, Reify(parts[0].is_not_lowest[p], RM_IMP)); //constraint : major sixth
+        rel(home, (parts[0].is_not_lowest[p]==0) >> (parts[1].hIntervalsCpCf[0][p]==9));
+        rel(home, (parts[0].is_not_lowest[p]==1) >> (parts[1].hIntervalsCpCf[0][p]==3));
     }
 }
 
