@@ -493,31 +493,31 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
 
 /**
  * Returns the size of the problem
- * @return an integer representing the size of the vars array
+ * @return an integer representing the size of the vars array           RETURNS THE SIZE OF THE SOLUTION_ARRAY
  */
 int Problem::getSize(){
-    string message = "getSize function called. size = " + to_string(size) + "\n";
+    string message = "getSize function called. size = " + to_string(solution_array.size()) + "\n";
     writeToLogFile(message.c_str());
-    return size;
+    return solution_array.size();
 }
 
 /**
- * Returns the values taken by the variables cp in a solution
+ * Returns the values taken by the variables vars in a solution
  * @todo Modify this to return the solution for your problem. This function uses @param size to generate an array of integers
  * @return an array of integers representing the values of the variables in a solution
- * Should only be used when using OM
  */
 int* Problem::return_solution(){
     string message = "return_solution method. Solution : [";
-    int* solution = new int[size];
-        for(int i = 0; i < size; i++){
-            solution[i] = 1;
-            message += to_string(solution[i]) + " ";
-        }
+    int* solution = new int[solution_array.size()];
+    for(int i = 0; i < solution_array.size(); i++){
+        solution[i] = solution_array[i].val();       // TODO : modify!!
+        message += to_string(solution[i]) + " ";
+    }
     message += "]\n";
     writeToLogFile(message.c_str());
     return solution;
 }
+
 
 /**
  * Copy method
@@ -570,7 +570,6 @@ string Problem::toString(){
             message += "]\n";
         }
     }
-
     writeToLogFile(message.c_str());
     return message;
 }

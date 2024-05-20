@@ -745,6 +745,7 @@
         (print "The solution can now be retrieved by evaluating the third output of cp-params.")
         ;; (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
         (setq sol-pitches (solution-to-int-array sol)) ; store the values of the solution
+        (print "sol-pitches :")
         (print sol-pitches)
         (let (
             (basic-rythmics (get-basic-rythmics *species-list *cf-len sol-pitches))
@@ -804,6 +805,7 @@
 ; ((4) 5) -> ~((-1/2 1 1 1 1/2 1/2 1 (pitches)) depending on the counterpoint
 
 (defun get-basic-rythmics (species-list len sol-pitches)
+    (print "get-basic-rythmics function entered")
     (setq len-1 (- len 1))
     (setq len-2 (- len 2))
     (let (
@@ -1167,6 +1169,15 @@
         (cons (/ (first l) 100) (to-midi (rest l)))
     )
 )
+
+; converts a list of MIDI values to MIDIcent
+(defun to-midicent (l)
+    (if (null l)
+        nil
+        (cons (* 100 (first l)) (to-midicent (rest l)))
+    )
+)
+
 
 (defun map-mode-to-int (mode)
   (cond
