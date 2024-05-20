@@ -11,14 +11,17 @@
 
 (print "Loading cp-params object...")
 
+(defparameter DFS 0)
+(defparameter BAB 1)
+
 (om::defclass! cp-params ()
 ;attributes
 (
     ; ---------- Input cantus firmus ----------
     (cf-voice :accessor cf-voice :initarg :cf-voice :initform nil :documentation "")
     ; ---------- Solver parameters ----------
-    (species-param :accessor species-param :initform (list "1st" "1st") :type string :documentation "")
-    (voice-type-param :accessor voice-type-param :initform (list "Really far above" "Above") :type string :documentation "")
+    (species-param :accessor species-param :initform (list "1st" "1st" "1st") :type string :documentation "")
+    (voice-type-param :accessor voice-type-param :initform (list "Really far above" "Above" "Below") :type string :documentation "")
     (min-skips-slider-param :accessor min-skips-slider-param :initform 0 :type integer :documentation "")
     (borrow-mode-param :accessor borrow-mode-param :initform "Major" :type string :documentation "")
     ; ---------- Output & Stop ----------
@@ -330,14 +333,14 @@
 
             (om::om-make-dialog-item
             'om::om-static-text
-            (om::om-make-point 25 80)
+            (om::om-make-point 25 70)
             (om::om-make-point 150 20)
             "First voice range"
             )
 
             (om::om-make-dialog-item
             'om::pop-up-menu
-            (om::om-make-point 275 75)
+            (om::om-make-point 275 65)
             (om::om-make-point 220 20)
             "Voice range"
             :range (list "Really far above" "Far above" "Above" "Same range" "Below" "Far below" "Really far below")
@@ -349,14 +352,14 @@
 
             (om::om-make-dialog-item
             'om::om-static-text
-            (om::om-make-point 25 130)
+            (om::om-make-point 25 110)
             (om::om-make-point 150 20)
             "Second voice species"
             )
 
             (om::om-make-dialog-item
             'om::pop-up-menu
-            (om::om-make-point 275 125)
+            (om::om-make-point 275 105)
             (om::om-make-point 220 20)
             "Second voice species"
             :range (list "None" "1st" "2nd" "3rd" "4th" "5th")
@@ -368,14 +371,14 @@
 
             (om::om-make-dialog-item
             'om::om-static-text
-            (om::om-make-point 25 180)
+            (om::om-make-point 25 150)
             (om::om-make-point 150 20)
             "Second voice range"
             )
 
             (om::om-make-dialog-item
             'om::pop-up-menu
-            (om::om-make-point 275 175)
+            (om::om-make-point 275 145)
             (om::om-make-point 220 20)
             "Second voice range"
             :range (list "Really far above" "Far above" "Above" "Same range" "Below" "Far below" "Really far below")
@@ -385,16 +388,57 @@
             )
             ) 
 
+
+
+            (om::om-make-dialog-item
+            'om::om-static-text
+            (om::om-make-point 25 190)
+            (om::om-make-point 150 20)
+            "Third voice species"
+            )
+
+            (om::om-make-dialog-item
+            'om::pop-up-menu
+            (om::om-make-point 275 185)
+            (om::om-make-point 220 20)
+            "Third voice species"
+            :range (list "None" "1st" "2nd" "3rd" "4th" "5th")
+            :value (third (species-param (om::object editor)))
+            :di-action #'(lambda (cost)
+                (setf (third (species-param (om::object editor))) (nth (om::om-get-selected-item-index cost) (om::om-get-item-list cost)))
+            )
+            )
+
             (om::om-make-dialog-item
             'om::om-static-text
             (om::om-make-point 25 230)
+            (om::om-make-point 150 20)
+            "Third voice range"
+            )
+
+            (om::om-make-dialog-item
+            'om::pop-up-menu
+            (om::om-make-point 275 225)
+            (om::om-make-point 220 20)
+            "Third voice range"
+            :range (list "Really far above" "Far above" "Above" "Same range" "Below" "Far below" "Really far below")
+            :value (third (voice-type-param (om::object editor)))
+            :di-action #'(lambda (cost)
+                (setf (third (voice-type-param (om::object editor))) (nth (om::om-get-selected-item-index cost) (om::om-get-item-list cost)))
+            )
+            ) 
+
+
+            (om::om-make-dialog-item
+            'om::om-static-text
+            (om::om-make-point 25 270)
             (om::om-make-point 150 20)
             "Borrowing mode"
             )
 
             (om::om-make-dialog-item
             'om::pop-up-menu
-            (om::om-make-point 275 225)
+            (om::om-make-point 275 265)
             (om::om-make-point 220 20)
             "Borrowing mode"
             :range (list "None" "Major" "Minor")
@@ -406,14 +450,14 @@
 
             (om::om-make-dialog-item
             'om::om-static-text
-            (om::om-make-point 25 280)
+            (om::om-make-point 25 310)
             (om::om-make-point 150 20)
             "Minimum % of skips"
             )
 
             (om::om-make-dialog-item
             'om::om-slider
-            (om::om-make-point 275 275)
+            (om::om-make-point 275 305)
             (om::om-make-point 220 20)
             "Minimum % of skips"
             :range '(0 100)
@@ -459,63 +503,137 @@
                     (cf-voice (om::object editor))
                     (borrow-mode-param (om::object editor))
                 )
-                (defparameter *params* (make-hash-table))
-                ;; set melodic parameters
-                (dolist (subcost melodic-subcosts)
-                    (setparam-cost (getf subcost :param) (getf subcost :value))
-                )
 
-                ;; set general costs
+                (defparameter *is-stopped nil)
+
+                (defvar melodic-params-list nil)
+                (defvar melodic-values-list nil)
+                (setq melodic-params-list nil)
+                (setq melodic-values-list nil)
+
+                (dolist (subcost melodic-subcosts)
+                    (setq melodic-params-list (append melodic-params-list (list (getf subcost :param))))
+                    (setq melodic-values-list (append melodic-values-list (list (convert-to-cost-integer (getf subcost :value))))))
+
+                (print "melodic lists params then values: ")
+                (print melodic-params-list)
+                (print melodic-values-list)
+                (print (length melodic-values-list))
+
+
+                (defvar general-params-list nil)
+                (defvar general-values-list nil)
+                (setq general-params-list nil)
+                (setq general-values-list nil)
+
                 (dolist (cost general-preferences)
                     (if (equal (getf cost :param) 'motions-cost)
                         nil ; motions-cost is treated by the subcosts
                         (if (equal (getf cost :param) 'penult-rule-check)
-                            (setparam-yes-no (getf cost :param) (getf cost :value)) ; penult-rule-check is a yes no
-                            (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                        )
-                    )
-                )
+                            (progn ; Use progn to group multiple expressions
+                                (setq general-params-list (append general-params-list (list (getf cost :param))))
+                                (setq general-values-list (append general-values-list (list (convertparam-yes-no (getf cost :value)))))) ; penult-rule-check is a yes no
+                            (progn ; Use progn to group multiple expressions
+                                (setq general-params-list (append general-params-list (list (getf cost :param))))
+                                (setq general-values-list (append general-values-list (list (convert-to-cost-integer (getf cost :value))))))))) ; else
 
-                ;; set motions costs
+                (print "general lists params then values: ")
+                (print general-params-list)
+                (print general-values-list)
+                (print (length general-values-list))
+
+
+                (defvar motion-params-list nil)
+                (defvar motion-values-list nil)
+                (setq motion-params-list nil)
+                (setq motion-values-list nil)
+
                 (dolist (subcost motion-subcosts)
-                    (setparam-cost (getf subcost :param) (getf subcost :value))
-                )
+                    (setq motion-params-list (append motion-params-list (list (getf subcost :param))))
+                    (setq motion-values-list (append motion-values-list (list (convert-to-cost-integer (getf subcost :value))))))
 
-                ;; set species specific costs
+                (print "motion lists params then values: ")
+                (print motion-params-list)
+                (print motion-values-list)
+                (print (length motion-values-list))
+
+
+                (defvar specific-params-list nil)
+                (defvar specific-values-list nil)
+                (setq specific-params-list nil)
+                (setq specific-values-list nil)
+
                 (dolist (cost specific-preferences)
                     (if (equal (getf cost :param) 'pref-species-slider)
-                        (setparam-slider (getf cost :param) (getf cost :value)) ; it is a slider
+                        (progn ; Use progn to group multiple expressions
+                            (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                            (setq specific-values-list (append specific-values-list (list (getf cost :value))))) ; slider
                         (if (equal (getf cost :param) 'con-m-after-skip-check)
-                            (setparam-yes-no (getf cost :param) (getf cost :value)) ; it is a yes-no
-                            (setparam-cost (getf cost :param) (getf cost :value)) ; else
-                        ) 
-                    )
-                )
+                            (progn ; Use progn to group multiple expressions
+                                (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                                (setq specific-values-list (append specific-values-list (list (convertparam-yes-no (getf cost :value)))))) ; con-m-after-skip-check is a yes no
+                            (progn ; Use progn to group multiple expressions
+                                (setq specific-params-list (append specific-params-list (list (getf cost :param))))
+                                (setq specific-values-list (append specific-values-list (list (convert-to-cost-integer (getf cost :value))))))))) ; else
 
-                ;; set search parameters
-                (setparam-slider 'min-skips-slider (min-skips-slider-param (om::object editor)))
-                (setparam 'borrow-mode (borrow-mode-param (om::object editor)))
+                (print "specific lists params then values: ")
+                (print specific-params-list)
+                (print specific-values-list)
+                (print (length specific-values-list))
 
+
+
+                (defvar cost-params-list nil)
+                (defvar cost-values-list nil)
+                (setq cost-params-list nil)
+                (setq cost-values-list nil)
 
                 ;; preferences for the cost order
                 (defparameter *cost-preferences* (make-hash-table))
                 (dolist (current-list (list general-preferences specific-preferences melodic-preferences))
                     (dolist (cost current-list)
                         (if (getf cost :importance)
-                            (setf (gethash (getf cost :param) *cost-preferences*) (getf cost :importance))
+                            (progn ; 
+                                (setq cost-params-list (append cost-params-list (list (getf cost :name))))
+                                (setq cost-values-list (append cost-values-list (list (parse-integer (getf cost :importance))))))
                         )   
                     )
                 )
 
-                (if (string= "Linear combination" (linear-combination (om::object editor))) 
-                    (setf *linear-combination t)
-                    (setf *linear-combination nil)
-                )
+                (print "cost name then values: ")
+                (print cost-params-list)
+                (print cost-values-list)
+                (print (length cost-values-list))
 
-                
+
+                (setf borrow-mode-int (map-mode-to-int (borrow-mode-param (om::object editor))))
+                (setf min-skips-slider (min-skips-slider-param (om::object editor)))
+
+                (print (borrow-mode-param (om::object editor)))
+                (print (map-mode-to-int (borrow-mode-param (om::object editor))))
+                (print borrow-mode-int)
+                (print min-skips-slider)
+
                 (setf species-integer-list (convert-to-species-integer-list (species-param (om::object editor))))
                 (setf *voices-types (convert-to-voice-integer-list (voice-type-param (om::object editor))))
-                (setf (current-csp (om::object editor)) (fux-cp species-integer-list))
+                
+                (print species-integer-list)
+                (print *voices-types)
+
+                (defparameter *species-list species-integer-list)
+
+                (print *scale)
+
+                (print "calling new problem")
+
+                (defparameter problem-pointer (new-ctp-problem *cf species-integer-list *voices-types borrow-mode-int min-skips-slider general-values-list motion-values-list melodic-values-list specific-values-list cost-values-list *tonalite-offset *scale *chromatic-scale *borrowed-scale))
+                (print problem-pointer)
+
+                (setf (current-csp (om::object editor)) (create-solver problem-pointer BAB))
+                (print (current-csp (om::object editor)))
+                
+                (print "Base<Problem>* (search engine) stored in current-csp object variable")
+                ;; (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
             )
 
@@ -530,7 +648,7 @@
                 )
                 (print "Searching for the next solution")
                 ;reset the boolean because we want to continue the search
-                (setparam 'is-stopped nil)
+                (setq *is-stopped nil)
                 ;get the next solution
                 (mp:process-run-function ; start a new thread for the execution of the next method
                     "solver-thread" ; name of the thread, not necessary but useful for debugging
@@ -559,7 +677,7 @@
                 )
                 (print "Searching for the best solution")
                 ;reset the boolean because we want to continue the search
-                (setparam 'is-stopped nil)
+                (setq *is-stopped nil)
                 ;get the next solution
                 (mp:process-run-function ; start a new thread for the execution of the next method
                     "solver-thread" ; name of the thread, not necessary but useful for debugging
@@ -585,13 +703,199 @@
             (om::om-make-point 160 20) ; size (horizontal, vertical)
             "Stop"
             :di-action #'(lambda (b)
-                (setparam 'is-stopped t)
+                (setq *is-stopped t)
+                (print "search stopped. *is-stopped parameter :" )
+                (print *is-stopped)
             )
             )
         )
         search-buttons
     )
 )
+
+
+
+
+(defun search-next-fux-cp (se)
+    (print "Searching next solution...")
+    ;; (print l)
+    ;; (#<|gil|::bab-engine 40100D21DB> (#<|gil|::int-var 40D038C6BB> #<|gil|::int-var 40D038C9CB> #<|gil|::int-var 40D038CD93> #<|gil|::int-var 40D038D233> #<|gil|::int-var 40D038D71B> #<|gil|::int-var 40D038DC03> #<|gil|::int-var 40D038E0EB> #<|gil|::int-var 40D038E5D3> #<|gil|::int-var 40D038E993> #<|gil|::int-var 40D038C59B> #<|gil|::int-var 40D038CB53> #<|gil|::int-var 40D038C81B> #<|gil|::int-var 40D038CF63> #<|gil|::int-var 40D038CB3B> #<|gil|::int-var 40D038D44B> #<|gil|::int-var 40D038CF4B> #<|gil|::int-var 40D038D933> #<|gil|::int-var 40D038D433> #<|gil|::int-var 40D038DE1B> #<|gil|::int-var 40D038D91B> #<|gil|::int-var 40D038E303> #<|gil|::int-var 40D038DE03> #<|gil|::int-var 40D038E753> #<|gil|::int-var 40D038E2EB> #<|gil|::int-var 40D038EAB3> #<|gil|::int-var 40D03974D3>) #<|gil|::time-stop 40100D16A3> #<|gil|::search-options 40100D1BC3> (1 2))
+    (let (
+        (check t)
+        sol sol-pitches sol-species
+        )
+
+        (time (om::while check :do
+            (print "search next loop")
+            ;; ; reset the tstop timer before launching the search
+            ;; (gil::time-stop-reset tstop)                             ; Done on Gecode side
+            ; try to find a solution
+            (time (setq sol (try-find-solution se)))    ; "sol" will contain a void* cast of a Problem* pointer (the solution space)
+            (if (null sol)
+                ; then check if there are solutions left and if the user wishes to continue searching
+                (stopped-or-ended (search-stopped se) (getparam 'is-stopped))   ; TODO check git damien
+                ; else we have found a solution so break fthe loop
+                (setf check nil)
+            )
+        ))
+
+        (print sol)
+        
+                
+        (print "The solution can now be retrieved by evaluating the third output of cp-params.")
+        ;; (setq sol-pitches (gil::g-values sol the-cp)) ; store the values of the solution
+        (setq sol-pitches (solution-to-int-array sol)) ; store the values of the solution
+        (print "sol-pitches :")
+        (print sol-pitches)
+        (let (
+            (basic-rythmics (get-basic-rythmics *species-list *cf-len sol-pitches))
+            (sol-voices (make-list *N-COUNTERPOINTS :initial-element nil))
+            )
+
+            (loop for i from 0 below *N-COUNTERPOINTS do (progn
+                (setq rythmic+pitches (nth i basic-rythmics)) ; get the rythmic correpsonding to the species
+                (setq rythmic-om (first rythmic+pitches))
+                (setq pitches-om (second rythmic+pitches))
+            )
+
+                (setf (nth i sol-voices) (make-instance 'voice :chords (to-midicent pitches-om) :tree (om::mktree rythmic-om '(4 4)) :tempo *cf-tempo))
+            )
+            (make-instance 'poly :voices sol-voices)
+        )
+    )
+)
+
+; try to find a solution, catch errors from Gecode
+(defun try-find-solution (se)
+    (print "try-find-solution")
+    (handler-case
+        (return-next-solution-space se) ; search the next solution, sol is the space of the solution
+        (error (c)
+            (error "Error on Gecode side when calling return-next-solution-space")
+            ;(try-find-solution se)
+        )
+    )
+)
+
+; determines if the search has been stopped by the solver because there are no more solutions or if the user has stopped the search
+(defun stopped-or-ended (stopped-se stop-user)
+    (print (list "stopped-se" stopped-se "stop-user" stop-user))
+    (if (= stopped-se 0); if the search has not been stopped by the TimeStop object, there is no more solutions
+        (error "The search was stopped because no more solution was found. Either the best solution was found or none exist.")
+    )
+    ;otherwise, check if the user wants to keep searching or not
+    (if stop-user
+        (error "The search was stopped. Press next to continue the search.")
+    )
+)
+
+
+; get the basic rythmic pattern and the corresponding notes the given species
+; - species-list: the species [1 2 3 4]
+; - len: the length of the cantus-firmus
+; - sol-pitches: the whole solution array
+; - counterpoints: the counterpoints we are working with (only useful for the 5th species as it needs the extended-cp-domain)
+; - sol: the solutino space (only useful for the 5th species)
+; return format = '('(rythmics-1 pitches-1) '(rythmics-2 pitches-2) ... '(rythmics-n pitches-n))
+; examples:
+; ((1) 5) -> (((1 1 1 1 1) (60 62 64 65 60)))
+; ((1 2) 5) -> (((1 1 1 1 1) (60 62 64 65 60)) ((1/2 1/2 1/2 1/2 1/2 1/2 1/2 1/2 1) (60 62 64 65 64 62 60 62 60)))
+; ((2) 5) -> ((1/2 1/2 1/2 1/2 1/2 1/2 1/2 1/2 1 (pitches))
+; ((3) 5) -> ((1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1/4 1 (pitches))
+; ((4) 5) -> ~((-1/2 1 1 1 1/2 1/2 1 (pitches)) depending on the counterpoint
+
+(defun get-basic-rythmics (species-list len sol-pitches)
+    (print "get-basic-rythmics function entered")
+    (setq len-1 (- len 1))
+    (setq len-2 (- len 2))
+    (let (
+        (rythmic+pitches (make-list *N-COUNTERPOINTS :initial-element nil))
+        )
+        (loop for i from 0 below *N-COUNTERPOINTS do (progn
+            (case (nth i species-list)
+                (1 (progn 
+                    (setf (nth i rythmic+pitches) (list
+                        ; rythm
+                        (make-list len :initial-element 1)
+                        ; pitches
+                        (subseq sol-pitches 0 len)
+                    ))
+                    (setf sol-pitches (subseq sol-pitches len))
+                ))
+                (2 (let (
+                        (rythmic (append (make-list (* 2 len-1) :initial-element 1/2) '(1)))
+                        (pitches (subseq sol-pitches 0 (- (* 2 len) 1)))
+                        )
+                        (if (eq (car (last pitches 4)) (car (last pitches 3))) (progn ; if the first note in the penult bar is the same as the last in the 2nd-to last
+                            ; then ligature them 
+                            (setf rythmic (append (butlast rythmic 4) '(1) (last rythmic 2)))
+                            (loop
+                                for i from (- (length pitches) 4) below (- (length pitches) 1)
+                                do (setf (nth i pitches) (nth (+ i 1) pitches))
+                            )
+                        ))
+                        (if (eq (car (last pitches 3)) (car (last pitches 2))) (progn ; same but for 3rd-to-last and 2nd-to-last
+                            (setf rythmic (append (butlast rythmic 3) '(1) (last rythmic 1)))
+                            (loop
+                                for i from (- (length pitches) 3) below (- (length pitches) 1)
+                                do (setf (nth i pitches) (nth (+ i 1) pitches))
+                            )
+                        ))
+                        (setf (nth i rythmic+pitches) (list
+                            rythmic
+                            pitches
+                        ))
+                        ; remove all the notes we've just considered from sol-pitches
+                        (setf sol-pitches (subseq sol-pitches (length pitches)))
+                    )                    
+                )
+                (3 (progn
+                    (setf (nth i rythmic+pitches) (list 
+                        ; rhythm
+                        (append (make-list (* 4 len-1) :initial-element 1/4) '(1))
+                        ; pitches
+                        (subseq sol-pitches 0 (- (* 4 len) 3))
+                    ))
+                    ; remove all the notes we've just considered from sol-pitches
+                    (setf sol-pitches (subseq sol-pitches (- (* 4 len) 3)))
+                ))
+                (4 (error "The fifth species is not implemented yet in get-basic-rythmics function.")
+                ;; (progn 
+                ;;     (setf (nth i rythmic+pitches) (build-rythmic-pattern
+                ;;         (get-4th-species-array len-2)
+                ;;         (get-4th-notes-array (subseq sol-pitches 0 (* 2 len-1)) (+ (* 4 len-1) 1))
+                ;;     ))
+                ;;     (setf j 0)
+                ;;     (dotimes (k *cf-penult-index)
+                ;;         (setf j (+ j 2))
+                ;;         ; if we have a note that creates a hidden fifth (direct motion to a fifth), then remove the note
+                ;;         (if (and
+                ;;             (eq 7 (nth (+ 1 j) (gil::g-values sol (first (h-intervals (nth i counterpoints))))))
+                ;;             (eq DIRECT (nth j (gil::g-values sol (first (motions (nth i counterpoints))))))
+                ;;             )
+                ;;             (setf (nth j (first (nth i rythmic+pitches))) -1/2)
+                ;;         )
+                ;;     )
+                ;;     (setf sol-pitches (subseq sol-pitches (* 2 len-1)))
+                ;; )
+                )
+                (5 (error "The fifth species is not implemented yet in get-basic-rythmics function.")
+                ;; (let (
+                ;;         (sol-species (gil::g-values sol (species-arr (nth i counterpoints)))) ; store the values of the solution
+                ;;     )                    
+                ;;     (setf (nth i rythmic+pitches) 
+                ;;         (parse-species-to-om-rythmic sol-species sol-pitches (extended-cp-domain (nth i counterpoints)))
+                ;;     )
+                ;;     (setf sol-pitches (subseq sol-pitches (solution-len (nth i counterpoints))))
+                ;; )
+                )
+            )
+        ))
+        (assert (eql sol-pitches nil) (sol-pitches) "Assertion failed: sol-pitches should be nil at the end of function get-basic-rythmics.")
+        rythmic+pitches
+    )
+)
+
 
 (defun make-slider (cost y-position)
     (om::om-make-dialog-item
@@ -626,38 +930,38 @@
     (mapcar #'(lambda (x) (format nil "~A" x)) (loop for i from 1 to 14 collect i))
 )
 
-; set the value @v in the hash table @h with key @k
-(defun seth (h k v)
-    (setf (gethash k h) v)
-)
+;; ; set the value @v in the hash table @h with key @k
+;; (defun seth (h k v)
+;;     (setf (gethash k h) v)
+;; )
 
-; set the value @v in the parameters with key @k
-(defun setparam (k v)
-    (seth *params* k v)
-)
+;; ; set the value @v in the parameters with key @k
+;; (defun setparam (k v)
+;;     (seth *params* k v)
+;; )
 
-(defun setparam-yes-no (k v)
-    (let ((converted (if (string= "Yes" v)
-                    t
-                    nil)))
-        (setparam k converted)
-    )
-)
+;; (defun setparam-yes-no (k v)
+;;     (let ((converted (if (string= "Yes" v)
+;;                     t
+;;                     nil)))
+;;         (setparam k converted)
+;;     )
+;; )
 
-; set the cost-converted value @of v in the parameters with key @k
-(defun setparam-cost (k v)
-    (setparam k (convert-to-cost-integer v))
-)
+;; ; set the cost-converted value @of v in the parameters with key @k
+;; (defun setparam-cost (k v)
+;;     (setparam k (convert-to-cost-integer v))
+;; )
 
-; set the species-converted value @of v in the parameters with key @k
-(defun setparam-species (k v)
-    (setparam k (convert-to-species-integer v))
-)
+;; ; set the species-converted value @of v in the parameters with key @k
+;; (defun setparam-species (k v)
+;;     (setparam k (convert-to-species-integer v))
+;; )
 
-; set the slider-converted value @of v in the parameters with key @k
-(defun setparam-slider (k v)
-    (setparam k (convert-to-percent v))
-)
+;; ; set the slider-converted value @of v in the parameters with key @k
+;; (defun setparam-slider (k v)
+;;     (setparam k (convert-to-percent v))
+;; )
 
 ; convert a cost to an integer
 (defun convert-to-cost-integer (param)
@@ -674,6 +978,7 @@
 
 ; convert a species to an integer
 (defun convert-to-species-integer-list (param-list)
+    ;; (print param-list)
     (let (
         (species-list '())
         )
@@ -763,4 +1068,130 @@
     (defparameter COST_UB (* *cf-len 20))
     ; *N-COUNTERPOINTS is the number of counterpoints in the counterpoint
     (defparameter *N-COUNTERPOINTS -1) ; will be defined when parsing the input
+)
+
+; return the tone offset of the voice
+; => [0, ...,  11]
+; 0 = C, 1 = C#, 2 = D, 3 = D#, 4 = E, 5 = F, 6 = F#, 7 = G, 8 = G#, 9 = A, 10 = A#, 11 = B
+(defun get-tone-offset (voice)
+    (let (
+        (tone (om::tonalite voice))
+    )
+        (if (eq tone nil)
+            ; then default to C major
+            0
+            ; else check if the mode is major or minor
+            (let (
+                (mode (om::mode tone))
+            )
+                (if (eq (third mode) 300)
+                    (midicent-to-midi-offset (+ (om::tonmidi tone) 300))
+                    (midicent-to-midi-offset (om::tonmidi tone))
+                )
+            )
+        )
+    )
+)
+
+
+; build the list of acceptable pitch based on the scale and a key offset
+(defun build-scaleset (scale offset)
+    (let ((major-modified (adapt-scale scale))
+          (scaleset (list)))
+        (loop :for octave :from -1 :below 11 :by 1 append
+              (setq scaleset (nconc scaleset (mapcar (lambda (n) (+ (+ n (* octave 12)) offset)) major-modified)))
+        )
+        (setq scaleset (remove-if 'minusp scaleset))
+        ;; tibo: remove notes higher than 127
+        (setq scaleset (remove 127 scaleset :test #'<))
+    )
+)
+
+; reformat a scale to be a canvas of pitch and not intervals
+(defun adapt-scale (scale)
+    (let ((major-modified (list (first scale))))
+         (loop :for i :from 1 :below (length scale) :by 1 :do
+            (setq major-modified (nconc major-modified (list (+ (nth i scale) (nth (- i 1) major-modified)))))
+         )
+    (return-from adapt-scale major-modified)
+    )
+)
+
+; returns the list of intervals defining a given mode
+(defun get-scale (&optional (mode "ionian (major)"))
+    (cond
+        ((string-equal mode "ionian (major)")
+            (list 2 2 1 2 2 2 1)
+        )
+        ((string-equal mode "dorian")
+            (list 2 1 2 2 2 1 2)
+        )
+        ((string-equal mode "phrygian")
+            (list 1 2 2 2 1 2 2)
+        )
+        ((string-equal mode "lydian")
+            (list 2 2 2 1 2 2 1)
+        )
+        ((string-equal mode "mixolydian")
+            (list 2 2 1 2 2 1 2)
+        )
+        ((string-equal mode "aeolian (natural minor)")
+            (list 2 1 2 2 1 2 2)
+        )
+        ((string-equal mode "locrian")
+            (list 1 2 2 1 2 2 2)
+        )
+        ((string-equal mode "harmonic minor")
+            (list 2 1 2 2 1 3 1)
+        )
+        ((string-equal mode "pentatonic")
+            (list 2 2 3 2 3)
+        )
+        ((string-equal mode "chromatic")
+            (list 1 1 1 1 1 1 1 1 1 1 1 1)
+        )
+        ((string-equal mode "borrowed")
+            (list 5 4 2 1)
+        )
+    )
+)
+
+; <chords> a list of chord object
+; Return the list of pitch contained in chords in midi format
+(defun to-pitch-list (chords)
+     (loop :for n :from 0 :below (length chords) :by 1 collect (to-midi (om::lmidic (nth n chords))))
+)
+
+; convert from MIDIcent to MIDI
+(defun to-midi (l)
+    (if (null l)
+        nil
+        (cons (/ (first l) 100) (to-midi (rest l)))
+    )
+)
+
+; converts a list of MIDI values to MIDIcent
+(defun to-midicent (l)
+    (if (null l)
+        nil
+        (cons (* 100 (first l)) (to-midicent (rest l)))
+    )
+)
+
+
+(defun map-mode-to-int (mode)
+  (cond
+    ((equal mode "None") 0)
+    ((equal mode "Major") 1)
+    ((equal mode "Minor") 2)
+    )
+)
+
+
+; TODO : check
+(defun convertparam-yes-no (v)
+    (cond
+    ((equal v "Yes") 1)
+    ((equal v "No")  0)
+    )
 )

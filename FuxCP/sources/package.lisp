@@ -6,6 +6,3 @@
 
 (defpackage :fuxcp
 (:use "COMMON-LISP" "OM" "CL-USER"))
-
-(defpackage :first
-(:use "COMMON-LISP" "OM" "CL-USER" "CFFI"))

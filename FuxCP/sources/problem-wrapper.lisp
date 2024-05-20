@@ -1,25 +1,131 @@
-(in-package :first)
+(cl:defpackage "gilf"
+  (:nicknames "GILF")
+   (:use common-lisp :cl-user :cl :cffi))
 
-(defun first-species ()
-    (first-sp )
+(in-package :gilf)
+(in-package :fuxcp)
+
+(print "Loading gecode-wrapper...")
+
+(defparameter DFS 0)
+(defparameter BAB 1)
+; corresponds to enum values in gecode_problem.h, but can be used graphically in om
+(defun bab ()
+    BAB
+)
+(defun dfs ()
+    DFS
 )
 
-(cffi::defcfun ("first_sp" first-sp) :pointer
+;;;;;;;;;;;;;;;;;;;;;
+;; Problem methods ;;
+;;;;;;;;;;;;;;;;;;;;;
 
+
+;; This function is used to convert lisp lists into int pointers so they can be passed to c++
+(defun new-ctp-problem (cf splist voicetypes borrowmode minskips generalcst motioncst melodiccst specificcst costimp toffset scale chromscale borscale)
+    (let (
+        (cfi (cffi::foreign-alloc :int :initial-contents cf))
+        (spl (cffi::foreign-alloc :int :initial-contents splist))
+        (vt (cffi::foreign-alloc :int :initial-contents voicetypes))
+        (gen (cffi::foreign-alloc :int :initial-contents generalcst))
+        (mot (cffi::foreign-alloc :int :initial-contents motioncst))
+        (mel (cffi::foreign-alloc :int :initial-contents melodiccst))
+        (spe (cffi::foreign-alloc :int :initial-contents specificcst))
+        (cst (cffi::foreign-alloc :int :initial-contents costimp))
+        (sca (cffi::foreign-alloc :int :initial-contents scale))
+        (chr (cffi::foreign-alloc :int :initial-contents chromscale))
+        (bor (cffi::foreign-alloc :int :initial-contents borscale))
+    )
+    (test-cffi 4)
+    (new-problem cfi (length cf) (length splist) spl vt borrowmode minskips gen mot mel spe cst toffset sca (length scale) chr (length chromscale) bor (length borscale))
+    )
 )
 
-(defun solver ()
-    (create-solver )
+(cffi::defcfun ("create_new_problem" new-problem) :pointer
+    "Creates a new instance of the problem. Returns a void* cast of a Problem*."
+
+    (cantus-firmus          :pointer :int)  ; the cantus firmus, in MIDI values
+    (cf-size                :int)           ; the size of the cantus firmus
+    (n-counterpoints        :int)           ; number of counterpoints
+    (species-list           :pointer :int)  ; list of the species of the counterpoints (size=n-counterpoints)
+    (voice-types            :pointer :int)  ; list of the voice types of the counterpoints (size=n-counterpoints)
+    (borrow-mode            :int)           ; borrowing mode : 0 if "None", 1 if "Major", 2 if "Minor"
+    (min-skips-percent      :int)           ; min skips slider
+    (general-cost-values    :pointer :int)  ; size = 8
+    (motion-cost-values     :pointer :int)  ; size = 3
+    (melodic-cost-values    :pointer :int)  ; size = 8
+    (specific-cost-values   :pointer :int)  ; size = 7
+    (cost-importances       :pointer :int)  ; size = 14
+    (tonalite-offset        :int)
+    (scale                  :pointer :int)  
+    (scale-size             :int)
+    (chromatic-scale        :pointer :int)
+    (chromatic-scale-size   :int)
+    (borrowed-scale         :pointer :int)
+    (borrowed-scale-size    :int)
+    ; TODO add here any additional arguments that your Problem constructor takes
 )
+
+(cffi::defcfun ("get_size" get-size) :int
+    "Returns the size of the space."
+    (sp :pointer) ; a void* cast of a Problem*
+)
+
+(cffi::defcfun ("test_cffi" test-cffi) :int
+    "Returns n+1."
+    (n :int) ; an integer
+)
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Search engine methods ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (cffi::defcfun ("create_solver" create-solver) :pointer
-
+    "Creates a DFS<Problem> object. Returns a void* cast of a DFS<Problem> object."
+    (sp :pointer) ; a void* cast of a Problem*
+    (solver-type :int); an integer representing the type of the solver (see above)
 )
 
-(defun next-sol ()
-    (get-next )
+(cffi::defcfun ("return_next_solution_space" return-next-solution-space) :pointer
+    "Returns a pointer to the next solution of the problem. Returns a void* cast of a Problem*."
+    (solver :pointer) ; a void* cast of a Base<Problem>* pointer
 )
 
-(cffi::defcfun ("get_next" get-next) :pointer
 
+(cffi::defcfun ("search_stopped" search-stopped) :int
+    "Returns 1 if the seach was stopped by the TimeStop object, and 1 otherwise."
+    (solver :pointer) ; a void* cast of a Base<Problem>* pointer
 )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Solution handling ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(cffi::defcfun ("return_solution" return-solution) :pointer
+    "Returns a int* that are the values of a solution."
+        (sp :pointer) ; a void* cast of a Problem object that is a solution of the problem.
+)
+
+(defun solution-to-int-array (sp)
+    "Returns the values the variables have taken in the solution as a list of integers. Casts a int* into a list of numbers."
+    "sp is a void* cast of a Problem* that is a solution to the problem. Calling this funciton on a non-solution 
+        will result in an error."
+        (if (cffi::null-pointer-p sp) ; TODO check
+            (error "No (more) solutions.")
+        )
+    (let* (
+            (size (get-size sp))
+            (ptr (return-solution sp))
+        )
+        (loop for i from 0 below size
+            collect (cffi::mem-aref ptr :int i)
+        )
+    )
+)
+
+
+(print "finished loading gecode-wrapper")
