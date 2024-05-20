@@ -300,6 +300,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             parts[p].is_neighbour = BoolVarArray(*this, parts[p].size-1, 0, 1);
 
             link_is_neighbour_array_2nd_species(*this, parts[p], lowest);
+
+            h_cons_arsis(*this, parts[p], PENULT_CONS);
+
+            penult_cons(*this, parts[p], PENULT_CONS_3P, IntVar(*this, 9,9), IntVar(*this,3,3));
         }
     }
 
@@ -417,6 +421,7 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].motions_cost = s.parts[p].motions_cost;
         parts[p].isCFB = s.parts[p].isCFB;
         parts[p].is_off = s.parts[p].is_off;
+        parts[p].penult_rule_check = s.parts[p].penult_rule_check;
         //2nd species variables
         parts[p].m_succ_intervals = s.parts[p].m_succ_intervals;
         parts[p].m_succ_intervals_brut = s.parts[p].m_succ_intervals_brut;
@@ -573,12 +578,22 @@ string Problem::toString(){
             message += "]\n";
         }
     }
-    for(int n = 0; n < size; n++){
-        if(parts[1].vector_notes[0][n].assigned()){
-            message += to_string(parts[1].vector_notes[0][n].val()) + " ";
+    message += "PART NOTES : ";
+    for(int p = 1; p < parts.size(); p++){
+        message += "[ ";
+        for(int i = 0; i < 4; i++){
+            message += "[ ";
+            for(int n = 0; n < parts[p].vector_notes[i].size(); n++){
+                if(parts[p].vector_notes[i][n].assigned()){
+                    message += to_string(parts[p].vector_notes[i][n].val()) + " ";
+                } else {
+                    message += "...";
+                }
+            }
+            message += "]";
         }
+        message += "]\n";
     }
-    message += "\n";
     for(int n = 0; n < cost_factors.size(); n++){
         if(cost_factors[n].assigned()){
             message += to_string(parts[1].vector_notes[0][n].val()) + " ";
@@ -587,19 +602,10 @@ string Problem::toString(){
         }
     }
     message += "\n";
-    message += "H INTERVAL : [";
-    for(int n = 0; n < size; n++){
-        if(parts[1].hIntervalsCpCf[0][n].assigned()){
-            message += to_string(parts[1].hIntervalsCpCf[0][n].val()) + " ";
-        } else{
-            message += "... ";
-        }
-    }
-    message += "]\n";
-    message += "LOWEST : [";
-    for(int n = 0; n < size; n++){
-        if(lowest[0].notes[n].assigned()){
-            message += to_string(lowest[0].notes[n].val()) + " ";
+    message += "COST FAC : [";
+    for(int n = 0; n < cost_factors[0].size(); n++){
+        if(cost_factors[0][n].assigned()){
+            message += to_string(cost_factors[0][n].val()) + " ";
         } else{
             message += "... ";
         }

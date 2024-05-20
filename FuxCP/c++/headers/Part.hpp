@@ -41,6 +41,7 @@ public:
     int m2_len;
     int sol_len;
     int total_m_len;
+    int penult_rule_check;
 
     Home home;
 

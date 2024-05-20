@@ -55,6 +55,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     h_octave = general_parameters[2];
     direct_move = general_parameters[6];
     off_cst = general_parameters[0];
+    penult_rule_check = general_parameters[7];
 
     step_cost = melodic[0];
     third_cost = melodic[1];
