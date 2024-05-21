@@ -124,7 +124,16 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
 /**
  * G7 : Chromatic melodies are forbidden
 */
-
 void no_chromatic_melodies(const Home &home, int size, vector<Part> parts);
+
+/**
+ * G10 : Last chord uses the same fundamental as the one of the scale used throughout the composition
+*/
+void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Stratum> upper, vector<Part> parts);
+
+/**
+ * Apply the last general constraints for 3 voices not yet implemented in other constraints
+*/
+void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper);
 
 #endif

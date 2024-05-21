@@ -336,3 +336,15 @@ void no_chromatic_melodies(const Home &home, int size, vector<Part> parts){
         }
     }
 }
+
+void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Stratum> upper, vector<Part> parts){
+    rel(home, expr(home, lowest[0].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].notes[0]%12));
+    for(int p = 0; p < upper.size(); p++){
+        rel(home, expr(home, upper[p].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].notes[0]%12));
+    }
+}
+
+void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper){
+    no_chromatic_melodies(home, parts[0].size, parts);
+    last_chord_same_fundamental(home, lowest, upper, parts);
+}

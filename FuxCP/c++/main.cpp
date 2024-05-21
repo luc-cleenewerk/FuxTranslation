@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     int size = 9;
     int species = 0;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
-    vector<int> speciesList = {1, 2};
+    vector<int> speciesList = {1, 1};
     // vector<int> voice_types = {2, 1};
     vector<int> voice_types = {3, 1};
     int t_off = 0;
