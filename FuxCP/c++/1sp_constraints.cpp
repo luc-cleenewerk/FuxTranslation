@@ -61,11 +61,7 @@
         set_step_costs(home, parts[1].size, parts);
 
         if(variant==6){
-            no_same_direction(home, parts[1].size, parts);
-
             no_successive_ascending_sixths(home, parts[1].size, parts);
-
-            no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);
 
             variety_cost_constraint(home, parts[1].size, parts);
 

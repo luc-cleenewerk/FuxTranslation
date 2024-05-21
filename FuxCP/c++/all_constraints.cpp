@@ -341,8 +341,19 @@ void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vecto
     rel(home, expr(home, lowest[0].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].notes[0]%12));
 }
 
-void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest){
-    no_chromatic_melodies(home, parts[0].size, parts);
-    last_chord_same_fundamental(home, lowest, parts);
+void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper){
+
+    //voices cannot play the same note except on first and last beat already checked off in first species calls
+
+    no_same_direction(home, parts[1].size, parts);
+
     last_chord_no_minor_third(home, parts[0].size, parts);
+
+    no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);
+
+    //last chord must be a major triad -> already checked by h_consonances? or is it only 3 voices?
+
+    last_chord_same_fundamental(home, lowest, parts);
+
+    no_chromatic_melodies(home, parts[0].size, parts); //havent seen it with anton yet
 }
