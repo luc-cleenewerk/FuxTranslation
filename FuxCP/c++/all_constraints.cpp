@@ -344,4 +344,5 @@ void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vecto
 void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest){
     no_chromatic_melodies(home, parts[0].size, parts);
     last_chord_same_fundamental(home, lowest, parts);
+    last_chord_no_minor_third(home, parts[0].size, parts);
 }
