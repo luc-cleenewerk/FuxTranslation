@@ -80,3 +80,27 @@ void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Str
         rel(home, part.is_neighbour[i], IRT_EQ, expr(home, (part.hIntervalsAbs[i]<=4) && (part.is_not_lowest[i]==(lowest[0].m_intervals_brut[i]>=0))));
     }
 }
+
+void h_cons_arsis(const Home &home, Part part, IntSet pen){
+    for(int i = 0; i < part.size-1; i++){
+        if(i==part.size-2){
+            if(part.penult_rule_check==1){
+                dom(home, part.hIntervalsCpCf[2][i], pen);
+            }
+        } else {
+            for(int d = 0; d < DIS_VEC.size(); d++){
+                rel(home, part.hIntervalsCpCf[2][i], IRT_EQ, DIS_VEC[d], Reify(part.is_ta_dim[i], RM_PMI));
+            }
+        }
+    }
+}
+
+void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE){
+    if(part.speciesList.size()==1){ //if it is 2 voices
+        if(part.penult_rule_check==1){
+            ite(home, part.isCFB[2][part.isCFB.size()-1], NINE, THREE, part.hIntervalsCpCf[2][part.hIntervalsCpCf[2].size()-1]);
+        }
+    } else {
+        dom(home, part.hIntervalsCpCf[2][part.hIntervalsCpCf[2].size()-1], pen3);
+    }
+}

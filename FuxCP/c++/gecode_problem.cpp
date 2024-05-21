@@ -123,6 +123,18 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     create_strata();
 
+    if(speciesList.size()==1){
+        if(speciesList[0]==1){
+            first_species(*this, parts, lowest, upper, 1); //dispatch 2 voices 1st species
+        }
+    } else if(speciesList.size()==2){
+        for(int i = 0; i < speciesList.size(); i++){
+            if(speciesList[i]==1){
+                first_species(*this, parts, lowest, upper, 6); //dispatch 3 voices 1st species
+            }
+        }
+    }
+
     //adding the costs to the list
 
     if(speciesList.size()>1){
@@ -169,70 +181,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     /// constraints
 
-    link_harmonic_arrays_1st_species(*this, size, parts, lowest, upper);
-
-    link_melodic_arrays_1st_species(*this, size, parts);
-
-    for(int p = 0; p < parts.size(); p++){
-
-        link_cfb_arrays_1st_species(*this, size, parts[p], parts[0], 0);
-
-        link_motions_arrays(*this, parts[p], parts[0], lowest, 0);
-    }
-    
-    harmonic_intervals_consonance(*this, parts);
-
-    perfect_consonance_constraints(*this, size, parts, speciesList.size());
-
-    imperfect_consonances_are_preferred(*this, size, parts, P_cons_cost);
-
-    key_tone_tuned_to_cantusfirmus(*this, size, parts);
-
-    voices_cannot_play_same_note(*this, size, parts);
-
-    penultimate_note_must_be_major_sixth_or_minor_third(*this, size, parts);
-
-    no_tritonic_intervals(*this, size, parts);
-
-    melodic_intervals_not_exceed_minor_sixth(*this, size, parts);
-
-    no_direct_perfect_consonance(*this, size, parts, speciesList.size());
-
-    no_battuta(*this, size, parts);
-
-    set_off_costs(*this, size, parts);
-
-    set_step_costs(*this, size, parts);
-
-    //if(speciesList.size()==1){
-    //    for(int i = 0; i < parts[1].varietyArray.size(); i++){
-    //        rel(*this, parts[1].varietyArray[i], IRT_EQ, 0);
-    //    }
-
-    //    for(int i = 0; i < parts[1].succ_cost.size(); i++){
-    //        rel(*this, parts[1].succ_cost[i], IRT_EQ, 0);
-    //    }
-
-    //    for(int i = 0; i < upper[1].triad_costs.size(); i++){
-    //        rel(*this, upper[1].triad_costs[i], IRT_EQ, 0);
-    //    }
-    //}
-
-    if(speciesList.size()==2){
-
-        no_tenth_in_last_chord(*this, size, parts, upper, lowest);
-
-        variety_cost_constraint(*this, size, parts);
-
-        avoid_perfect_consonances(*this, size, parts);
-
-        prefer_harmonic_triads(*this, size, parts, lowest, upper);
-    }
-
-    no_same_direction(*this, size, parts, speciesList.size());
-
-    no_successive_ascending_sixths(*this, size, parts, speciesList.size());
-
     //going through parts to check for second species
     int solution_len = 0;
     for(int p = 1; p < parts.size(); p++){
@@ -260,6 +208,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             }
 
             solution_len+=parts[p].sol_len;
+
+            if(speciesList.size()==1){
+                first_species(*this, parts, lowest, upper, 2);
+            } else if(speciesList.size()==2){
+                first_species(*this, parts, lowest, upper, 7);
+            }
 
             parts[p].hIntervalsAbs = IntVarArray(*this, size, 0, 127);
             parts[p].hIntervalsBrut = IntVarArray(*this, size, -127, 127);
@@ -300,6 +254,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             parts[p].is_neighbour = BoolVarArray(*this, parts[p].size-1, 0, 1);
 
             link_is_neighbour_array_2nd_species(*this, parts[p], lowest);
+
+            h_cons_arsis(*this, parts[p], PENULT_CONS);
+
+            penult_cons(*this, parts[p], PENULT_CONS_3P, IntVar(*this, 9,9), IntVar(*this,3,3));
         }
     }
 
@@ -417,6 +375,7 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].motions_cost = s.parts[p].motions_cost;
         parts[p].isCFB = s.parts[p].isCFB;
         parts[p].is_off = s.parts[p].is_off;
+        parts[p].penult_rule_check = s.parts[p].penult_rule_check;
         //2nd species variables
         parts[p].m_succ_intervals = s.parts[p].m_succ_intervals;
         parts[p].m_succ_intervals_brut = s.parts[p].m_succ_intervals_brut;
@@ -573,38 +532,23 @@ string Problem::toString(){
             message += "]\n";
         }
     }
-    for(int n = 0; n < size; n++){
-        if(parts[1].vector_notes[0][n].assigned()){
-            message += to_string(parts[1].vector_notes[0][n].val()) + " ";
+    message += "PART NOTES : ";
+    for(int p = 1; p < parts.size(); p++){
+        message += "[ ";
+        for(int i = 0; i < 4; i++){
+            message += "[ ";
+            for(int n = 0; n < parts[p].vector_notes[i].size(); n++){
+                if(parts[p].vector_notes[i][n].assigned()){
+                    message += to_string(parts[p].vector_notes[i][n].val()) + " ";
+                } else {
+                    message += "...";
+                }
+            }
+            message += "]";
         }
+        message += "]\n";
     }
-    message += "\n";
-    for(int n = 0; n < cost_factors.size(); n++){
-        if(cost_factors[n].assigned()){
-            message += to_string(parts[1].vector_notes[0][n].val()) + " ";
-        } else{
-            message += "... ";
-        }
-    }
-    message += "\n";
-    message += "H INTERVAL : [";
-    for(int n = 0; n < size; n++){
-        if(parts[1].hIntervalsCpCf[0][n].assigned()){
-            message += to_string(parts[1].hIntervalsCpCf[0][n].val()) + " ";
-        } else{
-            message += "... ";
-        }
-    }
-    message += "]\n";
-    message += "LOWEST : [";
-    for(int n = 0; n < size; n++){
-        if(lowest[0].notes[n].assigned()){
-            message += to_string(lowest[0].notes[n].val()) + " ";
-        } else{
-            message += "... ";
-        }
-    }
-    message += "]\n";
+    
     writeToLogFile(message.c_str());
     return message;
 }

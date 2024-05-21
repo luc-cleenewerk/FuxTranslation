@@ -2,7 +2,7 @@
 
 #include "Part.hpp"
 #include "Stratum.hpp"
-#include "1sp_constraints.hpp"
+#include "all_constraints.hpp"
 
 using namespace Gecode;
 using namespace std;
@@ -26,3 +26,7 @@ void link_ta_dim_array_2nd_species(const Home &home, Part part);
 void link_cfb_array_2nd_species(const Home &home, int size, Part part, Part cf);
 
 void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Stratum> lowest);
+
+void h_cons_arsis(const Home &home, Part part, IntSet pen);
+
+void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE);
