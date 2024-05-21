@@ -23,7 +23,7 @@
         link_motions_arrays(home, parts[p], parts[0], lowest, 0);
     }
 
-    if(variant==1 || variant==6){
+    if(variant==1 || variant==6 || variant==11){
         harmonic_intervals_consonance(home, parts, PENULT_CONS);
     } else if(variant == 2 || variant==7){
         harmonic_intervals_consonance(home, parts, PENULT_THESIS);
@@ -31,7 +31,9 @@
         harmonic_intervals_consonance(home, parts, PENULT_Q);
     }
 
-    voices_cannot_play_same_note(home, parts[1].size, parts);
+    if(variant <= 10){  // only for 2 or 3 voices, too restrictive for 4 voices.
+        voices_cannot_play_same_note(home, parts[1].size, parts);
+    }
 
     key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
 
@@ -40,19 +42,19 @@
     }
 
     if(variant==1 || variant==6){
-        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts);
+        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts);    // suspended for 4 voices
     }
 
-    if(variant==1 || variant==6){
-        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
+    if(variant==1 || variant==6 || variant == 11){
+        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);   // TODO modify for 4 voices : should accept octave
 
         no_direct_perfect_consonance(home, parts[1].size, parts, variant);
 
-        no_battuta(home, parts[1].size, parts);
+        no_battuta(home, parts[1].size, parts);                                 // TODO check that rules like this are scalable to 4v
     }
 
-    if(variant==1 || variant==6){
-        imperfect_consonances_are_preferred(home, parts[1].size, parts);
+    if(variant==1 || variant==6 || variant==11){
+        imperfect_consonances_are_preferred(home, parts[1].size, parts);    // Only for first species?
 
         no_tritonic_intervals(home, parts[1].size, parts);
 
@@ -60,18 +62,18 @@
 
         set_step_costs(home, parts[1].size, parts);
 
-        if(variant==6){
+        if(variant==6 || variant==11){
             no_same_direction(home, parts[1].size, parts);
 
             no_successive_ascending_sixths(home, parts[1].size, parts);
 
-            no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);
+            if(variant!=11) no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest); // suspended for 4 voices
 
             variety_cost_constraint(home, parts[1].size, parts);
 
             avoid_perfect_consonances(home, parts[1].size, parts);
 
-            prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper);
+            // prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper);              // TODO modify 4v
         }
     }
  }

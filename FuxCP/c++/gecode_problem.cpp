@@ -133,6 +133,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                 first_species(*this, parts, lowest, upper, 6); //dispatch 3 voices 1st species
             }
         }
+    } else if(speciesList.size()==3){
+        for(int i = 0; i < speciesList.size(); i++){
+            if(speciesList[i]==1){
+                first_species(*this, parts, lowest, upper, 11); //dispatch 4 voices 1st species
+            }
+        }
     }
 
     //adding the costs to the list
