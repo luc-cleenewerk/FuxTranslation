@@ -123,7 +123,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     create_strata();
 
-    apply_3v_general(*this, size, parts, lowest, upper);
+    apply_3v_general(*this, size, parts, lowest);
 
     if(speciesList.size()==1){
         if(speciesList[0]==1){
