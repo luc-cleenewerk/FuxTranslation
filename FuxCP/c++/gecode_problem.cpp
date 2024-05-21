@@ -76,7 +76,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //initializing the ordered costs list, aka the list containing the costs according to their importance
 
-    ordered_factors = IntVarArray(*this, 14, 0, 100);
+    ordered_factors = IntVarArray(*this, 14, 0, 1000);
     for(int i = 0; i < 14; i++){
         vector<string> tmp = {};
         ordered_costs.push_back(tmp);
@@ -94,9 +94,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
     if(speciesList.size()>1){
         if(highest_species==1){ //if the cp is of species 1
-        cost_factors.push_back(IntVarArray(*this, 8, 0, 100));
+        cost_factors.push_back(IntVarArray(*this, 8, 0, 1000));
         } else {
-            cost_factors.push_back(IntVarArray(*this, 8, 0, 100)); //TODO : this should be 9 instead of 8 later on
+            cost_factors.push_back(IntVarArray(*this, 8, 0, 1000)); //TODO : this should be 9 instead of 8 later on
         }
     }
 
@@ -258,6 +258,14 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             h_cons_arsis(*this, parts[p], PENULT_CONS);
 
             penult_cons(*this, parts[p], PENULT_CONS_3P, IntVar(*this, 9,9), IntVar(*this,3,3));
+
+            //melodic_inter_arsis(*this, parts[p]);
+
+            no_chromatic_motion(*this, parts[p]);
+
+            //no_unison_at_all(*this, parts[p], 7);
+
+
         }
     }
 
@@ -548,6 +556,46 @@ string Problem::toString(){
         }
         message += "]\n";
     }
+    message += "SOLUTION ARRAY : [";
+    for(int i = 0; i < solution_array.size(); i++){
+        if(solution_array[i].assigned()){
+            message += to_string(solution_array[i].val()) + " ";
+        }
+    }
+    message += "]\n";
+    message += "COST NAMES : [";
+    for(int i = 0; i < cost_names.size(); i++){
+            message += cost_names[i] + " ";
+    }
+    message += "]\n";
+    message += "COST FACTORS : [";
+    for(int i = 0; i < cost_factors[0].size(); i++){
+        if(cost_factors[0][i].assigned()){
+            message += to_string(cost_factors[0][i].val()) + " ";
+        }
+    }
+    message += "]\n";
+    for(int n = 0; n < parts[2].is_not_lowest.size(); n++){
+        if(parts[2].is_not_lowest[n].assigned()){
+            message += to_string(parts[2].is_not_lowest[n].val()) + " ";
+        } else {
+            message += "... ";
+        }
+    }
+    message += "\n";
+    message += "MOTIONS COST : [";
+    for(int i = 0; i < 4; i++){
+        message += "[ ";
+        for(int n = 0; n < parts[2].motions_cost[i].size(); n++){
+            if(parts[2].motions_cost[i][n].assigned()){
+                message += to_string(parts[2].motions_cost[i][n].val()) + " ";
+            } else {
+                message += "... ";
+            }
+        }
+        message += "]";
+    }
+    message += "]\n";
     
     writeToLogFile(message.c_str());
     return message;

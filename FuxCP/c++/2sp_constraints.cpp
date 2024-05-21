@@ -104,3 +104,41 @@ void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar T
         dom(home, part.hIntervalsCpCf[2][part.hIntervalsCpCf[2].size()-1], pen3);
     }
 }
+
+void melodic_inter_arsis(const Home &home, Part part){ //from here on solutions drastically decrease wesh
+    //first m_succ, is_neighbour
+    for(int i = 0; i < part.is_neighbour.size(); i++){
+        rel(home, part.m_succ_intervals[0][i], IRT_EQ, 12, Reify(part.is_neighbour[i], RM_PMI));
+        rel(home, expr(home, part.m_succ_intervals[0][i]==10 || part.m_succ_intervals[0][i]==11), BOT_OR, expr(home, part.m_succ_intervals[0][i]==9), 0);
+    }
+}
+
+void no_chromatic_motion(const Home &home, Part part){
+    //m_all_intervals_brut EXCEPT first, m2_intervals_brut
+    for(int i = 0; i < part.m2_intervals_brut.size(); i++){
+        rel(home, expr(home, part.m_all_intervals_brut[i+1]==1), BOT_AND, expr(home, part.m2_intervals_brut[i]==2), 0);
+        rel(home, expr(home, part.m_all_intervals_brut[i+1]==-1), BOT_AND, expr(home, part.m2_intervals_brut[i]==-2), 0);
+    }
+}
+
+void no_unison_at_all(const Home &home, Part part, int variant){
+    //solutionarray, rest of solution array
+    if(variant==2){
+        for(int i = 0; i < part.sol_len-1; i++){
+            rel(home, part.solution_array[i], IRT_NQ, part.solution_array[i+1]);
+        }
+    }
+    else if(variant==7){
+        //butlast solutionarray 3, rest (butlast solutionarray 3)
+        for(int i = 0; i < part.sol_len-4; i++){
+            rel(home, part.solution_array[i], IRT_NQ, part.solution_array[i+1]);
+        }
+        //last solutionarray 3, rest (last solutionarray 3)
+        //why does anton do that for 3 voices? fux specifically says there CAN be unison
+    }
+}
+
+void no_direct_move_perfect_consonance_2nd_species(const Home &home, Part part){
+    //real motions, is_p_cons_array, is_not_lowest
+    
+}
