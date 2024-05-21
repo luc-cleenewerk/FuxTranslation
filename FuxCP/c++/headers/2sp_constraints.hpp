@@ -2,7 +2,7 @@
 
 #include "Part.hpp"
 #include "Stratum.hpp"
-#include "1sp_constraints.hpp"
+#include "all_constraints.hpp"
 
 using namespace Gecode;
 using namespace std;
