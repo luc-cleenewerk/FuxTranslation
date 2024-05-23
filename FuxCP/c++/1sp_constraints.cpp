@@ -62,12 +62,8 @@
 
         set_step_costs(home, parts[1].size, parts);
 
-        if(variant==6 || variant==11){
-            no_same_direction(home, parts[1].size, parts);
-
+        if(variant==6){
             no_successive_ascending_sixths(home, parts[1].size, parts);
-
-            if(variant!=11) no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest); // suspended for 4 voices
 
             variety_cost_constraint(home, parts[1].size, parts);
 

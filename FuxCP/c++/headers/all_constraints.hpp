@@ -30,6 +30,8 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
 */
 void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx);
 
+void link_p_cons_array(const Home &home, Part part);
+
 /**
  * Constraint H1 : All harmonic intervals must be consonances
 */
@@ -118,5 +120,20 @@ void no_same_direction(const Home &home, int size, vector<Part> parts);
  * Constraint P7 : It is prohibited to use successive ascending sixths on a direct upwards motion (only 3 voices)
 */
 void no_successive_ascending_sixths(const Home &home, int size, vector<Part> parts);
+
+/**
+ * G7 : Chromatic melodies are forbidden
+*/
+void no_chromatic_melodies(const Home &home, int size, vector<Part> parts);
+
+/**
+ * G10 : Last chord uses the same fundamental as the one of the scale used throughout the composition
+*/
+void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Part> parts);
+
+/**
+ * Apply the last general constraints for 3 voices not yet implemented in other constraints
+*/
+void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper);
 
 #endif

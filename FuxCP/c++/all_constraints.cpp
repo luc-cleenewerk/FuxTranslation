@@ -55,17 +55,17 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
 void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx){
             for(int i = 0; i < cf.size-1; i++){
                 //direct motions help creation
-                BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]>0)); //if both parts are going in the same direction
-                BoolVar both_stay = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]==0)); //if both parts are staying
-                BoolVar both_down = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]<0)); //if both parts are going down
+                BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[0][i]>0)); //if both parts are going in the same direction
+                BoolVar both_stay = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[0][i]==0)); //if both parts are staying
+                BoolVar both_down = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[0][i]<0)); //if both parts are going down
                 //oblique motions help creation
-                BoolVar cf_stays_1 = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]==0)); //if the lowest part stays and one goes up
-                BoolVar cf_stays_2 = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]==0)); //if the lowest part stays and one goes down
-                BoolVar cp_stays_1 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]>0)); //if the lowest part goes up and one stays
-                BoolVar cp_stays_2 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[idx][i]<0)); //if the lowest part goes down and one stays
+                BoolVar cf_stays_1 = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[0][i]==0)); //if the lowest part stays and one goes up
+                BoolVar cf_stays_2 = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[0][i]==0)); //if the lowest part stays and one goes down
+                BoolVar cp_stays_1 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[0][i]>0)); //if the lowest part goes up and one stays
+                BoolVar cp_stays_2 = expr(home, (part.m_intervals_brut[idx][i]==0)&&(cf.m_intervals_brut[0][i]<0)); //if the lowest part goes down and one stays
                 //contrary motions help creation
-                BoolVar cpd_cfu = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[idx][i]>0)); //if the cf goes up and the cp down
-                BoolVar cpu_cfd = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[idx][i]<0)); //if the cf goes down and the cp up
+                BoolVar cpd_cfu = expr(home, (part.m_intervals_brut[idx][i]<0)&&(cf.m_intervals_brut[0][i]>0)); //if the cf goes up and the cp down
+                BoolVar cpu_cfd = expr(home, (part.m_intervals_brut[idx][i]>0)&&(cf.m_intervals_brut[0][i]<0)); //if the cf goes down and the cp up
                 //direct constraints
                 rel(home, ((both_up || both_stay || both_down) && (part.is_not_lowest[i]==1)) >> (part.motions[idx][i]==2));
                 rel(home, ((both_up || both_stay || both_down) && (part.is_not_lowest[i]==1)) >> (part.motions_cost[idx][i]==part.dir_motion_cost));
@@ -80,6 +80,12 @@ void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> l
                 rel(home, (part.is_not_lowest[i]==0) >> (part.motions_cost[idx][i]==0));
             }
      }
+
+void link_p_cons_array(const Home &home, Part part, int variant){
+    for(int i = 0; i < part.size; i++){
+        rel(home, expr(home, part.hIntervalsCpCf[0][i]==0), BOT_OR, expr(home, part.hIntervalsCpCf[0][i]==7), part.is_P_cons[i]);
+    }
+}
 
 void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet pen){
     for(int p = 0; p < parts.size(); p++){
@@ -320,4 +326,34 @@ void set_step_costs(const Home &home, int size, vector<Part> parts){
             rel(home, (parts[p].m_intervals[0][i]==12) >> (parts[p].m_degrees_cost[i]==parts[p].octave_cost));
         }
     }
+}
+
+void no_chromatic_melodies(const Home &home, int size, vector<Part> parts){
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-2; i++){
+            rel(home, expr(home, parts[p].m_intervals_brut[0][i]==1), BOT_AND, expr(home, parts[p].m_intervals_brut[0][i+1]==1), 0);
+            rel(home, expr(home, parts[p].m_intervals_brut[0][i]==-1), BOT_AND, expr(home, parts[p].m_intervals_brut[0][i+1]==-1), 0);
+        }
+    }
+}
+
+void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Part> parts){
+    rel(home, expr(home, lowest[0].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].notes[0]%12));
+}
+
+void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper){
+
+    //voices cannot play the same note except on first and last beat already checked off in first species calls
+
+    no_same_direction(home, parts[1].size, parts);
+
+    last_chord_no_minor_third(home, parts[0].size, parts);
+
+    no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);
+
+    //last chord must be a major triad -> already checked by h_consonances? or is it only 3 voices?
+
+    last_chord_same_fundamental(home, lowest, parts);
+
+    no_chromatic_melodies(home, parts[0].size, parts); //havent seen it with anton yet
 }

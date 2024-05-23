@@ -288,12 +288,27 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
 }
 
 void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs pc((splist.size()*size)-splist.size());
+    int sz = 0;
+    for(int i = 0; i < splist.size(); i++){
+        if(splist[i]==1){
+            sz+=(size-1);
+        } else if(splist[i]==2){
+            sz+=2*(size-1);
+        }
+    }
+    IntVarArgs pc(sz);
     int index = 0;
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < size-1; i++){
-            pc[index] = parts[p].motions_cost[0][i];
-            index++;
+            if(parts[p].species==1){
+                pc[index] = parts[p].motions_cost[0][i];
+                index++;
+            } else if(parts[p].species==2){
+                pc[index] = parts[p].motions_cost[0][i];
+                index++;
+                pc[index] = parts[p].motions_cost[2][i];
+                index++;
+            }
         }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(pc)));

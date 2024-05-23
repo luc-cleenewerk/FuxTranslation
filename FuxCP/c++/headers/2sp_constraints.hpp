@@ -30,3 +30,11 @@ void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Str
 void h_cons_arsis(const Home &home, Part part, IntSet pen);
 
 void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE);
+
+void melodic_inter_arsis(const Home &home, Part part);
+
+void no_chromatic_motion(const Home &home, Part part);
+
+void no_unison_at_all(const Home &home, Part part, int variant);
+
+void no_direct_move_perfect_consonance_2nd_species(const Home &home, Part part);
