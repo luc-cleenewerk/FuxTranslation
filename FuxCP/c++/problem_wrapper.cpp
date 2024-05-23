@@ -15,7 +15,7 @@ void* create_new_problem(int* cantusFirmus, int size, int n_cp, int* splist, int
         int* motion_params, int* melodic, int* specific, int* importance, int t_off, int* scle, int scale_size, 
         int* chromatic, int chrom_size, int* borrow, int borrow_size){
 
-    writeToLogFile("entered problem_wrapper.cpp");
+    writeToLogFile("Entered problem_wrapper.cpp . ");
 
     vector<int> cf(int_pointer_to_vector(cantusFirmus, size));
     vector<int> sp(int_pointer_to_vector(splist, n_cp));

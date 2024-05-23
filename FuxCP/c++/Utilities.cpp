@@ -214,14 +214,17 @@ string time(){
  * @param message the text to write
  */
 void write_to_log_file(const char *message, const string& filename) {
+    std::time_t currentTime = std::time(nullptr); // Get the current time
+    std::string timeString = std::asctime(std::localtime(&currentTime)); // Convert to string
+
     const char* homeDir = std::getenv("HOME"); // Get the user's home directory
     if (homeDir) {
         std::string filePath(homeDir);
-        filePath += "/Documents/Libraries/MusicConstraints/out/" + filename; // Specify the desired file path, such as $HOME/log.txt
+        filePath += "/log.txt"; // Specify the desired file path, such as $HOME/log.txt
 
         std::ofstream myfile(filePath, std::ios::app); // append mode
         if (myfile.is_open()) {
-            myfile << message << endl;
+            myfile <<timeString<< endl << message << endl;
             myfile.close();
         }
     }
