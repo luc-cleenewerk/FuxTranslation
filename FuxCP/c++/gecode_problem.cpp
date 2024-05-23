@@ -63,12 +63,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     tone_offset = t_off;                    //tonality offset
     scale = scle;                           //scale
     borrow_mode = b_mode;                   //is borrowing allowed
+    cost_size = 5;                          //cost number to be added, depends on species and number of voices
 
     //creating the map with the names of the costs and their importance
 
     vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic"};
-    prefs = {{importance_names[0], importance[0]},{importance_names[1], importance[1]},{importance_names[2], importance[2]},{importance_names[3], importance[3]}
-        ,{importance_names[4], importance[4]},{importance_names[5], importance[5]},{importance_names[6], importance[7]},{importance_names[7], importance[13]}};
+    prefs = {};
     
     //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
 
@@ -92,13 +92,19 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             highest_species = s;
         }
     }
-    if(speciesList.size()>1){
-        if(highest_species==1){ //if the cp is of species 1
-        cost_factors.push_back(IntVarArray(*this, 8, 0, 1000));
-        } else {
-            cost_factors.push_back(IntVarArray(*this, 8, 0, 1000)); //TODO : this should be 9 instead of 8 later on
+
+    if(speciesList.size()==1){ //si 2 voix
+        if(highest_species==2){
+
         }
-    }
+    } else if(speciesList.size()==2){ //si 3 voix
+        if(highest_species==1){ //if the cp is of species 1
+            cost_size += 3;
+        } else if(highest_species==2){
+            cost_size += 3;
+        }
+    }// add here any additional costs for 4 voices
+    cost_factors = IntVarArray(*this, cost_size, 0, 1000);
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
     parts.push_back(Part(*this, cf, s, general_params[3])); //putting the cantusFirmus in first position
@@ -140,25 +146,39 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
 
     //adding the costs to the list
+    //add general costs and p_cons_cost
+
+    //following two costs are for the imperfect consonances are preferred clause
+    add_fifth_cost(*this, cost_factors[0], size, splist, parts);
+    prefs.insert({importance_names[1], importance[1]});
+
+    add_octave_cost(*this, cost_factors[1], size, splist, parts);
+    prefs.insert({importance_names[2], importance[2]});
+
+    //following two costs are equal to setting general costs in the lisp code
+    add_off_cost(*this, cost_factors[2], size, splist, parts);
+    prefs.insert({importance_names[0], importance[0]});
+
+    add_melodic_cost(*this, cost_factors[3], size, splist, parts);
+    prefs.insert({importance_names[7], importance[13]});
+
+    //adding motion costs
+    add_motion_cost(*this, cost_factors[4], size, splist, parts);
+    prefs.insert({importance_names[6], importance[7]});
 
     if(speciesList.size()>1){
-        add_fifth_cost(*this, cost_factors[0][0], size, splist, parts);
 
-        add_octave_cost(*this, cost_factors[0][1], size, splist, parts);
+        add_variety_cost(*this, cost_factors[5], size, splist, parts);
+        prefs.insert({importance_names[4], importance[4]});
 
-        add_off_cost(*this, cost_factors[0][2], size, splist, parts);
+        add_succ_cost(*this, cost_factors[6], size, splist, parts);
+        prefs.insert({importance_names[3], importance[3]});
 
-        add_melodic_cost(*this, cost_factors[0][3], size, splist, parts);
+        add_triad_cost(*this, cost_factors[7], size, splist, upper);
+        prefs.insert({importance_names[5], importance[5]});
+    }
 
-        add_motion_cost(*this, cost_factors[0][4], size, splist, parts);
-
-        add_variety_cost(*this, cost_factors[0][5], size, splist, parts);
-
-        add_succ_cost(*this, cost_factors[0][6], size, splist, parts);
-
-        add_triad_cost(*this, cost_factors[0][7], size, splist, upper);
-
-        //ORDERING THE COSTS
+    //ORDERING THE COSTS
 
         //putting the name of the cost in the ordered costs list at the index of its importance
         for(const auto& entry : prefs){ 
@@ -171,9 +191,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             if(!ordered_costs[i].empty()){
                 for(int k = 0; k < ordered_costs[i].size(); k++){
                     IntVar to_add;
-                    for(int t = 0; t < cost_names.size(); t++){
+                    for(int t = 0; t < cost_size; t++){
                         if(cost_names[t]==ordered_costs[i][k]){
-                            to_add = cost_factors[0][t];
+                            to_add = cost_factors[t];
                         }
                     }
                     ordered_factors[n_unique_costs] = to_add;
@@ -181,7 +201,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                 }
             }
         }
-    }
 
     /// constraints
 
@@ -314,10 +333,12 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     prefs = s.prefs;
     ordered_costs = s.ordered_costs;
     n_unique_costs = s.n_unique_costs;
+    cost_size = s.cost_size;
     P_cons_cost.update(*this, s.P_cons_cost);
     vars.update(*this, s.vars);
     solution_array.update(*this, s.solution_array);
     ordered_factors.update(*this, s.ordered_factors);
+    cost_factors.update(*this, s.cost_factors);
 
     parts[0].home = s.parts[0].home;
     parts[0].size = s.parts[0].size;
@@ -340,10 +361,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[0].isCFB[h].update(*this, s.parts[0].isCFB[h]);
     }
     parts[0].succ_cost.update(*this, s.parts[0].succ_cost);
-
-    for(int i = 0; i < cost_factors.size(); i++){
-        cost_factors[i].update(*this, s.cost_factors[i]);
-    }
 
     for(int p = 1; p < parts.size(); p++){
         parts[p].home = s.parts[p].home;
@@ -531,7 +548,7 @@ string Problem::toString(){
     message += "size = " + to_string(size) + "\n";
     message += "Cantus firmus : " + int_vector_to_string(cantusFirmus) + "\n";
     
-    for(int p = 0; p < parts.size(); p++){
+    /*for(int p = 0; p < parts.size(); p++){
         if(parts[p].species==2){
             message += "IS NEIGHBOUR : [";
             for(int n = 0; n < parts[p].is_neighbour.size(); n++){
@@ -543,7 +560,7 @@ string Problem::toString(){
             }
             message += "]\n";
         }
-    }
+    }*/
     message += "PART NOTES : ";
     for(int p = 1; p < parts.size(); p++){
         message += "[ ";
@@ -568,17 +585,17 @@ string Problem::toString(){
     }
     message += "]\n";
     message += "COST NAMES : [";
-    for(int i = 0; i < cost_names.size(); i++){
+    for(int i = 0; i < cost_size; i++){
             message += cost_names[i] + " ";
     }
     message += "]\n";
     message += "COST FACTORS : [";
-    for(int i = 0; i < cost_factors[0].size(); i++){
-        if(cost_factors[0][i].assigned()){
-            message += to_string(cost_factors[0][i].val()) + " ";
+    for(int i = 0; i < cost_size; i++){
+        if(cost_factors[i].assigned()){
+            message += to_string(cost_factors[i].val()) + " ";
         }
     }
-    message += "]\n";
+    message += "]\n";/*
     for(int n = 0; n < parts[2].is_not_lowest.size(); n++){
         if(parts[2].is_not_lowest[n].assigned()){
             message += to_string(parts[2].is_not_lowest[n].val()) + " ";
@@ -599,7 +616,7 @@ string Problem::toString(){
         }
         message += "]";
     }
-    message += "]\n";
+    message += "]\n";*/
     
     writeToLogFile(message.c_str());
     return message;

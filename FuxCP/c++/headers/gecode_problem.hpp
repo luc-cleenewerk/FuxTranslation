@@ -42,6 +42,7 @@ protected:
     int borrow_mode;
     int h_triad_cost;
     int n_unique_costs;
+    int cost_size;
 
     unordered_map<string, int> prefs;
 
@@ -57,7 +58,7 @@ protected:
     vector<IntVarArray> cp_m_intervals_brut;
     vector<BoolVarArray> cp_is_P_cons;
     vector<IntVarArray> sorted_voices;
-    vector<IntVarArray> cost_factors;
+    IntVarArray cost_factors;
     IntVarArray ordered_factors;
     vector<Part> parts;
 

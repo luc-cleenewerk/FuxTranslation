@@ -52,6 +52,7 @@
     }
 
     if(variant==1 || variant==6){
+
         imperfect_consonances_are_preferred(home, parts[1].size, parts);
 
         no_tritonic_intervals(home, parts[1].size, parts);
