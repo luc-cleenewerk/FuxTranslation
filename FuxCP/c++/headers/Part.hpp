@@ -100,6 +100,8 @@ public:
     IntVarArray getNotes();
 
     void create_member_array(int idx);
+
+    void create_solution_array();
 };
 
 #endif

@@ -349,3 +349,19 @@ void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> 
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(tr)));
 }
+
+void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    int sz = 0;
+    for(int i = 0; i < splist.size(); i++){
+        sz += (size-2);
+    }
+    IntVarArgs dr((splist.size()*size)-2*splist.size());
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        for(int i = 0; i < size-2; i++){
+            dr[index] = parts[p].direct_move_cost[i];
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(dr)));
+}
