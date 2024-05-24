@@ -131,9 +131,4 @@ void no_chromatic_melodies(const Home &home, int size, vector<Part> parts);
 */
 void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Part> parts);
 
-/**
- * Apply the last general constraints for 3 voices not yet implemented in other constraints
-*/
-void apply_3v_general(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper);
-
 #endif

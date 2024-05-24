@@ -18,6 +18,9 @@
 Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int> v_types, int b_mode, int min_skips, vector<int> general_params, 
         vector<int> motion_params, vector<int> melodic, vector<int> specific, vector<int> importance, int t_off, vector<int> scle, int scale_size, 
         vector<int> chromatic, int chrom_size, vector<int> borrow, int borrow_size){
+
+    writeToLogFile("entered gecode_problem");
+
     string message = "WSpace object created. ";
     message += "\n";
     message += int_vector_to_string(cf);
@@ -103,7 +106,13 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         } else if(highest_species==2){
             cost_size += 4;
         }
-    }// add here any additional costs for 4 voices
+    } else if(speciesList.size()==3){ // 4 voix; // add here any additional costs for 4 voices
+        if(highest_species==1){ //if the cp is of species 1
+            cost_size += 3;
+        } else if(highest_species==2){
+            cost_size += 3;
+        }
+    }
     cost_factors = IntVarArray(*this, cost_size, 0, 1000);
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
@@ -129,18 +138,24 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     create_strata();
 
-    if(speciesList.size()==2){
-        apply_3v_general(*this, size, parts, lowest, upper);
-    }
+    // if(speciesList.size()==2){
+    //     apply_3v_general(*this, size, parts, lowest, upper);
+    // }
 
     if(speciesList.size()==1){
         if(speciesList[0]==1){
-            first_species(*this, parts, lowest, upper, 1); //dispatch 2 voices 1st species
+            first_species_2v(*this, parts, lowest, upper); //dispatch 2 voices 1st species
         }
     } else if(speciesList.size()==2){
         for(int i = 0; i < speciesList.size(); i++){
             if(speciesList[i]==1){
-                first_species(*this, parts, lowest, upper, 6); //dispatch 3 voices 1st species
+                first_species_3v(*this, parts, lowest, upper); //dispatch 3 voices 1st species
+            }
+        }
+    } else if(speciesList.size()==3){
+        for(int i = 0; i < speciesList.size(); i++){
+            if(speciesList[i]==1){
+                first_species_4v(*this, parts, lowest, upper); //dispatch 4 voices 1st species
             }
         }
     }
@@ -224,9 +239,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             solution_len+=parts[p].sol_len;
 
             if(speciesList.size()==1){
-                first_species(*this, parts, lowest, upper, 2);
+                first_species_2v(*this, parts, lowest, upper, 2);
             } else if(speciesList.size()==2){
-                first_species(*this, parts, lowest, upper, 7);
+                first_species_3v(*this, parts, lowest, upper, 2);
             }
 
             parts[p].hIntervalsAbs = IntVarArray(*this, size, 0, 127);
