@@ -78,6 +78,15 @@
 )
 
 
+(cffi::defcfun ("delete_pointer" delete-pointer) :void
+    "Deletes the pointer passed as argument. "
+    (p :pointer) 
+)
+
+(cffi::defcfun ("delete_solver_pointer" delete-solver-pointer) :void
+    "Deletes the pointer to a solver (search engine) passed as argument. "
+    (p :pointer) 
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search engine methods ;;

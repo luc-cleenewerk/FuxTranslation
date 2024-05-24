@@ -8,7 +8,7 @@
  // todo move this into appropriate file (should be organised) for species and type of constraint (harmonic, melodic, motion, linking arrays,...)
 
 /**
- * First species dispatcher for 2 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 2 voices. Calls necessary constraints given the species
 */
  void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
 
@@ -64,7 +64,7 @@
  }
 
  /**
- * First species dispatcher for 3 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 3 voices. Calls necessary constraints given the species
 */
  void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
 
@@ -144,7 +144,7 @@
  }
 
  /**
- * First species dispatcher for 4 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 4 voices. Calls necessary constraints given the species
 */
  void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
     

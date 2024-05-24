@@ -45,6 +45,18 @@ int test_cffi(int n){
     return n+1;
 }
 
+
+void delete_pointer(void* p){
+    delete static_cast<Problem*>(p);
+    writeToLogFile("deleted problem pointer");
+}
+
+void delete_solver_pointer(void* p){
+    delete static_cast<DFS<Problem>*>(p);
+    writeToLogFile("deleted solver pointer");
+}
+
+
 /**
  * returns the values of the variables for a solution
  * @param sp a void* pointer to a Problem object
