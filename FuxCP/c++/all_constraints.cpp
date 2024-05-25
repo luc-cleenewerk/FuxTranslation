@@ -187,7 +187,7 @@ void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts
             rel(home, (parts[1].hIntervalsCpCf[0][j]==0 || parts[1].hIntervalsCpCf[0][j]==7 || parts[1].hIntervalsCpCf[0][j+1]==0 || parts[1].hIntervalsCpCf[0][j+1]==7) >> 
             (parts[1].motions[0][j]!=2));
             if(j!=size-2){
-                //rel(home, parts[1].direct_move_cost[j], IRT_EQ, 0);
+                rel(home, parts[1].direct_move_cost[j], IRT_EQ, 0);
             }
         }
     } else { //else if 3 voices
