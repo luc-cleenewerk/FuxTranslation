@@ -102,9 +102,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         }
     } else if(speciesList.size()==2){ //si 3 voix
         if(highest_species==1){ //if the cp is of species 1
-            cost_size += 4;
+            cost_size += 3;
         } else if(highest_species==2){
-            cost_size += 4;
+            cost_size += 3;
         }
     } else if(speciesList.size()==3){ // 4 voix; // add here any additional costs for 4 voices
         if(highest_species==1){ //if the cp is of species 1
@@ -192,7 +192,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         add_triad_cost(*this, cost_factors[7], size, splist, upper);
         prefs.insert({importance_names[5], importance[5]});
 
-        add_direct_cost(*this, cost_factors[8], size, splist, parts);
+        //add_direct_cost(*this, cost_factors[8], size, splist, parts);
         //prefs.insert({importance_names[8], importance[6]});
     }
 
