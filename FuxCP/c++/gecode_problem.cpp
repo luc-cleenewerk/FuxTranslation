@@ -590,9 +590,9 @@ string Problem::toString(){
     }
     message += "]\n";
     message += "COST NAMES : [";
-    //for(int i = 0; i < cost_size; i++){
-    //        message += cost_names[i] + " ";
-    //}
+    for(int i = 0; i < cost_size; i++){
+        message += cost_names[i] + " ";
+    }
     message += "]\n";
     message += "PART DIRECT MOVE : ";
     for(int p = 1; p < parts.size(); p++){
@@ -608,7 +608,6 @@ string Problem::toString(){
         }
         message += "]\n";
     }
-    message += "]\n";
     message += "COST FACTORS : [";
     for(int i = 0; i < cost_size; i++){
         if(cost_factors[i].assigned()){

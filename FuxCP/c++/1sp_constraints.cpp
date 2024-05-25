@@ -125,7 +125,7 @@
     
         melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
 
-        no_direct_perfect_consonance(home, parts[1].size, parts, for_species);
+        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size());
 
         no_battuta(home, parts[1].size, parts);
 
@@ -210,7 +210,7 @@
         melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);   // TODO modify for 4 voices : should accept octave
 
         // P1
-        no_direct_perfect_consonance(home, parts[1].size, parts, for_species);
+        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size());
 
         // P3
         no_battuta(home, parts[1].size, parts);     

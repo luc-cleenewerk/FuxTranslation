@@ -186,6 +186,9 @@ void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts
             //it cannot go from either unisson or a perfect fifth to another one of these, then it is prohibited
             rel(home, (parts[1].hIntervalsCpCf[0][j]==0 || parts[1].hIntervalsCpCf[0][j]==7 || parts[1].hIntervalsCpCf[0][j+1]==0 || parts[1].hIntervalsCpCf[0][j+1]==7) >> 
             (parts[1].motions[0][j]!=2));
+            if(j!=size-2){
+                //rel(home, parts[1].direct_move_cost[j], IRT_EQ, 0);
+            }
         }
     } else { //else if 3 voices
         for(int p = 1; p < parts.size(); p++){
