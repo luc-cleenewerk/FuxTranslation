@@ -8,6 +8,8 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst):home(hme)
     upper_bound = 127;
     species = 0;
     succ = succ_cst;
+    NINE = IntVar(home, 9, 9);
+    THREE = IntVar(home, 3, 3);
     notes = IntVarArray(home, size, 0, 127);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
     for(int i = 0; i < size; i++){
@@ -65,6 +67,9 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     fifth_cost = melodic[4];
     sixth_cost = melodic[5];
     seventh_cost = melodic[6];
+
+    NINE = IntVar(home, 9, 9);
+    THREE = IntVar(home, 3, 3);
     
 
     //cp_range : WORKS
@@ -170,8 +175,7 @@ void Part::create_member_array(int idx){
         for(int l = 0; l < off_scale.size(); l++){
             BoolVar b1 = BoolVar(home, 0, 1);
             rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
-            rel(home, (b1==0)>>(res[l]==0));
-            rel(home, (b1==1)>>(res[l]==1));
+            ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
         }
         IntVarArgs x(res.size());
         for(int t = 0; t < off_scale.size(); t++){

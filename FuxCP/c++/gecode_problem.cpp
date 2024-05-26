@@ -357,6 +357,8 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
 
     parts[0].notes.update(*this, s.parts[0].notes);
     parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
+    parts[0].NINE.update(*this, s.parts[0].NINE);
+    parts[0].THREE.update(*this, s.parts[0].THREE);
     for(int h = 0; h < 4; h++){
         parts[0].hIntervalsCpCf[h].update(*this, s.parts[0].hIntervalsCpCf[h]);
         parts[0].m_intervals[h].update(*this, s.parts[0].m_intervals[h]);
@@ -429,6 +431,8 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].real_motions_cost.update(*this, s.parts[p].real_motions_cost);
         parts[p].is_ta_dim.update(*this, s.parts[p].is_ta_dim);
         parts[p].is_neighbour.update(*this, s.parts[p].is_neighbour);
+        parts[p].NINE.update(*this, s.parts[p].NINE);
+        parts[p].THREE.update(*this, s.parts[p].THREE);
         for(int h = 0; h < 4; h++){
             parts[p].hIntervalsCpCf[h].update(*this, s.parts[p].hIntervalsCpCf[h]);
             parts[p].m_intervals[h].update(*this, s.parts[p].m_intervals[h]);
@@ -614,28 +618,68 @@ string Problem::toString(){
             message += to_string(cost_factors[i].val()) + " ";
         }
     }
-    message += "]\n";/*
-    for(int n = 0; n < parts[2].is_not_lowest.size(); n++){
-        if(parts[2].is_not_lowest[n].assigned()){
-            message += to_string(parts[2].is_not_lowest[n].val()) + " ";
-        } else {
-            message += "... ";
-        }
-    }
-    message += "\n";
-    message += "MOTIONS COST : [";
-    for(int i = 0; i < 4; i++){
-        message += "[ ";
-        for(int n = 0; n < parts[2].motions_cost[i].size(); n++){
-            if(parts[2].motions_cost[i][n].assigned()){
-                message += to_string(parts[2].motions_cost[i][n].val()) + " ";
+    message += "]\n";
+    message += "UPPER H INTERVALS : [";
+    for(int p = 0; p < upper.size(); p++){
+        message += "UPPER H INTERVALS PART : [";
+        for(int i = 0; i < size; i++){
+            if(upper[p].hIntervalsAbs[i].assigned()){
+                message += to_string(upper[p].hIntervalsAbs[i].val()) + " ";
             } else {
                 message += "... ";
             }
         }
-        message += "]";
+        message += "]\n";
     }
-    message += "]\n";*/
+    message += "]\n";
+    message += "LOWEST NOTES : [";
+    for(int i = 0; i < size; i++){
+        if(lowest[0].notes[i].assigned()){
+            message += to_string(lowest[0].notes[i].val()) + " ";
+        } else {
+            message += "... ";
+        }
+    }
+    message += "]\n";
+    message += "UPPER NOTES : [";
+    for(int p = 0; p < upper.size(); p++){
+        message += " UPPER PART : [";
+        for(int i = 0; i < size; i++){
+            if(upper[p].notes[i].assigned()){
+                message += to_string(upper[p].notes[i].val()) + " ";
+            } else {
+                message += "... ";
+            }
+        }
+        message += "]\n";
+    }
+    message += "]\n";
+    message += "MOTIONS : [";
+    for(int p = 0; p < parts.size(); p++){
+        message += "MOTIONS PART : [";
+        for(int i = 0; i < size-2; i++){
+            if(parts[p].motions[0][i].assigned()){
+                message += to_string(parts[p].motions[0][i].val()) + " ";
+            } else {
+                message += "... ";
+            }
+        }
+        message += "]\n";
+    }
+    message += "]\n";
+    message += "IS LOWEST : [";
+    for(int p = 0; p < parts.size(); p++){
+        message += "IS LOWEST PART : [";
+        for(int i = 0; i < size; i++){
+            if(parts[p].is_not_lowest[i].assigned()){
+                message += to_string(parts[p].is_not_lowest[i].val()) + " ";
+            } else {
+                message += "... ";
+            }
+        }
+        message += "]\n";
+    }
+    message += "]\n";
     
     writeToLogFile(message.c_str());
     return message;
@@ -729,21 +773,17 @@ void Problem::create_strata(){
     for(int i = 0; i < size; i++){
 
         IntVarArray voices = IntVarArray(*this, parts.size(), 0, 120);
-        IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
+        //IntVarArray temp_hInterval = IntVarArray(*this, size, 0, 11);
 
         for(int j = 0; j < parts.size(); j++){
-            if(j==0){
-                rel(*this, voices[j], IRT_EQ, parts[j].getNotes()[i]); //getting the notes
-            } else {
-                rel(*this, voices[j], IRT_EQ, parts[j].vector_notes[0][i]); //getting the notes
-            }
-            rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[0][i]);
+            rel(*this, voices[j], IRT_EQ, parts[j].vector_notes[0][i]); //getting the notes
+            //rel(*this, temp_hInterval[j], IRT_EQ, parts[j].hIntervalsCpCf[0][i]);
         }
         
         IntVarArray order = IntVarArray(*this, parts.size(), 0, parts.size()-1);
         sorted_voices.push_back(IntVarArray(*this, parts.size(), 0, 120)); //sorting the voices
         
-        rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]); //linking the hInterval in the strata with the one in the cf / cp
+        //rel(*this, lowest[0].hIntervals[i], IRT_EQ, temp_hInterval[i]); //linking the hInterval in the strata with the one in the cf / cp
 
         sorted(*this, voices, sorted_voices[i], order); //sorting the voices
 

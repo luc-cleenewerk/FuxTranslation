@@ -91,6 +91,9 @@ public:
     IntVarArray fifth_costs;
     IntVarArray octave_costs;
 
+    IntVar NINE;
+    IntVar THREE;
+
     Part(const Home &sp, const vector<int> cf_notes, int s, int succ_cst);
 
     Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 

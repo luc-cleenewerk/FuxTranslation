@@ -40,7 +40,7 @@ void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet 
 /**
  * Constraint H6 : Imperfect consonances are preferred
 */
-void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts);
+void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, vector<Stratum> upper);
 
 /**
  * Constraint H2 and H3 : The first and last harmonic intervals must be a perfect consonance (only 2 voices)
@@ -62,7 +62,7 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
  * a minor third depending on the cantus firmus pitch. When writing with three voices, the
  * harmonic interval must be either a minor third, a perfect fifth, a major sixth or an octave
 */
-void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, vector<Part> parts);
+void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, vector<Part> parts, IntVar NINE, IntVar THREE, vector<Stratum> upper);
 
 void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper);
 
@@ -88,7 +88,7 @@ void variety_cost_constraint(const Home &home, int size, vector<Part> parts);
 /**
  * Constraint P1 : Perfect consonances cannot be reached by direct motion (cost when it is 3 voices)
 */
-void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts, int n_species);
+void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts, int n_species, vector<Stratum> upper);
 
 /**
  * Constraint H10 : Tenths are prohibited in the last chord (only 3 voices)

@@ -20,12 +20,12 @@
 
         link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+        link_motions_arrays(home, parts[p], parts[0], lowest, 0); //cost
     }
 
-    set_off_costs(home, parts[1].size, parts);
+    set_off_costs(home, parts[1].size, parts); //cost
 
-    set_step_costs(home, parts[1].size, parts);
+    set_step_costs(home, parts[1].size, parts); //cost
 
     if(for_species==1){
         harmonic_intervals_consonance(home, parts, PENULT_CONS);
@@ -48,15 +48,15 @@
 
     if(for_species==1){
 
-        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts);
+        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts, parts[0].NINE, parts[0].THREE, upper);
 
         melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
 
-        no_direct_perfect_consonance(home, parts[1].size, parts, for_species);
+        no_direct_perfect_consonance(home, parts[1].size, parts, for_species, upper);
 
         no_battuta(home, parts[1].size, parts);
 
-        imperfect_consonances_are_preferred(home, parts[1].size, parts);
+        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper); //2 cost
 
         no_tritonic_intervals(home, parts[1].size, parts);
 
@@ -121,15 +121,15 @@
 
     if(for_species==1){
 
-        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts);
+        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts, parts[0].NINE, parts[0].THREE, upper);
     
         melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
 
-        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size());
+        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size(), upper);
 
         no_battuta(home, parts[1].size, parts);
 
-        imperfect_consonances_are_preferred(home, parts[1].size, parts);
+        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper);
 
         no_tritonic_intervals(home, parts[1].size, parts);
 
@@ -210,13 +210,13 @@
         melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);   // TODO modify for 4 voices : should accept octave
 
         // P1
-        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size());
+        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size(), upper);
 
         // P3
         no_battuta(home, parts[1].size, parts);     
 
         // H6
-        imperfect_consonances_are_preferred(home, parts[1].size, parts);    // Only for first species?
+        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper);    // Only for first species?
 
         // M1
         no_tritonic_intervals(home, parts[1].size, parts);
