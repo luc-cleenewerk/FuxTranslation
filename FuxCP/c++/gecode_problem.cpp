@@ -70,7 +70,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //creating the map with the names of the costs and their importance
 
-    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic"};
+    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic", "direct"};
     prefs = {};
     
     //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
@@ -102,9 +102,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         }
     } else if(speciesList.size()==2){ //si 3 voix
         if(highest_species==1){ //if the cp is of species 1
-            cost_size += 3;
+            cost_size += 4;
         } else if(highest_species==2){
-            cost_size += 3;
+            cost_size += 4;
         }
     } else if(speciesList.size()==3){ // 4 voix; // add here any additional costs for 4 voices
         if(highest_species==1){ //if the cp is of species 1
@@ -191,6 +191,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
         add_triad_cost(*this, cost_factors[7], size, splist, upper);
         prefs.insert({importance_names[5], importance[5]});
+
+        add_direct_cost(*this, cost_factors[8], size, splist, parts);
+        //prefs.insert({importance_names[8], importance[6]});
     }
 
     //ORDERING THE COSTS
@@ -201,12 +204,18 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             ordered_costs[val].push_back(entry.first);
         }
 
+        for(int i = 0; i < 14; i++){
+            for(int j = 0; j < ordered_costs[i].size(); j++){
+                cout << to_string(i) + " : " + ordered_costs[i][j] + "\n" << endl;
+            }
+        }
+        cout << to_string(cost_size) + "\n" << endl;
         //creating the final ordered list
         for(int i = 0; i < 14; i++){
             if(!ordered_costs[i].empty()){
                 for(int k = 0; k < ordered_costs[i].size(); k++){
                     IntVar to_add;
-                    for(int t = 0; t < cost_size; t++){
+                    for(int t = 0; t < cost_names.size(); t++){
                         if(cost_names[t]==ordered_costs[i][k]){
                             to_add = cost_factors[t];
                         }
@@ -223,27 +232,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     int solution_len = 0;
     for(int p = 1; p < parts.size(); p++){
         if(parts[p].species==1){
-            parts[p].sol_len = size;
-            solution_len+=size;
-            parts[p].solution_array = IntVarArray(*this, parts[p].sol_len, 0, 127);
-            for(int n = 0; n < size; n++){
-                parts[p].solution_array[n] = parts[p].vector_notes[0][n];
-            }
+            solution_len+=parts[p].size;
         }
         if(parts[p].species==2){ //if it is a second species -> do modifications from the first species
-
-            parts[p].sol_len = size + (size-1);
-            parts[p].solution_array = IntVarArray(*this, parts[p].sol_len, 0, 127);
-            int idx = 0;
-            for(int n = 0; n < parts[p].sol_len; n+=2){
-                parts[p].solution_array[n] = parts[p].vector_notes[0][idx];
-                idx++;
-            }
-            idx=0;
-            for(int n = 1; n < parts[p].sol_len; n+=2){
-                parts[p].solution_array[n] = parts[p].vector_notes[2][idx];
-                idx++;
-            }
 
             solution_len+=parts[p].sol_len;
 
@@ -342,7 +333,6 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     tone_offset = s.tone_offset;
     scale = s.scale;
     borrow_mode = s.borrow_mode;
-    cost_factors = s.cost_factors;
     h_triad_cost = s.h_triad_cost;
     cost_names = s.cost_names;
     prefs = s.prefs;
@@ -600,8 +590,23 @@ string Problem::toString(){
     }
     message += "]\n";
     message += "COST NAMES : [";
-    for(int i = 0; i < cost_size; i++){
-            message += cost_names[i] + " ";
+    //for(int i = 0; i < cost_size; i++){
+    //        message += cost_names[i] + " ";
+    //}
+    message += "]\n";
+    message += "PART DIRECT MOVE : ";
+    for(int p = 1; p < parts.size(); p++){
+        message += "[ ";
+        for(int i = 0; i < size-2; i++){
+            message += "[ ";
+                if(parts[p].direct_move_cost[i].assigned()){
+                    message += to_string(parts[p].direct_move_cost[i].val()) + " ";
+                } else {
+                    message += "...";
+                }
+            message += "]";
+        }
+        message += "]\n";
     }
     message += "]\n";
     message += "COST FACTORS : [";

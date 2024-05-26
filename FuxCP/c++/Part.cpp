@@ -143,7 +143,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     is_P_cons = BoolVarArray(home, size, 0, 1);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
     varietyArray = IntVarArray(home, 3*(size-2), IntSet({0, variety_cost}));
-    direct_move_cost = IntVarArray(home, size-2, 0, 8);
+    direct_move_cost = IntVarArray(home, size-2, IntSet({0, direct_move}));
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
     is_off = {BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 )};
@@ -151,6 +151,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     m_degrees_cost = IntVarArray(home, size, IntSet({0,1,2}));
     fifth_costs = IntVarArray(home, size, IntSet(0,1));
     octave_costs = IntVarArray(home, size, IntSet(0,1));
+    create_solution_array();
     if(species==1){
         create_member_array(0);
     } else if(species==2){
@@ -178,5 +179,28 @@ void Part::create_member_array(int idx){
         }
         rel(home, sm, IRT_EQ, expr(home, sum(x)));
         rel(home, sm, IRT_GR, 0, Reify(is_off[idx][i]));
+    }
+}
+
+void Part::create_solution_array(){
+    if(species==1){
+        sol_len = size;
+        solution_array = IntVarArray(home, sol_len, 0, 127);
+        for(int n = 0; n < size; n++){
+            solution_array[n] = vector_notes[0][n];
+        }
+    } else if(species==2){
+        sol_len = size + (size-1);
+        solution_array = IntVarArray(home, sol_len, 0, 127);
+        int idx = 0;
+        for(int n = 0; n < sol_len; n+=2){
+            solution_array[n] = vector_notes[0][idx];
+            idx++;
+        }
+        idx=0;
+        for(int n = 1; n < sol_len; n+=2){
+            solution_array[n] = vector_notes[2][idx];
+            idx++;
+        }
     }
 }
