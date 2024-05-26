@@ -341,15 +341,13 @@ void add_succ_cost(const Home &home, IntVar cost_factor, int size, vector<int> s
     rel(home, cost_factor, IRT_EQ, expr(home, sum(scc)));
 }
 
-void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Stratum> upper){
-    IntVarArgs tr(upper.size()*size);
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs){
+    IntVarArgs tr(triad_costs.size());
     int index = 0;
-    for(int p = 0; p < upper.size(); p++){
         for(int i = 0; i < size; i++){
-            tr[index] = upper[p].triad_costs[i];
+            tr[index] = triad_costs[i];
             index++;
         }
-    }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(tr)));
 }
 

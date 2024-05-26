@@ -1,16 +1,18 @@
 #include "headers/Part.hpp"
 #include "headers/Utilities.hpp"
 
-Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst):home(hme){
+Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst, vector<int> general_parameters):home(hme){
     home = hme;
     size = s;
     lower_bound = 1;
     upper_bound = 127;
     species = 0;
     succ = succ_cst;
+    penult_rule_check = general_parameters[7];
     NINE = IntVar(home, 9, 9);
     THREE = IntVar(home, 3, 3);
     notes = IntVarArray(home, size, 0, 127);
+    is_P_cons = BoolVarArray(home, size, 0, 1);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
     for(int i = 0; i < size; i++){
         notes[i] = IntVar(home, cf_notes[i], cf_notes[i]);
@@ -70,6 +72,9 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
 
     NINE = IntVar(home, 9, 9);
     THREE = IntVar(home, 3, 3);
+    is_h1_poss = BoolVar(home, 0 ,1);
+    is_h2_poss = BoolVar(home, 0, 1);
+    is_not_triad = BoolVar(home, 0, 1);
     
 
     //cp_range : WORKS

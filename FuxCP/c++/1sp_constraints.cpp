@@ -16,11 +16,13 @@
 
     link_melodic_arrays_1st_species(home, parts[1].size, parts);
 
+    link_cfb_arrays_1st_species(home, parts[1].size, parts[1], parts[0], 0);
+
     for(int p = 0; p < parts.size(); p++){
 
-        link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
-
         link_motions_arrays(home, parts[p], parts[0], lowest, 0); //cost
+
+        link_p_cons_array(home, parts[p]);
     }
 
     set_off_costs(home, parts[1].size, parts); //cost
@@ -66,7 +68,7 @@
  /**
  * First species dispatcher for 3 voices. Calls necessary constraints for necessary species
 */
- void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
+ void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, int for_species){
 
     link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
 
@@ -95,7 +97,7 @@
 
     key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
 
-    no_chromatic_melodies(home, parts[1].size, parts);  // in 3v too?
+    //no_chromatic_melodies(home, parts[1].size, parts);  // in 3v too?
 
     // if(for_species==1 || for_species==2){                                        
     //     perfect_consonance_constraints(home, parts[1].size, parts);              // suspended in 3v
@@ -106,7 +108,7 @@
 
     //voices cannot play the same note except on first and last beat already checked off in first species calls
 
-    no_same_direction(home, parts[1].size, parts);
+    no_same_direction(home, parts[1].size, parts); //here issue
 
     last_chord_no_minor_third(home, parts[0].size, parts);
 
@@ -123,7 +125,7 @@
 
         penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts, parts[0].NINE, parts[0].THREE, upper);
     
-        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
+        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts); //here issue
 
         no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size(), upper);
 
@@ -139,7 +141,7 @@
 
         avoid_perfect_consonances(home, parts[1].size, parts);
 
-        prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper);
+        prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper, triad_costs);
     }
  }
 
