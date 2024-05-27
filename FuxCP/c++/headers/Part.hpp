@@ -91,7 +91,13 @@ public:
     IntVarArray fifth_costs;
     IntVarArray octave_costs;
 
-    Part(const Home &sp, const vector<int> cf_notes, int s, int succ_cst);
+    IntVar NINE;
+    IntVar THREE;
+    BoolVar is_h1_poss;
+    BoolVar is_h2_poss;
+    BoolVar is_not_triad;
+
+    Part(const Home &sp, const vector<int> cf_notes, int s, int succ_cst, vector<int> general_parameters);
 
     Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 
         int dir, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> melodic

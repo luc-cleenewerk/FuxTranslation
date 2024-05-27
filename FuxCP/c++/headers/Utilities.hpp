@@ -391,7 +391,7 @@ void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int
 
 void add_succ_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 
-void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Stratum> upper);
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs);
 
 void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 
