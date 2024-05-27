@@ -129,6 +129,7 @@ void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> par
 }
 
 void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts){
+    // TODO  check
     for(int p1 = 0; p1 < parts.size(); p1++){
         for(int p2 = p1+1; p2 < parts.size(); p2++){
             for(int k = 0; k < 4; k++){
@@ -325,6 +326,12 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
         rel(home, expr(home, parts[1].is_h1_poss || parts[1].is_h2_poss), BOT_XOR, parts[1].is_not_triad, 1);
         rel(home, triad_costs[i], IRT_EQ, 0, Reify(expr(home, parts[1].is_h1_poss || parts[1].is_h2_poss), RM_IMP));
         rel(home, triad_costs[i], IRT_EQ, parts[1].h_triad_cost, Reify(parts[1].is_not_triad, RM_IMP));
+    }
+}
+
+void prefer_harmonic_triads_4v(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs){
+    for(int i = 0; i < size; i++){
+        rel(home, triad_costs[i]==0);   // todo modify
     }
 }
 
