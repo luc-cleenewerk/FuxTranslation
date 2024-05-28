@@ -8,7 +8,7 @@ void second_species_2v(const Home &home, vector<Part> parts, vector<Stratum> low
 
     h_cons_arsis(home, parts[list_index], PENULT_CONS);
 
-    penult_cons(home, parts[list_index], PENULT_CONS_3P, NINE, THREE);
+    penult_cons(home, parts[list_index], PENULT_CONS_3P, NINE, THREE, 2);
 
     melodic_inter_arsis(home, parts[list_index]);
 
@@ -36,7 +36,7 @@ void second_species_3v(const Home &home, vector<Part> parts, vector<Stratum> low
 
     h_cons_arsis(home, parts[list_index], PENULT_CONS);
 
-    penult_cons(home, parts[list_index], PENULT_CONS_3P, NINE, THREE);
+    penult_cons(home, parts[list_index], PENULT_CONS_3P, NINE, THREE, 2);
 
     melodic_inter_arsis(home, parts[list_index]);
 

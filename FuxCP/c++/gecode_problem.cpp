@@ -2,6 +2,7 @@
 #include "headers/Utilities.hpp"
 #include "headers/1sp_constraints.hpp"
 #include "headers/2sp_constraints.hpp"
+#include "headers/3sp_constraints.hpp"
 
 /***********************************************************************************************************************
  *                                          Problem class methods                                                      *
@@ -101,6 +102,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     if(speciesList.size()==1){ //si 2 voix
         if(highest_species==2){
             cost_size+=1;
+        } else if(highest_species==3){
+            
         }
     } else if(speciesList.size()==2){ //si 3 voix
         if(highest_species==1){ //if the cp is of species 1
@@ -189,6 +192,34 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
             link_is_neighbour_array_2nd_species(*this, parts[p], lowest);
         }
+        if(parts[p].species==3){
+            for(int i = 0; i < 3; i++){
+                parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
+                parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, 12, 12));
+            }
+            
+            parts[p].m2_len = 4*(size-1)-1;
+            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
+            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
+
+            parts[p].total_m_len = 4*(size-1);
+            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
+            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
+
+            parts[p].is_qn_linked = BoolVarArray(*this, size-1, 0, 1);
+
+            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
+
+            for(int i = 0; i < 4; i++){
+                if(i==0){
+                    parts[p].is_consonant.push_back(BoolVarArray(*this, size, 0, 1));
+                } else {
+                    parts[p].is_consonant.push_back(BoolVarArray(*this, size-1, 0, 1));
+                }
+            }
+
+            parts[p].is_not_ciambatta = BoolVarArray(*this, size-1, 0, 1);
+        }
     }
 
     if(speciesList.size()==1){
@@ -199,6 +230,11 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             IntVar NINE = IntVar(*this, 9,9);
             IntVar THREE = IntVar(*this,3,3);
             second_species_2v(*this, parts, lowest, upper, NINE, THREE, 1);
+        }
+        else if(speciesList[0]==3){
+            IntVar NINE = IntVar(*this, 9,9);
+            IntVar THREE = IntVar(*this,3,3);
+            third_species_2v(*this, parts, lowest, upper, NINE, THREE, 1);
         }
     } else if(speciesList.size()==2){
         for(int i = 0; i < speciesList.size(); i++){
@@ -231,11 +267,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         solution_len+=parts[p].sol_len;
 
     }
-    
+
     //following two costs are for the imperfect consonances are preferred clause
     add_fifth_cost(*this, cost_factors[0], size, splist, parts);
     prefs.insert({importance_names[1], importance[1]});
-
     add_octave_cost(*this, cost_factors[1], size, splist, parts);
     prefs.insert({importance_names[2], importance[2]});
 
@@ -274,8 +309,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             add_penult_cost(*this, cost_factors[9], size, splist, parts);
             prefs.insert({importance_names[9], importance[8]});
         }
-    }    
-
+    }  
+    
     //ORDERING THE COSTS
 
         //putting the name of the cost in the ordered costs list at the index of its importance
@@ -309,6 +344,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
+    
 }
 
 /**
@@ -426,6 +462,11 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].fifth_costs = s.parts[p].fifth_costs;
         parts[p].octave_costs = s.parts[p].octave_costs;
         parts[p].m_degrees_cost = s.parts[p].m_degrees_cost;
+        //3rd species variables
+        if(parts[p].species==3){
+            parts[p].hIntervalsToCf = s.parts[p].hIntervalsToCf;
+            parts[p].is_consonant = s.parts[p].is_consonant;
+        }
         
         parts[p].m2_intervals.update(*this, s.parts[p].m2_intervals);
         parts[p].m2_intervals_brut.update(*this, s.parts[p].m2_intervals_brut);
@@ -448,6 +489,11 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].is_not_triad.update(*this, s.parts[p].is_not_triad);
         parts[p].is_off.update(*this, s.parts[p].is_off);
         parts[p].penult_sixth.update(*this, s.parts[p].penult_sixth);
+        //3rd species
+        if(parts[p].species==3){
+            parts[p].is_qn_linked.update(*this, s.parts[p].is_qn_linked);
+            parts[p].is_not_ciambatta.update(*this, s.parts[p].is_not_ciambatta);
+        }
         for(int h = 0; h < 4; h++){
             parts[p].hIntervalsCpCf[h].update(*this, s.parts[p].hIntervalsCpCf[h]);
             parts[p].m_intervals[h].update(*this, s.parts[p].m_intervals[h]);
@@ -458,6 +504,12 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
             parts[p].fifth_costs[h].update(*this, s.parts[p].fifth_costs[h]);
             parts[p].octave_costs[h].update(*this, s.parts[p].octave_costs[h]);
             parts[p].m_degrees_cost[h].update(*this, s.parts[p].m_degrees_cost[h]);
+
+            //Third species
+            if(parts[p].species==3){
+                parts[p].hIntervalsToCf[h].update(*this, s.parts[p].hIntervalsToCf[h]);
+                parts[p].is_consonant[h].update(*this, s.parts[p].is_consonant[h]);
+            }
         }
         for(int h = 0; h < parts[p].m_succ_intervals.size(); h++){
             parts[p].m_succ_intervals[h].update(*this, s.parts[p].m_succ_intervals[h]);
@@ -640,6 +692,7 @@ string Problem::toString(){
         }
     }
     message += "]\n";
+    /*
     message += "SUCC COST : [";
     for(int i = 0; i < succ_cost.size(); i++){
         if(succ_cost[i].assigned()){
@@ -648,7 +701,7 @@ string Problem::toString(){
             message += "... ";
         }
     }
-    message += "]\n";/*
+    message += "]\n";
     message += "UPPER H INTERVALS : [";
     for(int p = 0; p < upper.size(); p++){
         message += "UPPER H INTERVALS PART : [";
@@ -683,20 +736,24 @@ string Problem::toString(){
         }
         message += "]\n";
     }
-    message += "]\n";
-    message += "MOTIONS : [";
-    for(int p = 0; p < parts.size(); p++){
-        message += "MOTIONS PART : [";
-        for(int i = 0; i < size-2; i++){
-            if(parts[p].motions[0][i].assigned()){
-                message += to_string(parts[p].motions[0][i].val()) + " ";
-            } else {
-                message += "... ";
+    message += "]\n";*/
+    message += "M SUCC : [";
+    for(int p = 1; p < parts.size(); p++){
+        message += "M SUCC PART : [";
+        for(int k = 0; k < 3; k++){
+            message += "[ ";
+            for(int i = 0; i < size-1; i++){
+                if(parts[p].m_succ_intervals[k][i].assigned()){
+                    message += to_string(parts[p].m_succ_intervals[k][i].val()) + " ";
+                } else {
+                    message += "... ";
+                }
             }
+            message += "]";
         }
-        message += "]\n";
+        message += "]";
     }
-    message += "]\n";
+    message += "]\n";/*
     message += "IS LOWEST : [";
     for(int p = 0; p < parts.size(); p++){
         message += "IS LOWEST PART : [";

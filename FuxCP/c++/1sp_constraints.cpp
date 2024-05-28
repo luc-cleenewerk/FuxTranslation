@@ -10,6 +10,7 @@
 /**
  * First species dispatcher for 2 voices. Calls necessary constraints given the species
 */
+
  void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
 
     link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
@@ -45,8 +46,7 @@
 
     no_chromatic_melodies(home, parts[1].size, parts);
 
-
-    if(for_species==1 || for_species==2){
+    if(for_species==1 || for_species==2 || for_species==3){
         perfect_consonance_constraints(home, parts[1].size, parts);
     }
 
@@ -65,8 +65,8 @@
         }
 
         no_tritonic_intervals(home, parts[1].size, parts);
-
     }
+
  }
 
  /**

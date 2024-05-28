@@ -160,7 +160,7 @@ void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Str
 
 void h_cons_arsis(const Home &home, Part part, IntSet pen);
 
-void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE);
+void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE, int idx);
 
 void melodic_inter_arsis(const Home &home, Part part);
 
@@ -173,5 +173,47 @@ void no_direct_move_perfect_consonance_2nd_species(const Home &home, Part part);
 void no_battuta_2nd_species(const Home &home, Part part);
 
 void set_penult_sixth_cost(const Home &home, Part part);
+
+/**
+ * ========================================================================================================
+ *                                      THIRD SPECIES CONSTRAINTS
+ * ========================================================================================================
+*/
+
+void link_harmonic_arrays_3rd_species(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest);
+
+void link_harmonic_to_cf_3rd_species(const Home &home, int size, Part part, Part cf);
+
+void link_melodic_arrays_3rd_species_in_meas(const Home &home, int size, vector<Part> parts);
+
+void link_melodic_arrays_3rd_species_next_meas(const Home &home, int size, Part part);
+
+void link_m2_arrays_3rd_species(const Home &home, Part part);
+
+void link_melodic_self_arrays_3rd_species(const Home &home, Part part);
+
+void link_motions_arrays_3rd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest);
+
+void link_cfb_array_3rd_species(const Home &home, int size, Part part, Part cf);
+
+void link_is_qn_linked_3rd_species(const Home &home, Part part);
+
+void link_ta_dim_array_3rd_species(const Home &home, Part part);
+
+void link_is_cons_array_3rd_species(const Home &home, Part part);
+
+void link_ciambatta_3rd_species(const Home &home, Part part);
+
+void five_consecutive_notes(const Home &home, Part part);
+
+void any_disonant_note(const Home &home, Part part);
+
+void no_melodic_interval_between(const Home &home, Part part);
+
+void marcels_rule(const Home &home, Part part);
+
+void no_direct_move_perfect_consonance_3rd_species(const Home &home, Part part);
+
+void no_battuta_3rd_species(const Home &home, Part part);
 
 #endif

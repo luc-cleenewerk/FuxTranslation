@@ -23,7 +23,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst, vector<in
     }
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
-    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size, 0, 11)};
+    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11)};
     isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     hIntervalsBrut = IntVarArray(home, size, -127, 127);
     motions = {IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2)};
@@ -127,7 +127,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
         }
     }
 
-    vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size, IntSet(extended))};
+    vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended))};
 
     if(species==1){
         if(b_mode!=0){
@@ -139,8 +139,13 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
             vector_notes[2][size-2] = IntVar(home, IntSet(chrom_scale));
         }
     }
+    if(species==3){
+        if(b_mode!=0){
+            vector_notes[3][size-2] = IntVar(home, IntSet(chrom_scale));
+        }
+    }
     create_solution_array();
-    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size, 0, 11)};
+    hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11)};
     isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
@@ -163,6 +168,10 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     fifth_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
     octave_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
     penult_sixth = IntVar(home, IntSet({0, penult_sixth_cost}));
+
+    //3rd species variables init
+    hIntervalsToCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size-1, 0, 11)};
+
     if(species==1){
         create_member_array(0);
     } else if(species==2){
@@ -213,6 +222,49 @@ void Part::create_solution_array(){
         for(int n = 1; n < sol_len; n+=2){
             solution_array[n] = vector_notes[2][idx];
             idx++;
+        }
+    } else if(species==3){
+        sol_len = size + (3*(size-1));
+        solution_array = IntVarArray(home, sol_len, 0, 127);
+        int idx = 0;
+        for(int n = 0; n < sol_len; n+=4){
+            solution_array[n] = vector_notes[0][idx];
+            idx++;
+        }
+        idx=0;
+        for(int n = 1; n < sol_len; n+=4){
+            solution_array[n] = vector_notes[1][idx];
+            idx++;
+        }
+        idx=0;
+        for(int n = 2; n < sol_len; n+=4){
+            solution_array[n] = vector_notes[2][idx];
+            idx++;
+        }
+        idx=0;
+        for(int n = 3; n < sol_len; n+=4){
+            solution_array[n] = vector_notes[3][idx];
+            idx++;
+        }
+    }
+}
+
+void Part::create_is_cons(){
+    for(int h = 0; h < 4; h++){
+        for(int i = 0; i < is_consonant[h].size(); i++){
+            IntVarArray res = IntVarArray(home, CONSONANCES.size(), 0, 1);
+            IntVar sm = IntVar(home, 0, CONSONANCES.size());
+            for(int l = 0; l < CONSONANCES.size(); l++){
+                BoolVar b1 = BoolVar(home, 0, 1);
+                rel(home, hIntervalsCpCf[h][i], IRT_EQ, CONSONANCES[l], Reify(b1));
+                ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
+            }
+            IntVarArgs x(res.size());
+            for(int t = 0; t < CONSONANCES.size(); t++){
+                x[t] = res[t];
+            }
+            rel(home, sm, IRT_EQ, expr(home, sum(x)));
+            rel(home, sm, IRT_GR, 0, Reify(is_consonant[h][i]));
         }
     }
 }

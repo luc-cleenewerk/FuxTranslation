@@ -31,7 +31,7 @@ void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> p
 
 void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf, int idx){
     for(int i = 0; i < size; i++){
-        rel(home, part.vector_notes[idx][i], IRT_GQ, cf.notes[i], Reify(part.isCFB[idx][i])); //links the CFB values in the array
+        rel(home, part.vector_notes[idx][i], IRT_GQ, cf.vector_notes[0][i], Reify(part.isCFB[idx][i])); //links the CFB values in the array
     }
 }
 
@@ -486,13 +486,13 @@ void h_cons_arsis(const Home &home, Part part, IntSet pen){
     }
 }
 
-void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE){
+void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE, int idx){
     if(part.speciesList.size()==1){ //if it is 2 voices
         if(part.penult_rule_check==1){
-            ite(home, part.isCFB[2][part.isCFB.size()-1], NINE, THREE, part.hIntervalsCpCf[2][part.hIntervalsCpCf[2].size()-1]);
+            ite(home, part.isCFB[idx][part.isCFB.size()-1], NINE, THREE, part.hIntervalsCpCf[idx][part.hIntervalsCpCf[idx].size()-1]);
         }
     } else {
-        dom(home, part.hIntervalsCpCf[2][part.hIntervalsCpCf[2].size()-1], pen3);
+        dom(home, part.hIntervalsCpCf[idx][part.hIntervalsCpCf[idx].size()-1], pen3);
     }
 }
 
@@ -566,4 +566,164 @@ void set_penult_sixth_cost(const Home &home, Part part){
     //penult first h-Interval, IRT_NQ, 7, penult_thesis_cost, penult_sixth
     rel(home, (part.hIntervalsCpCf[0][part.size-2]!=7) >> (part.penult_sixth==part.penult_sixth_cost));
     rel(home, (part.hIntervalsCpCf[0][part.size-2]==7) >> (part.penult_sixth==0));
+}
+
+/**
+ * ========================================================================================================
+ *                                      THIRD SPECIES CONSTRAINTS
+ * ========================================================================================================
+*/
+
+void link_harmonic_arrays_3rd_species(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest){
+    //notes cp, butlast first notes lowest, hIntervalsCpCf
+    for(int j = 0; j < parts.size(); j++){
+        for(int h = 1; h <= 3; h++){
+            for(int i = 0; i < size; i++){
+                if(i!=size-1){ //butlast in lisp code of anton
+                    rel(home, parts[j].hIntervalsCpCf[h][i] == abs((parts[j].vector_notes[h][i] - lowest[0].notes[i])%12)); //assigns the hIntervals
+                }     
+            }
+        }
+    }
+}
+
+void link_harmonic_to_cf_3rd_species(const Home &home, int size, Part part, Part cf){
+    //notes cp, butlast cf, hIntervalsToCf
+    for(int h = 1; h <= 3; h++){
+        for(int i = 0; i < size; i++){
+            if(i!=size-1){ //butlast in lisp code of anton
+                rel(home, part.hIntervalsToCf[h][i] == abs((part.vector_notes[h][i] - cf.vector_notes[0][i])%12)); //assigns the hIntervals
+            }     
+        }
+    }
+}
+
+void link_melodic_arrays_3rd_species_in_meas(const Home &home, int size, vector<Part> parts){
+    //vector_notes i-1 cp, vector_notes i cp, i-1 m_succ, i-1 m_succ_brut
+    rel(home, parts[1].m_succ_intervals_brut[0][3], IRT_EQ, 60);
+    abs(home, parts[1].m_succ_intervals_brut[0][3], parts[1].m_succ_intervals[0][3]); 
+    for(int p = 1; p < parts.size(); p++){
+        for(int h = 1; h <= 3; h++){
+            for(int i = 0; i < size-1; i++){
+                
+            }
+        }
+    }
+}
+
+void link_melodic_arrays_3rd_species_next_meas(const Home &home, int size, Part part){
+    //fourth notes, first notes (except first), fourth m-intervals, fourth m-intervals-brut
+    for(int i = 0; i < size-1; i++){
+        rel(home, part.m_intervals_brut[3][i] == part.vector_notes[3][i]-part.vector_notes[0][i+1]);
+        abs(home, part.m_intervals_brut[3][i], part.m_intervals[3][i]); 
+    }
+}
+
+void link_m2_arrays_3rd_species(const Home &home, Part part){
+    link_m2_arrays_2nd_species(home, part);
+}
+
+void link_melodic_self_arrays_3rd_species(const Home &home, Part part){
+    link_melodic_self_arrays_2nd_species(home, part);
+}
+
+void link_motions_arrays_3rd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest){
+    link_motions_arrays(home, part, cf, lowest, 3);
+}
+
+void link_cfb_array_3rd_species(const Home &home, int size, Part part, Part cf){
+    link_cfb_arrays_1st_species(home, size-1, part, cf, 3);
+}
+
+void link_is_qn_linked_3rd_species(const Home &home, Part part){
+    //m_all_intervals, m_all_intervals_brut, is_qn_linked
+    //m1=i ; m2 = i+1; m3 = i+2; m4 = i+3
+    //mb1 = i; mb2 = i+1; mb3 = i+2; mb4 = i+3
+    //b = is_qn_linked
+    for(int i = 0; i <= part.m_all_intervals.size()-3; i++){
+        if(i%4==0){
+            rel(home, expr(home, (part.m_all_intervals[i]<=2 && part.m_all_intervals[i+1]<=2 && part.m_all_intervals[i+2]<=2 && part.m_all_intervals[i+3]<=2) && 
+           (part.m_all_intervals_brut[i]>0 == part.m_all_intervals_brut[i+1]>0 == part.m_all_intervals_brut[i+2]>0 == part.m_all_intervals_brut[i+3]>0)), 
+           IRT_EQ, 1, Reify(part.is_qn_linked[i/4]));
+        }
+    }
+}
+
+void link_ta_dim_array_3rd_species(const Home &home, Part part){
+    //second m_succ, collect-by-4(m2-intervals) (every 4th element, like i=0 -> i, i+4, i+8, 0 is the offset), third m-succ, is_ta_dim
+    for(int i = 0; i < part.size-1; i++){
+        rel(home, part.is_ta_dim[i], IRT_EQ, expr(home, ((part.m2_intervals[i*4]==3)||(part.m2_intervals[i*4]==4))&&(part.m_succ_intervals[1][i]<=2)
+            &&(part.m_succ_intervals[2][i]<=2)));
+    }
+}
+
+void link_is_cons_array_3rd_species(const Home &home, Part part){
+    part.create_is_cons();
+}
+
+void link_ciambatta_3rd_species(const Home &home, Part part){
+    //second is_consonant, third is_consonant, second m_succ, is_not_ciambatta
+    for(int i = 0; i < part.size-1; i++){
+        rel(home, expr(home, part.is_consonant[1][i]==1 && part.is_consonant[2][i]), BOT_AND, 
+            expr(home, part.m_succ_intervals[1][i]<=2), part.is_not_ciambatta[i]);
+    }
+}
+
+void five_consecutive_notes(const Home &home, Part part){
+    //third is_consonant, is_qn_array
+    for(int i = 0; i < part.is_qn_linked.size(); i++){
+        rel(home, part.is_qn_linked[i], BOT_IMP, part.is_consonant[2][i], 1);
+    }
+}
+
+void any_disonant_note(const Home &home, Part part){
+    //second is_consonant, third is_consonant, fourth is_consonant, is_ta_dim
+    for(int i = 0; i < part.is_ta_dim.size(); i++){
+        rel(home, expr(home, part.is_consonant[2][i]==1 || (part.is_consonant[1][i] && part.is_consonant[3][i])), BOT_AND, 
+            expr(home, part.is_consonant[2][i] || part.is_ta_dim[i]), 1);
+    }
+}
+
+void no_melodic_interval_between(const Home &home, Part part){
+    for(int h = 0; h < part.m_succ_intervals.size(); h++){
+        for(int i = 0; i < part.m_succ_intervals[h].size(); i++){
+            rel(home, part.m_succ_intervals[h][i], IRT_NQ, 9);
+            rel(home, part.m_succ_intervals[h][i], IRT_NQ, 10);
+            rel(home, part.m_succ_intervals[h][i], IRT_NQ, 11);
+        }
+    }
+    for(int i = 0; i < part.m_intervals[3].size(); i++){
+        rel(home, part.m_intervals[3][i], IRT_NQ, 9);
+        rel(home, part.m_intervals[3][i], IRT_NQ, 10);
+        rel(home, part.m_intervals[3][i], IRT_NQ, 11);
+    }
+}
+
+void marcels_rule(const Home &home, Part part){
+    //m_all_intervals, m_all_intervals_brut
+    for(int i = 0; i < part.m_all_intervals.size()-1; i++){
+        BoolVar b_contrary = expr(home, part.m_all_intervals_brut[i] > 0 == part.m_all_intervals_brut[i+1] < 0);
+        BoolVar b_skip = expr(home, part.m_all_intervals[i] > 2);
+        rel(home, part.m_all_intervals[i+1], IRT_LQ, 2, Reify(b_skip, RM_IMP));
+        rel(home, b_skip, BOT_IMP, b_contrary, 1);
+    }
+}
+
+void no_direct_move_perfect_consonance_3rd_species(const Home &home, Part part){
+    //fourth motions, is_p_cons_array, is_not_lowest
+    if(part.speciesList.size()==1){
+        for(int i = 0; i < part.size-1; i++){
+            rel(home, part.motions[3][i], IRT_NQ, 2, Reify(expr(home, part.is_not_lowest[i+1] && part.is_P_cons[i+1]), RM_IMP));
+        }
+    }
+}
+
+void no_battuta_3rd_species(const Home &home, Part part){
+    //fourth motions, first hIntervalsToCf, fourth m_intervals_brut, fourth is_cf_lower
+    for(int j = 0; j < part.size-1; j++){
+        //constraints avoiding a battuta kind of motion
+        rel(home, expr(home, ((part.hIntervalsToCf[0][j+1]==0)&&(part.motions[3][j]==0)&&(part.m_intervals_brut[3][j]<-4)&&(part.is_not_lowest[j]==1))), IRT_EQ, 0);
+        //here add cantusFirmus melodic interval
+        rel(home, expr(home, ((part.hIntervalsToCf[0][j+1]==0)&&(part.motions[3][j]==0)&&(part.m_intervals_brut[3][j]<-4)&&(part.is_not_lowest[j]==0))), IRT_EQ, 0);
+    }
 }

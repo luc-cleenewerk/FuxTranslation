@@ -93,6 +93,12 @@ public:
     vector<IntVarArray> fifth_costs;
     vector<IntVarArray> octave_costs;
 
+    //Third species specific
+    vector<IntVarArray> hIntervalsToCf;
+    BoolVarArray is_qn_linked;
+    vector<BoolVarArray> is_consonant;
+    BoolVarArray is_not_ciambatta;
+
     IntVar NINE;
     IntVar THREE;
     BoolVar is_h1_poss;
@@ -110,6 +116,8 @@ public:
     void create_member_array(int idx);
 
     void create_solution_array();
+
+    void create_is_cons();
 };
 
 #endif

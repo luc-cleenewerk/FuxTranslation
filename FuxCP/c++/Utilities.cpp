@@ -249,6 +249,9 @@ void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> 
         if(splist[s]==2){
             sz+=(2*size)-1;
         }
+        if(splist[s]==3){
+            sz+=(4*size)-3;
+        }
     }
     IntVarArgs y(sz);
     int index = 0;
@@ -270,6 +273,24 @@ void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> 
                 index++;
             }
         }
+        if(parts[p].species==3){
+            for(int i = 0; i < size; i++){
+                y[index] = parts[p].fifth_costs[0][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                y[index] = parts[p].fifth_costs[1][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                y[index] = parts[p].fifth_costs[2][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                y[index] = parts[p].fifth_costs[3][i];
+                index++;
+            }
+        }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(y)));
 }
@@ -282,6 +303,9 @@ void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int>
         }
         if(splist[s]==2){
             sz+=(2*size)-1;
+        }
+        if(splist[s]==3){
+            sz+=(4*size)-3;
         }
     }
     IntVarArgs oc(sz);
@@ -301,6 +325,24 @@ void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int>
             }
             for(int i = 0; i < size-1; i++){
                 oc[index] = parts[p].octave_costs[2][i];
+                index++;
+            }
+        }
+        if(parts[p].species==3){
+            for(int i = 0; i < size; i++){
+                oc[index] = parts[p].octave_costs[0][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                oc[index] = parts[p].octave_costs[1][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                oc[index] = parts[p].octave_costs[2][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                oc[index] = parts[p].octave_costs[3][i];
                 index++;
             }
         }
@@ -333,6 +375,9 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
         if(parts[p].species==2){
             sz += 2*(size-1);
         }
+        if(parts[p].species==3){
+            sz += 2*(size-1);
+        }
     }
     IntVarArgs x(sz);
     int index = 0;
@@ -343,9 +388,15 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
                 index++;
             }
         }
-        if(parts[p].species>=2){
+        if(parts[p].species==2){
             for(int i = 0; i < size-1; i++){
                 x[index] = parts[p].m_degrees_cost[2][i];
+                index++;
+            }
+        }
+        if(parts[p].species==3){
+            for(int i = 0; i < size-1; i++){
+                x[index] = parts[p].m_degrees_cost[3][i];
                 index++;
             }
         }
@@ -356,7 +407,11 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
 void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
-        sz+=(size-1);
+        if(splist[i]!=3){
+            sz+=(size-1);
+        } else {
+            sz+=2*(size-1);
+        }
     }
     IntVarArgs pc(sz);
     int index = 0;
@@ -367,6 +422,11 @@ void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int>
                 index++;
             } else if(parts[p].species==2){
                 pc[index] = parts[p].real_motions_cost[i];
+                index++;
+            } else if(parts[p].species==3){
+                pc[index] = parts[p].motions_cost[0][i];
+                index++;
+                pc[index] = parts[p].motions_cost[3][i];
                 index++;
             }
         }
