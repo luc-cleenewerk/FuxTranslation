@@ -8,7 +8,7 @@
  // todo move this into appropriate file (should be organised) for species and type of constraint (harmonic, melodic, motion, linking arrays,...)
 
 /**
- * First species dispatcher for 2 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 2 voices. Calls necessary constraints given the species
 */
  void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
 
@@ -70,7 +70,7 @@
  }
 
  /**
- * First species dispatcher for 3 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 3 voices. Calls necessary constraints given the species
 */
  void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, IntVarArray succ_cost,
     int for_species){
@@ -157,9 +157,10 @@
  }
 
  /**
- * First species dispatcher for 4 voices. Calls necessary constraints for necessary species
+ * First species dispatcher for 4 voices. Calls necessary constraints given the species
 */
- void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, int for_species){
+ void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, 
+    IntVarArray succ_cost, int for_species){
     
     link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
 
@@ -248,6 +249,6 @@
         avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         // H8
-        // prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper);              // TODO modify 4v
+        prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs);              // TODO modify 4v
         }
  }

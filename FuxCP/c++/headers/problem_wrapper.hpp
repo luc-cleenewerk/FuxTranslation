@@ -28,6 +28,11 @@ int get_size(void* sp);
 
 int test_cffi(int n);
 
+void delete_pointer(void* p);
+
+void delete_solver_pointer(void* p);
+
+
 /**
  * returns the values of the variables for a solution
  * @param sp a void* pointer to a Problem object

@@ -499,6 +499,9 @@
                     (error "No voice has been given to the solver. Please set a cantus firmus into the second input and try again.")
                 )
 
+                (if (not (null (current-csp (om::object editor)))) (delete-solver-pointer (current-csp (om::object editor)))) ; delete the pointer to the current-csp if it is already initialized
+
+
                 (set-global-cf-variables
                     (cf-voice (om::object editor))
                     (borrow-mode-param (om::object editor))
@@ -633,6 +636,11 @@
                 (print (current-csp (om::object editor)))
                 
                 (print "Base<Problem>* (search engine) stored in current-csp object variable")
+
+                (delete-pointer problem-pointer)
+
+                (print "problem-pointer deleted")
+
                 ;; (setf (current-csp (om::object editor)) (fux-cp species-integer-list))   ; TODO : REPLACE BY CALL TO GECODE
             )
             )

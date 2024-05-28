@@ -10,6 +10,7 @@ void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
 
 void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, IntVarArray succ_cost, int species=1);
 
-void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, int species=1);
+void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs,
+    IntVarArray succ_cost, int species=1);
 
 #endif

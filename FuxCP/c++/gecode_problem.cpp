@@ -214,7 +214,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     } else if(speciesList.size()==3){
         for(int i = 0; i < speciesList.size(); i++){
             if(speciesList[i]==1){
-                first_species_4v(*this, parts, lowest, upper, succ_cost); //dispatch 4 voices 1st species
+                first_species_4v(*this, parts, lowest, upper, triad_costs, succ_cost); //dispatch 4 voices 1st species
             }
         }
     }
@@ -553,6 +553,10 @@ void Problem::constrain(const IntLexMinimizeSpace& _b) {
 }
 
 IntVarArgs Problem::cost(void) const{
+    // cout << "cost() function \n";
+    // for(const auto& var : cost_factors){
+    //     cout << var << endl;
+    // }
     IntVarArgs cost_var_args;
     for(const auto& var : cost_factors){
         cost_var_args << var;
@@ -825,10 +829,30 @@ void Problem::create_strata(){
             rel(*this, parts[0].is_not_lowest[i], IRT_EQ, 0, Reify(parts[1].is_not_lowest[i]));
         }
         if(parts.size()==3){
-            BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].vector_notes[0][i]));
+            // BoolVar temp = expr(*this, (parts[0].is_not_lowest[i]==0)&&(lowest[0].notes[i]!=parts[1].vector_notes[0][i]));
 
-            rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
+            // rel(*this, temp, IRT_EQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
+            // rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
+
+
+            rel(*this, expr(*this, (parts[0].is_not_lowest[i]==1)&&(lowest[0].notes[i]==parts[1].vector_notes[0][i])), IRT_NQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
             rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
+
+        }
+        if(parts.size()==4){ 
+
+            // rel(*this, expr(*this, (parts[0].is_not_lowest[i]==1)&&(lowest[0].notes[i]==parts[1].vector_notes[0][i])), IRT_NQ, 1, Reify(parts[1].is_not_lowest[i])); //else it is the cp1
+            // rel(*this, expr(*this, parts[1].is_not_lowest[i]!=parts[0].is_not_lowest[i]), IRT_EQ, parts[2].is_not_lowest[i]); //else it is the cp2 (in 3 voices)
+
+            rel(*this, expr(*this, (parts[0].is_not_lowest[i]==1)&&(lowest[0].notes[i]==parts[1].vector_notes[0][i])), IRT_NQ, 1, Reify(parts[1].is_not_lowest[i])); // if cf is not lowest and parts[1]=lowest, parts[1].isnotlowest=0
+            // cf is not lowest and cp1=lowest ==> expr evalutates to 1 ==> IRTNQ 1 evaluates to 0 ==> parts[1].isnotlowest set to 0
+            // else parts[1].isnotlowest set to 1
+
+            rel(*this, expr(*this, (parts[0].is_not_lowest[i]==1)&&(parts[1].is_not_lowest[i]==1)&&(lowest[0].notes[i]==parts[2].vector_notes[0][i])), IRT_NQ, 1, Reify(parts[2].is_not_lowest[i]));
+            rel(*this, expr(*this, (parts[0].is_not_lowest[i]) && (parts[1].is_not_lowest[i]) && (parts[2].is_not_lowest[i])), IRT_NQ, parts[3].is_not_lowest[i]);
+
+            // ensure one and only one is lowest 
+            // assert(parts[0].is_not_lowest[i].val() + parts[1].is_not_lowest[i].val() + parts[2].is_not_lowest[i].val() + parts[3].is_not_lowest[i].val() == 3);
         }
 
         if(i > 0){
@@ -864,6 +888,10 @@ void Problem::create_strata(){
             rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp1_is_lowest));
             if(parts.size()==3){
                 rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp2_is_lowest));
+            }
+            if(parts.size()==4){
+                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[2].is_not_lowest[i]));
+                rel(*this, corresponding_m_intervals[3][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[3].is_not_lowest[i]));
             }
         }
 
