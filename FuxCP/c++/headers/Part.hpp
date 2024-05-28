@@ -42,6 +42,7 @@ public:
     int sol_len;
     int total_m_len;
     int penult_rule_check;
+    int penult_sixth_cost;
 
     Home home;
 
@@ -85,11 +86,12 @@ public:
     IntVarArray direct_move_cost;
     IntVarArray succ_cost;
     IntVarArray triad_costs;
-    vector<BoolVarArray> is_off;
+    BoolVarArray is_off;
     IntVarArray off_costs;
-    IntVarArray m_degrees_cost;
-    IntVarArray fifth_costs;
-    IntVarArray octave_costs;
+    IntVar penult_sixth;
+    vector<IntVarArray> m_degrees_cost;
+    vector<IntVarArray> fifth_costs;
+    vector<IntVarArray> octave_costs;
 
     IntVar NINE;
     IntVar THREE;
@@ -101,7 +103,7 @@ public:
 
     Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> speciesList, int con, int obl, 
         int dir, int voice_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> melodic
-        , vector<int> general_params, vector<int> chrom);
+        , vector<int> general_params, vector<int> chrom, vector<int> specific);
 
     IntVarArray getNotes();
 

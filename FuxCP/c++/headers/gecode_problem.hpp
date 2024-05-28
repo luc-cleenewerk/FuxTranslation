@@ -80,6 +80,7 @@ protected:
     IntVarArray motions_cost;
     BoolVarArray is_P_cons;
     IntVarArray triad_costs;
+    IntVarArray succ_cost;
 
     IntVarArray vars;
     IntVarArray solution_array;

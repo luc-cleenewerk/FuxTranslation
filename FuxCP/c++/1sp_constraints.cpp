@@ -23,12 +23,14 @@
         link_motions_arrays(home, parts[p], parts[0], lowest, 0); //cost
 
         link_p_cons_array(home, parts[p]);
+
+        if(p!=0){
+            set_step_costs(home, parts[1].size, parts[p], 0); //cost
+        }
     }
 
     set_off_costs(home, parts[1].size, parts); //cost
-
-    set_step_costs(home, parts[1].size, parts); //cost
-
+    
     if(for_species==1){
         harmonic_intervals_consonance(home, parts, PENULT_CONS);
     } else if(for_species == 2){
@@ -58,7 +60,9 @@
 
         no_battuta(home, parts[1].size, parts);
 
-        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper); //2 cost
+        for(int i = 1; i < parts.size(); i++){
+            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
+        }
 
         no_tritonic_intervals(home, parts[1].size, parts);
 
@@ -68,7 +72,8 @@
  /**
  * First species dispatcher for 3 voices. Calls necessary constraints for necessary species
 */
- void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, int for_species){
+ void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, IntVarArray succ_cost,
+    int for_species){
 
     link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
 
@@ -79,11 +84,15 @@
         link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
 
         link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+
+        link_p_cons_array(home, parts[p]);
+
+        if(p!=0){
+            set_step_costs(home, parts[1].size, parts[p], 0); //cost
+        }
     }
 
     set_off_costs(home, parts[1].size, parts);
-
-    set_step_costs(home, parts[1].size, parts);
 
     if(for_species==1){
         harmonic_intervals_consonance(home, parts, PENULT_CONS);
@@ -131,7 +140,9 @@
 
         no_battuta(home, parts[1].size, parts);
 
-        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper);
+        for(int i = 1; i < parts.size(); i++){
+            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
+        }
 
         no_tritonic_intervals(home, parts[1].size, parts);
 
@@ -139,7 +150,7 @@
 
         variety_cost_constraint(home, parts[1].size, parts);
 
-        avoid_perfect_consonances(home, parts[1].size, parts);
+        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper, triad_costs);
     }
@@ -148,7 +159,7 @@
  /**
  * First species dispatcher for 4 voices. Calls necessary constraints for necessary species
 */
- void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
+ void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, int for_species){
     
     link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
 
@@ -159,11 +170,13 @@
         link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
 
         link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+
+        if(p!=0){
+            set_step_costs(home, parts[1].size, parts[p], 0); //cost
+        }
     }
     
     set_off_costs(home, parts[1].size, parts);
-
-    set_step_costs(home, parts[1].size, parts);
 
     // H1
     if(for_species==1){
@@ -218,7 +231,9 @@
         no_battuta(home, parts[1].size, parts);     
 
         // H6
-        imperfect_consonances_are_preferred(home, parts[1].size, parts, upper);    // Only for first species?
+        for(int i = 1; i < parts.size(); i++){
+            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
+        }
 
         // M1
         no_tritonic_intervals(home, parts[1].size, parts);
@@ -230,7 +245,7 @@
         variety_cost_constraint(home, parts[1].size, parts);
 
         // P4
-        avoid_perfect_consonances(home, parts[1].size, parts);
+        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         // H8
         // prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper);              // TODO modify 4v

@@ -37,7 +37,7 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst, vector<in
 
 Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, int con, int obl, int dir, 
     int v_type, int t_off, vector<int> scle, vector<int> b_scale, int b_mode, int triad, vector<int> melodic, 
-    vector<int> general_parameters, vector<int> chrom):home(hme){
+    vector<int> general_parameters, vector<int> chrom, vector<int> specific):home(hme){
     voice_type = v_type;
     home = hme;
     size = s;
@@ -75,7 +75,8 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     is_h1_poss = BoolVar(home, 0 ,1);
     is_h2_poss = BoolVar(home, 0, 1);
     is_not_triad = BoolVar(home, 0, 1);
-    
+
+    penult_sixth_cost = specific[0];
 
     //cp_range : WORKS
     //extended : INVERTED BUT SHOULD WORK THE SAME
@@ -138,7 +139,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
             vector_notes[2][size-2] = IntVar(home, IntSet(chrom_scale));
         }
     }
-
+    create_solution_array();
     hIntervalsCpCf = {IntVarArray(home, size, 0, 11),IntVarArray(home, size, 0, 11),IntVarArray(home, size-1, 0, 11),IntVarArray(home, size, 0, 11)};
     isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
@@ -156,16 +157,17 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     direct_move_cost = IntVarArray(home, size-2, IntSet({0, direct_move}));
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
-    is_off = {BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 ),BoolVarArray(home, size, 0, 1 )};
-    off_costs = IntVarArray(home, size, 0, 1); //cost here is 1 for now
-    m_degrees_cost = IntVarArray(home, size, IntSet({0,1,2}));
-    fifth_costs = IntVarArray(home, size, IntSet(0,1));
-    octave_costs = IntVarArray(home, size, IntSet(0,1));
-    create_solution_array();
+    is_off = BoolVarArray(home, sol_len, 0, 1);
+    off_costs = IntVarArray(home, sol_len, 0, 1); //cost here is 1 for now
+    m_degrees_cost = {IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2}))};
+    fifth_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
+    octave_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
+    penult_sixth = IntVar(home, IntSet({0, penult_sixth_cost}));
     if(species==1){
         create_member_array(0);
     } else if(species==2){
         create_member_array(2);
+        cout << sol_len << endl;
     }
 }
 
@@ -174,21 +176,22 @@ IntVarArray Part::getNotes(){
 }
 
 void Part::create_member_array(int idx){
-    for(int i = 0; i < sol_len; i++){
-        IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
-        IntVar sm = IntVar(home, 0, off_scale.size());
-        for(int l = 0; l < off_scale.size(); l++){
-            BoolVar b1 = BoolVar(home, 0, 1);
-            rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
-            ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
+    //creates is_off with the index being the same as the notes in the solution array, watch out for species higher than 1
+        for(int i = 0; i < sol_len; i++){
+            IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
+            IntVar sm = IntVar(home, 0, off_scale.size());
+            for(int l = 0; l < off_scale.size(); l++){
+                BoolVar b1 = BoolVar(home, 0, 1);
+                rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
+                ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
+            }
+            IntVarArgs x(res.size());
+            for(int t = 0; t < off_scale.size(); t++){
+                x[t] = res[t];
+            }
+            rel(home, sm, IRT_EQ, expr(home, sum(x)));
+            rel(home, sm, IRT_GR, 0, Reify(is_off[i]));
         }
-        IntVarArgs x(res.size());
-        for(int t = 0; t < off_scale.size(); t++){
-            x[t] = res[t];
-        }
-        rel(home, sm, IRT_EQ, expr(home, sum(x)));
-        rel(home, sm, IRT_GR, 0, Reify(is_off[idx][i]));
-    }
 }
 
 void Part::create_solution_array(){

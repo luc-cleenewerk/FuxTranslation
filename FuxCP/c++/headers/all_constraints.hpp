@@ -40,7 +40,7 @@ void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet 
 /**
  * Constraint H6 : Imperfect consonances are preferred
 */
-void imperfect_consonances_are_preferred(const Home &home, int size, vector<Part> parts, vector<Stratum> upper);
+void imperfect_consonances_are_preferred(const Home &home, int size, Part part, int idx);
 
 /**
  * Constraint H2 and H3 : The first and last harmonic intervals must be a perfect consonance (only 2 voices)
@@ -68,7 +68,7 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
 
 void set_off_costs(const Home &home, int size, vector<Part> parts);
 
-void set_step_costs(const Home &home, int size, vector<Part> parts);
+void set_step_costs(const Home &home, int size, Part part, int idx);
 
 /**
  * Constraint M1 : Tritone melodic intervals are forbidden
@@ -109,7 +109,7 @@ void no_battuta(const Home &home, int size, vector<Part> parts);
 /**
  * Constraint P4 : Successive perfect consonances should be avoided (only 3 voices)
 */
-void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts);
+void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, IntVarArray succ_cost);
 
 /**
  * Constraint P6 : It is prohibited that all parts move in the same direction (only 3 voices)
@@ -130,5 +130,47 @@ void no_chromatic_melodies(const Home &home, int size, vector<Part> parts);
  * G10 : Last chord uses the same fundamental as the one of the scale used throughout the composition
 */
 void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Part> parts);
+
+/**
+ * ========================================================================================================
+ *                                      SECOND SPECIES CONSTRAINTS
+ * ========================================================================================================
+*/
+
+void link_harmonic_arrays_2nd_species(const Home &home, int size, Part part, vector<Stratum> lowest);
+
+void link_melodic_arrays_2nd_species_next_meas(const Home &home, int size, Part part);
+
+void link_melodic_arrays_2nd_species_in_meas(const Home &home, int size, Part part);
+
+void link_m2_arrays_2nd_species(const Home &home, Part part);
+
+void link_melodic_self_arrays_2nd_species(const Home &home, Part part);
+
+void link_motions_arrays_2nd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest);
+
+void link_real_motions_arrays_2nd_species(const Home &home, Part part);
+
+void link_ta_dim_array_2nd_species(const Home &home, Part part);
+
+void link_cfb_array_2nd_species(const Home &home, int size, Part part, Part cf);
+
+void link_is_neighbour_array_2nd_species(const Home &home, Part part, vector<Stratum> lowest);
+
+void h_cons_arsis(const Home &home, Part part, IntSet pen);
+
+void penult_cons(const Home &home, Part part, IntSet pen3, IntVar NINE, IntVar THREE);
+
+void melodic_inter_arsis(const Home &home, Part part);
+
+void no_chromatic_motion(const Home &home, Part part);
+
+void no_unison_at_all(const Home &home, Part part, int variant);
+
+void no_direct_move_perfect_consonance_2nd_species(const Home &home, Part part);
+
+void no_battuta_2nd_species(const Home &home, Part part);
+
+void set_penult_sixth_cost(const Home &home, Part part);
 
 #endif

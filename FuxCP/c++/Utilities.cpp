@@ -241,36 +241,82 @@ void create_solution_array(IntVarArray sol, vector<Part> parts){
 }
 
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs y(splist.size()*size);
+    int sz = 0;
+    for(int s = 0; s < splist.size(); s++){
+        if(splist[s]==1){
+            sz += size;
+        }
+        if(splist[s]==2){
+            sz+=(2*size)-1;
+        }
+    }
+    IntVarArgs y(sz);
     int index = 0;
 
     for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
-            y[index] = parts[p].fifth_costs[i];
-            index++;
+        if(parts[p].species==1){
+            for(int i = 0; i < size; i++){
+                y[index] = parts[p].fifth_costs[0][i];
+                index++;
+            }
+        }
+        if(parts[p].species==2){
+            for(int i = 0; i < size; i++){
+                y[index] = parts[p].fifth_costs[0][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                y[index] = parts[p].fifth_costs[2][i];
+                index++;
+            }
         }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(y)));
 }
 
 void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs oc(splist.size()*size);
+    int sz = 0;
+    for(int s = 0; s < splist.size(); s++){
+        if(splist[s]==1){
+            sz += size;
+        }
+        if(splist[s]==2){
+            sz+=(2*size)-1;
+        }
+    }
+    IntVarArgs oc(sz);
     int index = 0;
 
     for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
-            oc[index] = parts[p].octave_costs[i];
-            index++;
+        if(parts[p].species==1){
+            for(int i = 0; i < size; i++){
+                oc[index] = parts[p].octave_costs[0][i];
+                index++;
+            }
+        }
+        if(parts[p].species==2){
+            for(int i = 0; i < size; i++){
+                oc[index] = parts[p].octave_costs[0][i];
+                index++;
+            }
+            for(int i = 0; i < size-1; i++){
+                oc[index] = parts[p].octave_costs[2][i];
+                index++;
+            }
         }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(oc)));
 }
 
 void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs z(splist.size()*size);
+    int sz = 0;
+    for(int p = 1; p < parts.size(); p++){
+        sz += parts[p].sol_len;
+    }
+    IntVarArgs z(sz);
     int index = 0;
     for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size; i++){
+        for(int i = 0; i < parts[p].sol_len; i++){
             z[index] = parts[p].off_costs[i];
             index++;
         }
@@ -279,12 +325,29 @@ void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> sp
 }
 
 void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs x((splist.size()*size)-splist.size());
+    int sz = 0;
+    for(int p = 0; p < parts.size(); p++){
+        if(parts[p].species==1){
+            sz += size-1;
+        }
+        if(parts[p].species==2){
+            sz += 2*(size-1);
+        }
+    }
+    IntVarArgs x(sz);
     int index = 0;
     for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-1; i++){
-            x[index] = parts[p].m_degrees_cost[i];
-            index++;
+        if(parts[p].species>=1){
+            for(int i = 0; i < size-1; i++){
+                x[index] = parts[p].m_degrees_cost[0][i];
+                index++;
+            }
+        }
+        if(parts[p].species>=2){
+            for(int i = 0; i < size-1; i++){
+                x[index] = parts[p].m_degrees_cost[2][i];
+                index++;
+            }
         }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(x)));
@@ -293,11 +356,7 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
 void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
-        if(splist[i]==1){
-            sz+=(size-1);
-        } else if(splist[i]==2){
-            sz+=2*(size-1);
-        }
+        sz+=(size-1);
     }
     IntVarArgs pc(sz);
     int index = 0;
@@ -307,9 +366,7 @@ void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int>
                 pc[index] = parts[p].motions_cost[0][i];
                 index++;
             } else if(parts[p].species==2){
-                pc[index] = parts[p].motions_cost[0][i];
-                index++;
-                pc[index] = parts[p].motions_cost[2][i];
+                pc[index] = parts[p].real_motions_cost[i];
                 index++;
             }
         }
@@ -329,14 +386,10 @@ void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int
     rel(home, cost_factor, IRT_EQ, expr(home, sum(v)));
 }
 
-void add_succ_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
-    IntVarArgs scc((splist.size()*size)-2*splist.size());
-    int index = 0;
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-2; i++){
-            scc[index] = parts[p].succ_cost[i];
-            index++;
-        }
+void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray succ_cost){
+    IntVarArgs scc(size);
+    for(int i = 0; i < size; i++){
+        scc[i] = succ_cost[i];
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(scc)));
 }
@@ -365,4 +418,22 @@ void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int>
         }
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(dr)));
+}
+
+void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    int sz = 0;
+    for(int i = 0; i < splist.size(); i++){
+        if(splist[i]==2){
+            sz += 1;
+        }
+    }
+    IntVarArgs pe(sz);
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        if(parts[p].species==2){
+            pe[index] = parts[p].penult_sixth;
+            index++;
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(pe)));
 }
