@@ -1,7 +1,7 @@
 #include "headers/3sp_constraints.hpp"
 #include "headers/Utilities.hpp"
 
-void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE,
+void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE, IntVar ZERO,
     int list_index, int for_species){
 
     first_species_2v(home, parts, lowest, upper, 3);
@@ -18,6 +18,7 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
 
     link_melodic_self_arrays_3rd_species(home, parts[list_index]);
 
+    //3.P1
     link_motions_arrays_3rd_species(home, parts[list_index], parts[0], lowest);
 
     link_cfb_array_3rd_species(home, parts[list_index].size, parts[list_index], parts[0]);
@@ -38,12 +39,13 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
      * ==================================================================
     */
 
+    //3.H4
     penult_cons(home, parts[list_index], PENULT_CONS_3P, NINE, THREE, 3);
 
     //the third note of the penultimate measure must be below the fourth one.
     //rel(home, parts[list_index].m_succ_intervals_brut[2][parts[list_index].m_succ_intervals_brut[2].size()-1], IRT_GR, 1);
     //the second note and the third note of the penultimate measure must be distant by greater than 1 semi-tone from the fourth note
-    rel(home, parts[list_index].m2_intervals[parts[list_index].size-2], IRT_NQ, 1);
+    //rel(home, parts[list_index].m2_intervals[parts[list_index].size-2], IRT_NQ, 1);
 
     five_consecutive_notes(home, parts[list_index]);
 
@@ -59,7 +61,7 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
 
     //no chromatic melodies taken in 1sp_constraints call
 
-    marcels_rule(home, parts[list_index]);
+    //marcels_rule(home, parts[list_index]);
 
     /**
      * ==================================================================
@@ -93,6 +95,8 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
 
     set_step_costs(home, parts[list_index].size, parts[list_index], 3);
 
+    set_cambiata(home, parts[list_index], ZERO); //this has to be changed once the m_succ works correctly
 
+    set_m2_cost(home, parts[list_index]);
 
 }

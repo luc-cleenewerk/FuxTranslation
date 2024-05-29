@@ -497,3 +497,45 @@ void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     }
     rel(home, cost_factor, IRT_EQ, expr(home, sum(pe)));
 }
+
+void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    int sz = 0;
+    for(int i = 0; i < splist.size(); i++){
+        if(splist[i]==3){
+            sz += size-1;
+        }
+    }
+    IntVarArgs ci(sz);
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        if(parts[p].species==3){
+            for(int i = 0; i < size-1; i++){
+                ci[index] = parts[p].not_cambiatta_cost[i];
+                index++;
+            }
+            
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(ci)));
+}
+
+void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+    int sz = 0;
+    for(int i = 0; i < splist.size(); i++){
+        if(splist[i]==3){
+            sz += parts[i+1].m2_len;
+        }
+    }
+    IntVarArgs m2(sz);
+    int index = 0;
+    for(int p = 1; p < parts.size(); p++){
+        if(parts[p].species==3){
+            for(int i = 0; i < parts[p].m2_len; i++){
+                m2[index] = parts[p].m2_eq_zero_costs[i];
+                index++;
+            }
+            
+        }
+    }
+    rel(home, cost_factor, IRT_EQ, expr(home, sum(m2)));
+}

@@ -43,6 +43,8 @@ public:
     int total_m_len;
     int penult_rule_check;
     int penult_sixth_cost;
+    int cambiatta_cost;
+    int m2_zero_cost;
 
     Home home;
 
@@ -98,6 +100,8 @@ public:
     BoolVarArray is_qn_linked;
     vector<BoolVarArray> is_consonant;
     BoolVarArray is_not_ciambatta;
+    IntVarArray not_cambiatta_cost;
+    IntVarArray m2_eq_zero_costs;
 
     IntVar NINE;
     IntVar THREE;

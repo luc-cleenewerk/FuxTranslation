@@ -7,7 +7,7 @@
 using namespace Gecode;
 using namespace std;
 
-void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE,
+void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE, IntVar ZERO,
     int list_index, int for_species=3);
 
 #endif

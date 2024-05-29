@@ -398,4 +398,8 @@ void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int>
 
 void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 
+void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
+void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+
 #endif

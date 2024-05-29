@@ -204,9 +204,25 @@ void link_is_cons_array_3rd_species(const Home &home, Part part);
 
 void link_ciambatta_3rd_species(const Home &home, Part part);
 
+/**
+ * 3.H1
+*/
 void five_consecutive_notes(const Home &home, Part part);
 
+/**
+ * 3.H2
+*/
 void any_disonant_note(const Home &home, Part part);
+
+/**
+ * 3.H3 Cambiata
+*/
+void set_cambiata(const Home &home, Part part, IntVar ZERO);
+
+/**
+ * 3.M1 M2 cost
+*/
+void set_m2_cost(const Home &home, Part part);
 
 void no_melodic_interval_between(const Home &home, Part part);
 

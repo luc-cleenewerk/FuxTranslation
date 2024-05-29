@@ -73,12 +73,12 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //creating the map with the names of the costs and their importance
 
-    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic", "direct", "penult"};
+    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic", "direct", "penult", "cambiatta", "m2"};
     prefs = {};
     
     //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
 
-    cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
+    cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult", "cambiatta", "m2"};
 
     //initializing the ordered costs list, aka the list containing the costs according to their importance
 
@@ -103,7 +103,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         if(highest_species==2){
             cost_size+=1;
         } else if(highest_species==3){
-            
+            cost_size+=2;
         }
     } else if(speciesList.size()==2){ //si 3 voix
         if(highest_species==1){ //if the cp is of species 1
@@ -219,6 +219,10 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             }
 
             parts[p].is_not_ciambatta = BoolVarArray(*this, size-1, 0, 1);
+
+            parts[p].not_cambiatta_cost = IntVarArray(*this, size-1, IntSet({0, specific[1]}));
+
+            parts[p].m2_eq_zero_costs = IntVarArray(*this, parts[p].m2_len, IntSet({0, specific[4]}));
         }
     }
 
@@ -234,7 +238,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         else if(speciesList[0]==3){
             IntVar NINE = IntVar(*this, 9,9);
             IntVar THREE = IntVar(*this,3,3);
-            third_species_2v(*this, parts, lowest, upper, NINE, THREE, 1);
+            IntVar ZERO = IntVar(*this, 0, 0);
+            third_species_2v(*this, parts, lowest, upper, NINE, THREE, ZERO, 1);
         }
     } else if(speciesList.size()==2){
         for(int i = 0; i < speciesList.size(); i++){
@@ -310,6 +315,16 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             prefs.insert({importance_names[9], importance[8]});
         }
     }  
+
+    if(highest_species==3){
+        if(speciesList.size()==1){
+            add_cambiatta_cost(*this, cost_factors[5], size, splist, parts);
+            prefs.insert({importance_names[10], importance[9]});
+
+            add_m2_cost(*this, cost_factors[6], size, splist, parts);
+            prefs.insert({importance_names[11], importance[10]}); //recheck importance here
+        }
+    }
     
     //ORDERING THE COSTS
 
@@ -454,6 +469,8 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         parts[p].isCFB = s.parts[p].isCFB;
         parts[p].penult_rule_check = s.parts[p].penult_rule_check;
         parts[p].penult_sixth_cost = s.parts[p].penult_sixth_cost;
+        parts[p].cambiatta_cost = s.parts[p].cambiatta_cost;
+        parts[p].m2_zero_cost = s.parts[p].m2_zero_cost;
         //2nd species variables
         parts[p].m_succ_intervals = s.parts[p].m_succ_intervals;
         parts[p].m_succ_intervals_brut = s.parts[p].m_succ_intervals_brut;
@@ -493,6 +510,8 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
         if(parts[p].species==3){
             parts[p].is_qn_linked.update(*this, s.parts[p].is_qn_linked);
             parts[p].is_not_ciambatta.update(*this, s.parts[p].is_not_ciambatta);
+            parts[p].not_cambiatta_cost.update(*this, s.parts[p].not_cambiatta_cost);
+            parts[p].m2_eq_zero_costs.update(*this, s.parts[p].m2_eq_zero_costs);
         }
         for(int h = 0; h < 4; h++){
             parts[p].hIntervalsCpCf[h].update(*this, s.parts[p].hIntervalsCpCf[h]);
@@ -737,21 +756,15 @@ string Problem::toString(){
         message += "]\n";
     }
     message += "]\n";*/
-    message += "M SUCC : [";
+    message += "M2 ARRAY : [";
     for(int p = 1; p < parts.size(); p++){
-        message += "M SUCC PART : [";
-        for(int k = 0; k < 3; k++){
-            message += "[ ";
-            for(int i = 0; i < size-1; i++){
-                if(parts[p].m_succ_intervals[k][i].assigned()){
-                    message += to_string(parts[p].m_succ_intervals[k][i].val()) + " ";
-                } else {
-                    message += "... ";
-                }
+        for(int i = 0; i < parts[p].m2_len; i++){
+            if(parts[p].m2_intervals[i].assigned()){
+                message += to_string(parts[p].m2_intervals[i].val()) + " ";
+            } else {
+                message += "... ";
             }
-            message += "]";
         }
-        message += "]";
     }
     message += "]\n";/*
     message += "IS LOWEST : [";

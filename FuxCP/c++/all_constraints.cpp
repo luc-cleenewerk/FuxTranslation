@@ -684,6 +684,23 @@ void any_disonant_note(const Home &home, Part part){
     }
 }
 
+void set_cambiata(const Home &home, Part part, IntVar ZERO){
+    //is-nit-cambiatta, cambiatta_cost
+    for(int j = 0; j < part.size-1; j++){
+        //ite(home, part.is_not_ciambatta[j], part.cambiatta_cost, ZERO, part.not_cambiatta_cost[j]);
+        //rel(home, (part.is_not_ciambatta[j]==1) >> (part.not_cambiatta_cost[j]==part.cambiatta_cost));
+        //rel(home, (part.is_not_ciambatta[j]==0) >> (part.not_cambiatta_cost[j]==0));
+        rel(home, part.not_cambiatta_cost[j], IRT_EQ, 0);
+    }
+}
+
+void set_m2_cost(const Home &home, Part part){
+    for(int j = 0; j < part.m2_len; j++){
+        rel(home, (part.m2_intervals[j]==0) >> (part.m2_eq_zero_costs[j]==part.m2_zero_cost));
+        rel(home, (part.m2_intervals[j]!=0) >> (part.m2_eq_zero_costs[j]==0));
+    }
+}
+
 void no_melodic_interval_between(const Home &home, Part part){
     for(int h = 0; h < part.m_succ_intervals.size(); h++){
         for(int i = 0; i < part.m_succ_intervals[h].size(); i++){

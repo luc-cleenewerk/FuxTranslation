@@ -77,6 +77,8 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     is_not_triad = BoolVar(home, 0, 1);
 
     penult_sixth_cost = specific[0];
+    cambiatta_cost = specific[1];
+    m2_zero_cost = specific[4];
 
     //cp_range : WORKS
     //extended : INVERTED BUT SHOULD WORK THE SAME
