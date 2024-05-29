@@ -272,7 +272,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         solution_len+=parts[p].sol_len;
 
     }
-
+    vector<string> factors_order_1_1 = {"fifth", "octave", "borrow", "melodic", "motion"};
+    vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"};
+    vector<string> factors_order_3_1 = {"fifth", "octave", "borrow", "melodic", "motion", "cambiatta", "m2"};
     //following two costs are for the imperfect consonances are preferred clause
     add_fifth_cost(*this, cost_factors[0], size, splist, parts);
     prefs.insert({importance_names[1], importance[1]});
@@ -341,7 +343,18 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                     IntVar to_add;
                     for(int t = 0; t < cost_names.size(); t++){
                         if(cost_names[t]==ordered_costs[i][k]){
-                            to_add = cost_factors[n_unique_costs];
+                            int idx = -1;
+                            if(speciesList.size()==1){
+                                if(speciesList[0]==1){
+                                    idx = getIndex(factors_order_1_1, cost_names[t]);
+                                } else if(speciesList[0]==2){
+                                    idx = getIndex(factors_order_2_1, cost_names[t]);
+                                } else if(speciesList[0]==3){
+                                    idx = getIndex(factors_order_3_1, cost_names[t]);
+                                }
+                            }
+                            cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
+                            to_add = cost_factors[idx];
                         }
                     }
                     ordered_factors[n_unique_costs] = to_add;
@@ -629,7 +642,8 @@ IntVarArgs Problem::cost(void) const{
     //     cout << var << endl;
     // }
     IntVarArgs cost_var_args;
-    for(const auto& var : cost_factors){
+    for(int i = 0; i < cost_size; i++){
+        const auto& var = ordered_factors[i];
         cost_var_args << var;
     }
     return cost_var_args;
@@ -684,8 +698,12 @@ string Problem::toString(){
     
     message += "]\n";
     message += "COST NAMES : [";
-    for(int i = 0; i < cost_size; i++){
-        message += cost_names[i] + " ";
+    for(int i = 0; i < 14; i++){
+        if(!ordered_costs[i].empty()){
+            for(int j = 0; j < ordered_costs[i].size(); j++){
+                message += ordered_costs[i][j] + " ";
+            }
+        }
     }
     message += "]\n";/*
     message += "PART DIRECT MOVE : ";
@@ -703,9 +721,9 @@ string Problem::toString(){
         message += "]\n";
     }*/
     message += "COST FACTORS : [";
-    for(int i = 0; i < cost_size; i++){
-        if(cost_factors[i].assigned()){
-            message += to_string(cost_factors[i].val()) + " ";
+    for(int i = 0; i < ordered_factors.size(); i++){
+        if(ordered_factors[i].assigned()){
+            message += to_string(ordered_factors[i].val()) + " ";
         } else {
             message += "... ";
         }
@@ -755,7 +773,7 @@ string Problem::toString(){
         }
         message += "]\n";
     }
-    message += "]\n";*/
+    message += "]\n";
     message += "M2 ARRAY : [";
     for(int p = 1; p < parts.size(); p++){
         for(int i = 0; i < parts[p].m2_len; i++){
@@ -766,7 +784,7 @@ string Problem::toString(){
             }
         }
     }
-    message += "]\n";/*
+    message += "]\n";
     message += "IS LOWEST : [";
     for(int p = 0; p < parts.size(); p++){
         message += "IS LOWEST PART : [";

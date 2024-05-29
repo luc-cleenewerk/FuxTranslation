@@ -378,6 +378,8 @@ void write_to_log_file(const char *message, const string& filename);
 
 void create_solution_array(IntVarArray sol, vector<Part> parts);
 
+int getIndex(vector<string> v, string K);
+
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 
 void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);

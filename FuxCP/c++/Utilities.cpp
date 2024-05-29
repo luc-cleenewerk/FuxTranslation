@@ -240,6 +240,26 @@ void create_solution_array(IntVarArray sol, vector<Part> parts){
     }
 }
 
+int getIndex(vector<string> v, string K) 
+{ 
+    auto it = find(v.begin(), v.end(), K); 
+  
+    // If element was found 
+    if (it != v.end())  
+    { 
+      
+        // calculating the index 
+        // of K 
+        int index = it - v.begin(); 
+        return index; 
+    } 
+    else { 
+        // If the element is not 
+        // present in the vector 
+        return -1;
+    } 
+} 
+
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
     int sz = 0;
     for(int s = 0; s < splist.size(); s++){
