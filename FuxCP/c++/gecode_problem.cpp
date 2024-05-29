@@ -275,6 +275,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     vector<string> factors_order_1_1 = {"fifth", "octave", "borrow", "melodic", "motion"};
     vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"};
     vector<string> factors_order_3_1 = {"fifth", "octave", "borrow", "melodic", "motion", "cambiatta", "m2"};
+
+    vector<string> factors_order_1_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct"};
+    vector<string> factors_order_2_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
     //following two costs are for the imperfect consonances are preferred clause
     add_fifth_cost(*this, cost_factors[0], size, splist, parts);
     prefs.insert({importance_names[1], importance[1]});
@@ -351,6 +354,16 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                                     idx = getIndex(factors_order_2_1, cost_names[t]);
                                 } else if(speciesList[0]==3){
                                     idx = getIndex(factors_order_3_1, cost_names[t]);
+                                }
+                            } else if(speciesList.size()==2){
+                                if(highest_species==1){
+                                    idx = getIndex(factors_order_1_2, cost_names[t]);
+                                } else if(highest_species==2){
+                                    idx = idx = getIndex(factors_order_2_2, cost_names[t]);
+                                }
+                            } else if(speciesList.size()==3){
+                                if(highest_species==1){
+                                    idx = getIndex(factors_order_1_2, cost_names[t]);
                                 }
                             }
                             cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
