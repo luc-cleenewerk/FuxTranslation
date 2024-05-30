@@ -380,6 +380,8 @@ void create_solution_array(IntVarArray sol, vector<Part> parts);
 
 int getIndex(vector<string> v, string K);
 
+void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size);
+
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
 
 void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);

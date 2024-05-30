@@ -25,7 +25,7 @@ enum {
 /*****************
  * Problem class *
  *****************/
-class Problem: public IntLexMinimizeSpace {
+class Problem: public IntMinimizeSpace {
 protected:
     /// Input data
     int size;                       // The size of the variable array of interest
@@ -45,6 +45,7 @@ protected:
     int cost_size;
 
     unordered_map<string, int> prefs;
+    IntVar global_cost;
 
     vector<int> cantusFirmus;
     vector<int> speciesList;
@@ -123,16 +124,16 @@ public:
      * Copy method
      * @return a copy of the current instance of the Problem class. Calls the copy constructor
      */
-    virtual IntLexMinimizeSpace *copy(void);
+    virtual IntMinimizeSpace *copy(void);
 
     /**
      * Constrain method for bab search
      * @todo modify this function if you want to use branch and bound
      * @param _b a space to constrain the current instance of the Problem class with upon finding a solution
      */
-    virtual void constrain(const IntLexMinimizeSpace& _b);
+    virtual void constrain(const IntMinimizeSpace& _b);
 
-    virtual IntVarArgs cost(void) const;
+    virtual IntVar cost() const;
 
     /**
      * Prints the solution in the console

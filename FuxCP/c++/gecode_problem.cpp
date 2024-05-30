@@ -70,6 +70,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     cost_size = 5;                          //cost number to be added, depends on species and number of voices
     h_triad_cost = general_params[5];
     triad_costs = IntVarArray(*this, size, IntSet({0, h_triad_cost}));
+    global_cost = IntVar(*this, 0, 10000);
 
     //creating the map with the names of the costs and their importance
 
@@ -348,6 +349,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         }
 
         //creating the final ordered list
+        IntVarArray inversed_costs = IntVarArray(*this, 14, 0, 1000);
         for(int i = 0; i < 14; i++){
             if(!ordered_costs[i].empty()){
                 for(int k = 0; k < ordered_costs[i].size(); k++){
@@ -383,15 +385,21 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                 }
             }
         }
-
+        //int idx = 0;
+        //for(int i = n_unique_costs-1; i >= 0; i--){
+        //    ordered_factors[idx] = inversed_costs[i];
+        //    idx++;
+        //}
+    set_global_cost(*this, ordered_factors, global_cost, cost_size);
     //creating the solution array which will contain the notes of the counterpoint
 
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     
     create_solution_array(solution_array, parts);
     /// branching
+    //branch(*this, global_cost, INT_VAL_RANGE_MIN());
     branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
-    branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_MIN());
+    branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
     
 }
@@ -401,7 +409,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
  * @param s an instance of the Problem class
  * @todo modify this copy constructor to also copy any additional attributes you add to the class
  */
-Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
+Problem::Problem(Problem& s): IntMinimizeSpace(s){
     //IntVars update
     size = s.size;
     lower_bound_domain = s.lower_bound_domain;
@@ -433,6 +441,7 @@ Problem::Problem(Problem& s): IntLexMinimizeSpace(s){
     cost_factors.update(*this, s.cost_factors);
     triad_costs.update(*this, s.triad_costs);
     succ_cost.update(*this, s.succ_cost);
+    global_cost.update(*this, s.global_cost);
 
     parts[0].home = s.parts[0].home;
     parts[0].size = s.parts[0].size;
@@ -642,7 +651,7 @@ int* Problem::return_solution(){
  * Copy method
  * @return a copy of the current instance of the Problem class. Calls the copy constructor
  */
-IntLexMinimizeSpace* Problem::copy(void) {
+IntMinimizeSpace* Problem::copy(void) {
     return new Problem(*this);
 }
 
@@ -651,24 +660,21 @@ IntLexMinimizeSpace* Problem::copy(void) {
  * @todo modify this function if you want to use branch and bound
  * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
  */
-void Problem::constrain(const IntLexMinimizeSpace& _b) {
+void Problem::constrain(const IntMinimizeSpace& _b) {
     const Problem &b = static_cast<const Problem &>(_b);
-    IntVar current_sum = IntVar(*this, 0, 1000);
-    max(*this, ordered_factors, current_sum);
+    //IntVar current_sum = IntVar(*this, 0, 1000);
+    //max(*this, ordered_factors, current_sum);
+    rel(*this, global_cost, IRT_LQ, b.global_cost.val());
+    for(int i = 0; i < cost_size; i++){
+        rel(*this, ordered_factors[i], IRT_LQ, b.ordered_factors[i].val());
+    }
+    
 }
 
-IntVarArgs Problem::cost(void) const{
-    // cout << "cost() function \n";
-    // for(const auto& var : cost_factors){
-    //     cout << var << endl;
-    // }
-    IntVarArgs cost_var_args;
-    for(int i = 0; i < cost_size; i++){
-        const auto& var = ordered_factors[i];
-        cost_var_args << var;
-    }
-    return cost_var_args;
+IntVar Problem::cost(void) const{
+    return global_cost;
 }
+
 
 /**
  * toString method
@@ -742,13 +748,20 @@ string Problem::toString(){
         message += "]\n";
     }*/
     message += "COST FACTORS : [";
-    for(int i = 0; i < ordered_factors.size(); i++){
+    for(int i = 0; i < cost_size; i++){
         if(ordered_factors[i].assigned()){
             message += to_string(ordered_factors[i].val()) + " ";
         } else {
             message += "... ";
         }
     }
+    message += "]\n";
+    message += "GLOBAL COST : [";
+        if(global_cost.assigned()){
+            message += to_string(global_cost.val()) + " ";
+        } else {
+            message += "... ";
+        }
     message += "]\n";
     /*
     message += "SUCC COST : [";

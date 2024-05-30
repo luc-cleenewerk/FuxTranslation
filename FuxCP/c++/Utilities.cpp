@@ -260,6 +260,14 @@ int getIndex(vector<string> v, string K)
     } 
 } 
 
+void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size){
+    IntVarArgs sm(size);
+    for(int i = 0; i < size; i++){
+        sm[i] = ordered_costs[i];
+    }
+    rel(home, global_cost, IRT_EQ, expr(home, sum(sm)));
+}
+
 void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
     int sz = 0;
     for(int s = 0; s < splist.size(); s++){
