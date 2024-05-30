@@ -172,6 +172,8 @@
 
         link_motions_arrays(home, parts[p], parts[0], lowest, 0);
 
+        link_p_cons_array(home, parts[p]);
+
         if(p!=0){
             set_step_costs(home, parts[1].size, parts[p], 0); //cost
         }
@@ -248,7 +250,7 @@
         variety_cost_constraint(home, parts[1].size, parts);
 
         // P4
-        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
+        //avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         // H8
         prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs);              // TODO modify 4v

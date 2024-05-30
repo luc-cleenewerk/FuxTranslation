@@ -263,6 +263,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         for(int i = 0; i < speciesList.size(); i++){
             if(speciesList[i]==1){
                 first_species_4v(*this, parts, lowest, upper, triad_costs, succ_cost); //dispatch 4 voices 1st species
+                avoid_perfect_consonances(*this, size, parts, succ_cost);
             }
         }
     }
@@ -732,14 +733,14 @@ string Problem::toString(){
             }
         }
     }
-    message += "]\n";/*
-    message += "PART DIRECT MOVE : ";
-    for(int p = 1; p < parts.size(); p++){
+    message += "]\n";
+    /*message += "PART DIRECT MOVE : ";
+    for(int p = 0; p < parts.size(); p++){
         message += "[ ";
-        for(int i = 0; i < size-2; i++){
+        for(int i = 0; i < size-1; i++){
             message += "[ ";
-                if(parts[p].direct_move_cost[i].assigned()){
-                    message += to_string(parts[p].direct_move_cost[i].val()) + " ";
+                if(parts[p].is_P_cons[i].assigned()){
+                    message += to_string(parts[p].is_P_cons[i].val()) + " ";
                 } else {
                     message += "...";
                 }
