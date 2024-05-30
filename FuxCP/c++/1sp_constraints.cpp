@@ -246,7 +246,7 @@
         variety_cost_constraint(home, parts[1].size, parts);
 
         // P4
-        //avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
+        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         // H8
         prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs);              // TODO modify 4v

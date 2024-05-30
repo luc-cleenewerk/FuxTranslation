@@ -263,7 +263,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         for(int i = 0; i < speciesList.size(); i++){
             if(speciesList[i]==1){
                 first_species_4v(*this, parts, lowest, upper, triad_costs, succ_cost); //dispatch 4 voices 1st species
-                avoid_perfect_consonances(*this, size, parts, succ_cost);
             }
         }
     }
