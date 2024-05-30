@@ -139,7 +139,13 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         upper[j].notes = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
     }
 
-    succ_cost = IntVarArray(*this, (parts.size()*size)-parts.size(), IntSet({0, general_params[3]}));
+    int scc_cz = size-1;
+    if(speciesList.size()==2){
+        scc_cz += 2*(size-1);
+    } else if(speciesList.size()==3){
+        scc_cz += 5*(size-1);
+    }
+    succ_cost = IntVarArray(*this, scc_cz, IntSet({0, general_params[3]}));
 
     //creation of the strata and putting the correct notes in each strata
 
@@ -278,6 +284,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     vector<string> factors_order_1_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct"};
     vector<string> factors_order_2_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
+    
+    vector<string> factors_order_1_3 = factors_order_1_2;
     //following two costs are for the imperfect consonances are preferred clause
     add_fifth_cost(*this, cost_factors[0], size, splist, parts);
     prefs.insert({importance_names[1], importance[1]});
@@ -290,7 +298,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     add_melodic_cost(*this, cost_factors[3], size, splist, parts);
     prefs.insert({importance_names[7], importance[13]});
-
+    
     //adding motion costs
     add_motion_cost(*this, cost_factors[4], size, splist, parts);
     prefs.insert({importance_names[6], importance[7]});
@@ -363,7 +371,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                                 }
                             } else if(speciesList.size()==3){
                                 if(highest_species==1){
-                                    idx = getIndex(factors_order_1_2, cost_names[t]);
+                                    idx = getIndex(factors_order_1_3, cost_names[t]);
                                 }
                             }
                             cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;

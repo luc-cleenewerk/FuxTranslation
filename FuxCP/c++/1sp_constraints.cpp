@@ -188,6 +188,8 @@
         harmonic_intervals_consonance(home, parts, PENULT_Q);
     }
 
+    
+
     // if(for_species <= 10){                                               // H5 : only for 2 or 3 voices, too restrictive for 4 voices. or maybe just relax it?
     //     voices_cannot_play_same_note(home, parts[1].size, parts);
     // }
@@ -235,7 +237,7 @@
         for(int i = 1; i < parts.size(); i++){
             imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
         }
-
+        
         // M1
         no_tritonic_intervals(home, parts[1].size, parts);
 

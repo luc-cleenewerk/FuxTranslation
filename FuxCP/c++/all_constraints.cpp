@@ -261,12 +261,14 @@ void variety_cost_constraint(const Home &home, int size, vector<Part> parts){
 
 void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, IntVarArray succ_cost){ //nothing to change here, it's fine
     int idx = 0;
+    cout << "SUCC SIZE :" + to_string(succ_cost.size()) << endl;
     for(int p1 = 0; p1 < parts.size(); p1++){
         for(int p2 = p1+1; p2 < parts.size(); p2++){
             cout << "Part 1 : " << to_string(parts[p1].species) << endl;
             cout << "Part 2 : " << to_string(parts[p2].species) << endl;
             if(parts[p1].species!= 2 && parts[p2].species!=2){
                 for(int i = 0; i < parts[p1].is_P_cons.size()-1; i++){
+                    cout << "IDX : " + to_string(idx) << endl;
                     rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1)));
                     idx++;
                 }        
