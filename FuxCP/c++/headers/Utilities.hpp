@@ -197,6 +197,7 @@ enum chordTypes{
 const IntSet consonances({UNISSON,MINOR_THIRD,MAJOR_THIRD,PERFECT_FIFTH,MINOR_SIXTH,MAJOR_SIXTH, PERFECT_OCTAVE});
 const IntSet perfect_consonance({UNISSON, PERFECT_FIFTH});
 const IntSet major_h_triad({UNISSON, MAJOR_THIRD, PERFECT_FIFTH});
+const IntSet any_h_triad({UNISSON, MINOR_THIRD, MAJOR_THIRD, PERFECT_FIFTH});
 const IntSet MIN3_PERF5_MAJ6_OCT({MINOR_THIRD, PERFECT_FIFTH, MAJOR_SIXTH, PERFECT_OCTAVE});
 const IntSet PENULT_CONS({UNISSON, MINOR_THIRD, MAJOR_SIXTH});
 const IntSet PENULT_CONS_3P({UNISSON, MINOR_THIRD, PERFECT_FIFTH, MAJOR_SIXTH});
@@ -380,30 +381,37 @@ void create_solution_array(IntVarArray sol, vector<Part> parts);
 
 int getIndex(vector<string> v, string K);
 
-void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size);
+void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size, bool set_to_zero = false);
 
-void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray succ_cost);
+void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray succ_cost, bool set_to_zero = false);
 
-void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs);
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs, bool set_to_zero = false);
 
-void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
-void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts);
+void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
+
+
+const int not_harmonic_triad_cost  = 16;
+const int double_fifths_cost       = 8;
+const int double_thirds_cost       = 6;
+const int triad_with_octave_cost   = 2;
+
 
 #endif

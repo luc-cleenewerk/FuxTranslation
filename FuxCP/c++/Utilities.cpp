@@ -260,7 +260,11 @@ int getIndex(vector<string> v, string K)
     } 
 } 
 
-void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size){
+void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_cost, int size, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, global_cost, IRT_EQ, 0);
+        return;
+    }
     IntVarArgs sm(size);
     for(int i = 0; i < size; i++){
         sm[i] = ordered_costs[i];
@@ -268,7 +272,12 @@ void set_global_cost(const Home &home, IntVarArray ordered_costs, IntVar global_
     rel(home, global_cost, IRT_EQ, expr(home, sum(sm)));
 }
 
-void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int s = 0; s < splist.size(); s++){
         if(splist[s]==1){
@@ -323,7 +332,12 @@ void add_fifth_cost(const Home &home, IntVar cost_factor, int size, vector<int> 
     rel(home, cost_factor, IRT_EQ, expr(home, sum(y)));
 }
 
-void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int s = 0; s < splist.size(); s++){
         if(splist[s]==1){
@@ -378,7 +392,12 @@ void add_octave_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     rel(home, cost_factor, IRT_EQ, expr(home, sum(oc)));
 }
 
-void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int p = 1; p < parts.size(); p++){
         sz += parts[p].sol_len;
@@ -394,7 +413,12 @@ void add_off_cost(const Home &home, IntVar cost_factor, int size, vector<int> sp
     rel(home, cost_factor, IRT_EQ, expr(home, sum(z)));
 }
 
-void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int p = 0; p < parts.size(); p++){
         if(parts[p].species==1){
@@ -432,7 +456,12 @@ void add_melodic_cost(const Home &home, IntVar cost_factor, int size, vector<int
     rel(home, cost_factor, IRT_EQ, expr(home, sum(x)));
 }
 
-void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
         if(splist[i]!=3){
@@ -462,7 +491,12 @@ void add_motion_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     rel(home, cost_factor, IRT_EQ, expr(home, sum(pc)));
 }
 
-void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     IntVarArgs v((splist.size()*size)-splist.size());
     int index = 0;
     for(int p = 1; p < parts.size(); p++){
@@ -474,7 +508,12 @@ void add_variety_cost(const Home &home, IntVar cost_factor, int size, vector<int
     rel(home, cost_factor, IRT_EQ, expr(home, sum(v)));
 }
 
-void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray succ_cost){
+void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray succ_cost, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     IntVarArgs scc(size);
     for(int i = 0; i < size; i++){
         scc[i] = succ_cost[i];
@@ -482,7 +521,12 @@ void add_succ_cost(const Home &home, IntVar cost_factor, int size, IntVarArray s
     rel(home, cost_factor, IRT_EQ, expr(home, sum(scc)));
 }
 
-void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs){
+void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, IntVarArray triad_costs, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     IntVarArgs tr(triad_costs.size());
     int index = 0;
         for(int i = 0; i < size; i++){
@@ -492,7 +536,12 @@ void add_triad_cost(const Home &home, IntVar cost_factor, int size, vector<int> 
     rel(home, cost_factor, IRT_EQ, expr(home, sum(tr)));
 }
 
-void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
         sz += (size-2);
@@ -508,7 +557,12 @@ void add_direct_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     rel(home, cost_factor, IRT_EQ, expr(home, sum(dr)));
 }
 
-void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
         if(splist[i]==2){
@@ -526,7 +580,12 @@ void add_penult_cost(const Home &home, IntVar cost_factor, int size, vector<int>
     rel(home, cost_factor, IRT_EQ, expr(home, sum(pe)));
 }
 
-void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
         if(splist[i]==3){
@@ -547,7 +606,12 @@ void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<i
     rel(home, cost_factor, IRT_EQ, expr(home, sum(ci)));
 }
 
-void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts){
+void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero){
+    if (set_to_zero){
+        rel(home, cost_factor, IRT_EQ, 0);
+        return;
+    }
+
     int sz = 0;
     for(int i = 0; i < splist.size(); i++){
         if(splist[i]==3){

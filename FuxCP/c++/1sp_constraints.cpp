@@ -209,8 +209,6 @@
 
     // APPLY 3V GENERAL : 
 
-    //voices cannot play the same note except on first and last beat already checked off in first species calls
-
     // P6
     no_same_direction(home, parts[1].size, parts);
 
@@ -218,8 +216,6 @@
     last_chord_no_minor_third(home, parts[0].size, parts);
 
     // no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);       // suspended for 4 voices
-
-    //last chord must be a major triad -> already checked by h_consonances? or is it only 3 voices?     TODO check 4v
 
     // G10 (G9 dans fux_rules 4v)
     last_chord_same_fundamental(home, lowest, parts);

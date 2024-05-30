@@ -69,7 +69,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     borrow_mode = b_mode;                   //is borrowing allowed
     cost_size = 5;                          //cost number to be added, depends on species and number of voices
     h_triad_cost = general_params[5];
-    triad_costs = IntVarArray(*this, size, IntSet({0, h_triad_cost}));
+    triad_costs = IntVarArray(*this, size, IntSet({0, not_harmonic_triad_cost, double_fifths_cost, double_thirds_cost, triad_with_octave_cost}));  // TODO MODIFY
     global_cost = IntVar(*this, 0, 10000);
 
     //creating the map with the names of the costs and their importance

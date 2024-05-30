@@ -92,7 +92,7 @@ void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet 
     for(int p = 0; p < parts.size(); p++){
         for(int i = 0; i < parts[p].hIntervalsCpCf[0].size(); i++){
             if(i==parts[p].size-1 && parts[p].speciesList.size()>1){
-                dom(home, parts[p].hIntervalsCpCf[0][i], major_h_triad); //major h triad constraint
+                dom(home, parts[p].hIntervalsCpCf[0][i], any_h_triad); // G9: h triad constraint (TODO LUC CHECK)
             } else if(i==parts[p].size-2){
                 dom(home, parts[p].hIntervalsCpCf[0][i], pen);
             } else {
@@ -183,10 +183,18 @@ void no_tritonic_intervals(const Home &home, int size, vector<Part> parts){
     }
 }
 
-void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){
-        for(int j = 0; j < size-1; j++){
-            rel(home, parts[p].m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
+void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, vector<Part> parts){  // TODO check 4v
+    if (parts.size() == 3){
+        for(int p = 1; p < parts.size(); p++){
+            for(int j = 0; j < size-1; j++){
+                rel(home, parts[p].m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
+            }
+        }
+    }else if (parts.size() == 4){
+        for(int p = 1; p < parts.size(); p++){
+            for(int j = 0; j < size-1; j++){
+                rel(home, parts[p].m_intervals[0][j] <= 8 || parts[p].m_intervals[0][j] == 12); //constraint : must not exceed a minor sixth, or can be an octave jump
+            }
         }
     }
 }
@@ -349,7 +357,53 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
 
 void prefer_harmonic_triads_4v(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs){
     for(int i = 0; i < size; i++){
-        rel(home, triad_costs[i]==0);   // todo modify
+
+        IntVar H_b = upper[0].hIntervalsAbs[i];
+        IntVar H_c = upper[1].hIntervalsAbs[i];
+        IntVar H_d = upper[2].hIntervalsAbs[i];
+
+
+        BoolVar H_b_is_third    = expr(home, H_b==3 || H_b==4);
+        BoolVar H_b_is_fifth    = expr(home, H_b==7);
+        BoolVar H_b_is_octave   = expr(home, H_b==0);
+
+        BoolVar H_c_is_third    = expr(home, H_c==3 || H_c==4);
+        BoolVar H_c_is_fifth    = expr(home, H_c==7);
+        BoolVar H_c_is_octave   = expr(home, H_c==0);
+
+        BoolVar H_d_is_third    = expr(home, H_d==3 || H_d==4);
+        BoolVar H_d_is_fifth    = expr(home, H_d==7);
+        BoolVar H_d_is_octave   = expr(home, H_d==0);
+
+
+        // worst case : not a harmonic triad with at least a third and a fifth
+        BoolVar no_fifth_or_no_third = expr(home, H_b_is_third + H_c_is_third + H_d_is_third == 0 || H_b_is_fifth + H_c_is_fifth + H_d_is_fifth == 0);
+        BoolVar note_outside_harmonic_triad = expr(home, H_b_is_third + H_b_is_fifth + H_b_is_octave == 0 || H_c_is_third + H_c_is_fifth + H_c_is_octave == 0 || H_d_is_third + H_d_is_fifth + H_d_is_octave == 0);
+
+        rel(home, (note_outside_harmonic_triad || no_fifth_or_no_third) >> (triad_costs[i] == not_harmonic_triad_cost));
+
+        // now we are left with only combinations with at a third, a fifth, and another note of the harmonic triad. 
+        // Doubling the fifth
+        rel(home, expr(home, H_b_is_fifth + H_c_is_fifth + H_d_is_fifth == 2) >> (triad_costs[i] == double_fifths_cost));
+
+        // Doubling the third, and ensure it is the same type of third (not a major and a minor)
+        rel(home, expr(home, H_b_is_third + H_c_is_third + H_d_is_third == 2) >> (triad_costs[i] == double_thirds_cost));
+        rel(home, (H_b_is_third && H_c_is_third) >> (H_b == H_c));
+        rel(home, (H_b_is_third && H_d_is_third) >> (H_b == H_d));
+        rel(home, (H_c_is_third && H_d_is_third) >> (H_c == H_d));
+
+        // triad with octave
+        rel(home, (H_b_is_fifth && H_c_is_third && H_d_is_octave) >> (triad_costs[i] == triad_with_octave_cost)); // 5 3 8
+        rel(home, (H_b_is_third && H_c_is_octave && H_d_is_fifth) >> (triad_costs[i] == triad_with_octave_cost)); // 3 8 5
+        rel(home, (H_b_is_third && H_c_is_fifth && H_d_is_octave) >> (triad_costs[i] == triad_with_octave_cost)); // 3 5 8
+        rel(home, (H_b_is_octave && H_c_is_third && H_d_is_fifth) >> (triad_costs[i] == triad_with_octave_cost)); // 8 3 5
+        rel(home, (H_b_is_octave && H_c_is_fifth && H_d_is_third) >> (triad_costs[i] == triad_with_octave_cost)); // 8 5 3
+
+        // Best case : 5 8 3
+        rel(home, (H_b_is_fifth && H_c_is_octave && H_d_is_third) >> (triad_costs[i] == 0)); 
+
+
+    
     }
 }
 
@@ -744,5 +798,55 @@ void no_battuta_3rd_species(const Home &home, Part part){
         rel(home, expr(home, ((part.hIntervalsToCf[0][j+1]==0)&&(part.motions[3][j]==0)&&(part.m_intervals_brut[3][j]<-4)&&(part.is_not_lowest[j]==1))), IRT_EQ, 0);
         //here add cantusFirmus melodic interval
         rel(home, expr(home, ((part.hIntervalsToCf[0][j+1]==0)&&(part.motions[3][j]==0)&&(part.m_intervals_brut[3][j]<-4)&&(part.is_not_lowest[j]==0))), IRT_EQ, 0);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * ========================================================================================================
+ *                                      TEST FUNCTIONS
+ * ========================================================================================================
+*/
+
+// fig 160, page 110
+void test_4v_fux(const Home &home, vector<Part> parts){
+
+    // cp3  fa la do si si re do mi re do# re 
+    // cp3  65 69 72 71 71 74 72 76 74 73 74
+
+    // cf : re fa mi re sol fa la sol fa mi re
+    // cf : 62 65 64 62 67 65 69 67 65 64 62
+
+    // cp2  la fa sol sol sol la la do la la la
+    // cp2  57 53 55 55 55 57 57 60 57 57 57
+
+    // cp1  50 50 48 55 52 50 53 48 50 45 50
+
+    vector<int> cp1 = {50, 50, 48, 55, 52, 50, 53, 48, 50, 45, 50};
+    vector<int> cp2 = {57, 53, 55, 55, 55, 57, 57, 60, 57, 57, 57};
+    vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
+
+
+    for (int i = 0; i < cp1.size(); i++)
+    {
+        rel(home, parts[0].vector_notes[0][i] == cp1[i]);
+        rel(home, parts[1].vector_notes[0][i] == cp2[i]);
+        rel(home, parts[2].vector_notes[0][i] == cp3[i]);
     }
 }

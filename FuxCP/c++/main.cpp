@@ -7,6 +7,7 @@ int main(int argc, char* argv[]) {
     int size = 9;
     int species = 0;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
+    // cantusFirmus = {62, 65, 64, 62, 67, 65, 69, 67, 65, 64, 62};   // cf from fux fig 160 (test_4v_fux)
     vector<int> speciesList = {1, 1, 1};
     // vector<int> voice_types = {2, 1};
     vector<int> voice_types = {2, 0, -2};

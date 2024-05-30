@@ -33,7 +33,7 @@ void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> l
 void link_p_cons_array(const Home &home, Part part);
 
 /**
- * Constraint H1 : All harmonic intervals must be consonances
+ * Constraint H1 and H9 : All harmonic intervals must be consonances
 */
 void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet pen);
 
@@ -231,5 +231,17 @@ void marcels_rule(const Home &home, Part part);
 void no_direct_move_perfect_consonance_3rd_species(const Home &home, Part part);
 
 void no_battuta_3rd_species(const Home &home, Part part);
+
+
+
+
+
+
+/**
+ * ========================================================================================================
+ *                                      TEST FUNCTIONS
+ * ========================================================================================================
+*/
+void test_4v_fux(const Home &home, vector<Part> parts);
 
 #endif
