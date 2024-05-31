@@ -50,8 +50,8 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
     }
 }
 
-void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx){ //TODO : delete lowest from parameters, not used
-            for(int i = 0; i < cf.size-1; i++){
+void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, int idx){ //TODO : delete lowest from parameters, not used
+            for(int i = 0; i < part.size-1; i++){
                 //direct motions help creation
                 BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(lowest[0].m_intervals_brut[i]>0)); //if both parts are going in the same direction
                 BoolVar both_stay = expr(home, (part.m_intervals_brut[idx][i]==0)&&(lowest[0].m_intervals_brut[i]==0)); //if both parts are staying
@@ -269,14 +269,14 @@ void variety_cost_constraint(const Home &home, int size, vector<Part> parts){
 
 void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, IntVarArray succ_cost){ //nothing to change here, it's fine
     int idx = 0;
-    cout << "SUCC SIZE :" + to_string(succ_cost.size()) << endl;
+    // cout << "SUCC SIZE :" + to_string(succ_cost.size()) << endl;
     for(int p1 = 0; p1 < parts.size(); p1++){
         for(int p2 = p1+1; p2 < parts.size(); p2++){
-            cout << "Part 1 : " << to_string(parts[p1].species) << endl;
-            cout << "Part 2 : " << to_string(parts[p2].species) << endl;
+            // cout << "Part 1 : " << to_string(parts[p1].species) << endl;
+            // cout << "Part 2 : " << to_string(parts[p2].species) << endl;
             if(parts[p1].species!= 2 && parts[p2].species!=2){
                 for(int i = 0; i < parts[p1].is_P_cons.size()-1; i++){
-                    cout << "IDX : " + to_string(idx) << endl;
+                    // cout << "IDX : " + to_string(idx) << endl;
                     rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1)));
                     idx++;
                 }        
@@ -310,11 +310,13 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
     }
 }
 
-void no_same_direction(const Home &home, int size, vector<Part> parts){
+void no_same_direction_3v(const Home &home, int size, vector<Part> parts){
     IntSet t = IntSet(0, 1);
     for(int n = 0; n < size-1; n++){
-        rel(home, (parts[0].motions[0][n]==0 || parts[0].motions[0][n]==1) || (parts[1].motions[0][n]==0 || parts[1].motions[0][n]==1) || 
-            (parts[2].motions[0][n]==0 || parts[2].motions[0][n]==1));
+        // rel(home, (parts[0].motions[0][n]==0 || parts[0].motions[0][n]==1) || (parts[1].motions[0][n]==0 || parts[1].motions[0][n]==1) || 
+        //     (parts[2].motions[0][n]==0 || parts[2].motions[0][n]==1));
+        rel(home, parts[0].motions[0][n]!=2 || parts[1].motions[0][n]!=2 || parts[2].motions[0][n]!=2);
+        
     }
     //for(int p1 = 0; p1 < parts.size(); p1++){
     //    for(int p2 = p1+1; p2 < parts.size(); p2++){
@@ -323,6 +325,14 @@ void no_same_direction(const Home &home, int size, vector<Part> parts){
     //        }
     //    }
     //}
+}
+
+void no_same_direction_4v(const Home &home, int size, vector<Part> parts){
+    IntSet t = IntSet(0, 1);
+    for(int n = 0; n < size-1; n++){
+        rel(home, parts[0].motions[0][n]!=2 || parts[1].motions[0][n]!=2 || parts[2].motions[0][n]!=2 || parts[3].motions[0][n]!=2);
+        
+    }
 }
 
 void no_successive_ascending_sixths(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
@@ -494,8 +504,8 @@ void link_melodic_self_arrays_2nd_species(const Home &home, Part part){
     }
 }
 
-void link_motions_arrays_2nd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest){
-    link_motions_arrays(home, part, cf, lowest, 2);
+void link_motions_arrays_2nd_species(const Home &home, Part part, vector<Stratum> lowest){
+    link_motions_arrays(home, part, lowest, 2);
 }
 
 void link_real_motions_arrays_2nd_species(const Home &home, Part part){
@@ -683,8 +693,8 @@ void link_melodic_self_arrays_3rd_species(const Home &home, Part part){
     link_melodic_self_arrays_2nd_species(home, part);
 }
 
-void link_motions_arrays_3rd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest){
-    link_motions_arrays(home, part, cf, lowest, 3);
+void link_motions_arrays_3rd_species(const Home &home, Part part, vector<Stratum> lowest){
+    link_motions_arrays(home, part, lowest, 3);
 }
 
 void link_cfb_array_3rd_species(const Home &home, int size, Part part, Part cf){
@@ -843,10 +853,11 @@ void test_4v_fux(const Home &home, vector<Part> parts){
     vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
 
 
-    for (int i = 0; i < cp1.size(); i++)
+    for (int i = 0; i < 0; i++)
     {
-        rel(home, parts[0].vector_notes[0][i] == cp1[i]);
-        rel(home, parts[1].vector_notes[0][i] == cp2[i]);
-        rel(home, parts[2].vector_notes[0][i] == cp3[i]);
+        cout << parts[1].vector_notes[0][i] << endl;
+        rel(home, parts[1].vector_notes[0][i] == cp1[i]);
+        rel(home, parts[2].vector_notes[0][i] == cp2[i]);
+        rel(home, parts[3].vector_notes[0][i] == cp3[i]);
     }
 }

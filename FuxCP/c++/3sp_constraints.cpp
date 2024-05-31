@@ -19,7 +19,7 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
     link_melodic_self_arrays_3rd_species(home, parts[list_index]);
 
     //3.P1
-    link_motions_arrays_3rd_species(home, parts[list_index], parts[0], lowest);
+    link_motions_arrays_3rd_species(home, parts[list_index], lowest);
 
     link_cfb_array_3rd_species(home, parts[list_index].size, parts[list_index], parts[0]);
 

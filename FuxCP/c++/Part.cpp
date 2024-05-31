@@ -43,6 +43,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     size = s;
     lower_bound = (6 * voice_type - 6) + cf[0];
     upper_bound = (6 * voice_type + 12) + cf[0];
+    // cout << "vtype : " << v_type << " , lb, ub : " << lower_bound << " , " << upper_bound << endl;
     species = sp;
     cantusFirmus = cf;
     speciesList = splist;

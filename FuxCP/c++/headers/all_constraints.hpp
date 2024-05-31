@@ -28,7 +28,7 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
 /**
  * Initialization and calculation of the motions between the notes
 */
-void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx);
+void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, int idx);
 
 void link_p_cons_array(const Home &home, Part part);
 
@@ -115,7 +115,8 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
 /**
  * Constraint P6 : It is prohibited that all parts move in the same direction (only 3 voices)
 */
-void no_same_direction(const Home &home, int size, vector<Part> parts);
+void no_same_direction_3v(const Home &home, int size, vector<Part> parts);
+void no_same_direction_4v(const Home &home, int size, vector<Part> parts);
 
 /**
  * Constraint P7 : It is prohibited to use successive ascending sixths on a direct upwards motion (only 3 voices)
@@ -148,7 +149,7 @@ void link_m2_arrays_2nd_species(const Home &home, Part part);
 
 void link_melodic_self_arrays_2nd_species(const Home &home, Part part);
 
-void link_motions_arrays_2nd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest);
+void link_motions_arrays_2nd_species(const Home &home, Part part, vector<Stratum> lowest);
 
 void link_real_motions_arrays_2nd_species(const Home &home, Part part);
 
@@ -192,7 +193,7 @@ void link_m2_arrays_3rd_species(const Home &home, Part part);
 
 void link_melodic_self_arrays_3rd_species(const Home &home, Part part);
 
-void link_motions_arrays_3rd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest);
+void link_motions_arrays_3rd_species(const Home &home, Part part, vector<Stratum> lowest);
 
 void link_cfb_array_3rd_species(const Home &home, int size, Part part, Part cf);
 

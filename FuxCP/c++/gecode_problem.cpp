@@ -128,6 +128,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
+    // test_4v_fux(*this, parts);
+
     //lowest is the lowest stratum for each note
     
     lowest.push_back(Stratum(*this, size, lower_bound_domain, upper_bound_domain, general_params[5]));
@@ -186,7 +188,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             parts[p].real_motions = IntVarArray(*this, size-1, -1, 2);
             parts[p].real_motions_cost = IntVarArray(*this, size-1, IntSet({0, parts[p].con_motion_cost, parts[p].dir_motion_cost, parts[p].obl_motion_cost}));
 
-            link_motions_arrays_2nd_species(*this, parts[p], parts[0], lowest);
+            link_motions_arrays_2nd_species(*this, parts[p], lowest);
             link_real_motions_arrays_2nd_species(*this, parts[p]);
 
             parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
@@ -376,7 +378,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
                                     idx = getIndex(factors_order_1_3, cost_names[t]);
                                 }
                             }
-                            cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
+                            // cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
                             to_add = cost_factors[idx];
                         }
                     }
@@ -665,9 +667,9 @@ void Problem::constrain(const IntMinimizeSpace& _b) {
     //IntVar current_sum = IntVar(*this, 0, 1000);
     //max(*this, ordered_factors, current_sum);
     rel(*this, global_cost, IRT_LQ, b.global_cost.val());
-    for(int i = 0; i < cost_size; i++){
-        rel(*this, ordered_factors[i], IRT_LQ, b.ordered_factors[i].val());
-    }
+    // for(int i = 0; i < cost_size; i++){
+    //     rel(*this, ordered_factors[i], IRT_LQ, b.ordered_factors[i].val());
+    // }
     
 }
 
@@ -763,75 +765,75 @@ string Problem::toString(){
             message += "... ";
         }
     message += "]\n";
-    /*
-    message += "SUCC COST : [";
-    for(int i = 0; i < succ_cost.size(); i++){
-        if(succ_cost[i].assigned()){
-            message += to_string(succ_cost[i].val()) + " ";
+    
+    message += "TRIAD COST : [";
+    for(int i = 0; i < triad_costs.size(); i++){
+        if(triad_costs[i].assigned()){
+            message += to_string(triad_costs[i].val()) + " ";
         } else {
             message += "... ";
         }
     }
     message += "]\n";
-    message += "UPPER H INTERVALS : [";
-    for(int p = 0; p < upper.size(); p++){
-        message += "UPPER H INTERVALS PART : [";
-        for(int i = 0; i < size; i++){
-            if(upper[p].hIntervalsAbs[i].assigned()){
-                message += to_string(upper[p].hIntervalsAbs[i].val()) + " ";
-            } else {
-                message += "... ";
-            }
-        }
-        message += "]\n";
-    }
-    message += "]\n";
-    message += "LOWEST NOTES : [";
-    for(int i = 0; i < size; i++){
-        if(lowest[0].notes[i].assigned()){
-            message += to_string(lowest[0].notes[i].val()) + " ";
-        } else {
-            message += "... ";
-        }
-    }
-    message += "]\n";
-    message += "UPPER NOTES : [";
-    for(int p = 0; p < upper.size(); p++){
-        message += " UPPER PART : [";
-        for(int i = 0; i < size; i++){
-            if(upper[p].notes[i].assigned()){
-                message += to_string(upper[p].notes[i].val()) + " ";
-            } else {
-                message += "... ";
-            }
-        }
-        message += "]\n";
-    }
-    message += "]\n";
-    message += "M2 ARRAY : [";
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < parts[p].m2_len; i++){
-            if(parts[p].m2_intervals[i].assigned()){
-                message += to_string(parts[p].m2_intervals[i].val()) + " ";
-            } else {
-                message += "... ";
-            }
-        }
-    }
-    message += "]\n";
-    message += "IS LOWEST : [";
-    for(int p = 0; p < parts.size(); p++){
-        message += "IS LOWEST PART : [";
-        for(int i = 0; i < size; i++){
-            if(parts[p].is_not_lowest[i].assigned()){
-                message += to_string(parts[p].is_not_lowest[i].val()) + " ";
-            } else {
-                message += "... ";
-            }
-        }
-        message += "]\n";
-    }
-    message += "]\n";*/
+    // message += "UPPER H INTERVALS : [";
+    // for(int p = 0; p < upper.size(); p++){
+    //     message += "UPPER H INTERVALS PART : [";
+    //     for(int i = 0; i < size; i++){
+    //         if(upper[p].hIntervalsAbs[i].assigned()){
+    //             message += to_string(upper[p].hIntervalsAbs[i].val()) + " ";
+    //         } else {
+    //             message += "... ";
+    //         }
+    //     }
+    //     message += "]\n";
+    // }
+    // message += "]\n";
+    // message += "LOWEST NOTES : [";
+    // for(int i = 0; i < size; i++){
+    //     if(lowest[0].notes[i].assigned()){
+    //         message += to_string(lowest[0].notes[i].val()) + " ";
+    //     } else {
+    //         message += "... ";
+    //     }
+    // }
+    // message += "]\n";
+    // message += "UPPER NOTES : [";
+    // for(int p = 0; p < upper.size(); p++){
+    //     message += " UPPER PART : [";
+    //     for(int i = 0; i < size; i++){
+    //         if(upper[p].notes[i].assigned()){
+    //             message += to_string(upper[p].notes[i].val()) + " ";
+    //         } else {
+    //             message += "... ";
+    //         }
+    //     }
+    //     message += "]\n";
+    // }
+    // message += "]\n";
+    // message += "M2 ARRAY : [";
+    // for(int p = 1; p < parts.size(); p++){
+    //     for(int i = 0; i < parts[p].m2_len; i++){
+    //         if(parts[p].m2_intervals[i].assigned()){
+    //             message += to_string(parts[p].m2_intervals[i].val()) + " ";
+    //         } else {
+    //             message += "... ";
+    //         }
+    //     }
+    // }
+    // message += "]\n";
+    // message += "IS LOWEST : [";
+    // for(int p = 0; p < parts.size(); p++){
+    //     message += "IS LOWEST PART : [";
+    //     for(int i = 0; i < size; i++){
+    //         if(parts[p].is_not_lowest[i].assigned()){
+    //             message += to_string(parts[p].is_not_lowest[i].val()) + " ";
+    //         } else {
+    //             message += "... ";
+    //         }
+    //     }
+    //     message += "]\n";
+    // }
+    // message += "]\n";
     
     writeToLogFile(message.c_str());
     return message;

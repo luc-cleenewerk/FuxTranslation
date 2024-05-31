@@ -21,7 +21,7 @@
 
     for(int p = 0; p < parts.size(); p++){
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0); //cost
+        link_motions_arrays(home, parts[p], lowest, 0); //cost
 
         link_p_cons_array(home, parts[p]);
 
@@ -83,7 +83,7 @@
 
         link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+        link_motions_arrays(home, parts[p], lowest, 0);
 
         link_p_cons_array(home, parts[p]);
 
@@ -117,7 +117,7 @@
 
     //voices cannot play the same note except on first and last beat already checked off in first species calls
 
-    no_same_direction(home, parts[1].size, parts); //here issue
+    no_same_direction_3v(home, parts[1].size, parts); //here issue
 
     last_chord_no_minor_third(home, parts[0].size, parts);
 
@@ -170,7 +170,7 @@
 
         link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+        link_motions_arrays(home, parts[p], lowest, 0);
 
         link_p_cons_array(home, parts[p]);
 
@@ -210,7 +210,7 @@
     // APPLY 3V GENERAL : 
 
     // P6
-    no_same_direction(home, parts[1].size, parts);
+    no_same_direction_4v(home, parts[1].size, parts);
 
     // H12
     last_chord_no_minor_third(home, parts[0].size, parts);
