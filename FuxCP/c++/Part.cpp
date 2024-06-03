@@ -130,6 +130,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
         }
     }
 
+    // last measure is a whole note, so size-1 for the three last IntVarArrays. 
     vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended))};
 
     if(species==1){
@@ -166,7 +167,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
     is_off = BoolVarArray(home, sol_len, 0, 1);
-    off_costs = IntVarArray(home, sol_len, 0, 1); //cost here is 1 for now
+    off_costs = IntVarArray(home, sol_len, IntSet({0, off_cst})); 
     m_degrees_cost = {IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2}))};
     fifth_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
     octave_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
@@ -192,9 +193,9 @@ void Part::create_member_array(int idx){
         for(int i = 0; i < sol_len; i++){
             IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
             IntVar sm = IntVar(home, 0, off_scale.size());
-            for(int l = 0; l < off_scale.size(); l++){
+            for(int l = 0; l < off_scale.size(); l++){      // TODO il y a d'office une meilleure manière de faire que double boucle for
                 BoolVar b1 = BoolVar(home, 0, 1);
-                rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
+                rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));   // REIFY RM_PMI?
                 ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
             }
             IntVarArgs x(res.size());
@@ -202,7 +203,7 @@ void Part::create_member_array(int idx){
                 x[t] = res[t];
             }
             rel(home, sm, IRT_EQ, expr(home, sum(x)));
-            rel(home, sm, IRT_GR, 0, Reify(is_off[i]));
+            rel(home, sm, IRT_GR, 0, Reify(is_off[i]));  // REIFY RM_PMI?
         }
 }
 

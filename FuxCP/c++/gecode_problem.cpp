@@ -71,6 +71,11 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     h_triad_cost = general_params[5];
     triad_costs = IntVarArray(*this, size, IntSet({0, not_harmonic_triad_cost, double_fifths_cost, double_thirds_cost, triad_with_octave_cost}));  // TODO MODIFY
     global_cost = IntVar(*this, 0, 10000);
+    
+
+    // check that the cantus firmus ends at home 
+    assert(cantusFirmus[0] == cantusFirmus[size-1]);
+
 
     //creating the map with the names of the costs and their importance
 
@@ -128,7 +133,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
-    // test_4v_fux(*this, parts);
+    test_4v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -718,14 +723,41 @@ string Problem::toString(){
         }
         message += "]\n";
     }
-    message += "SOLUTION ARRAY : [";
-    for(int i = 0; i < solution_array.size(); i++){
-        if(solution_array[i].assigned()){
-            message += to_string(solution_array[i].val()) + " ";
+
+    // message += "PART melodic arrays : ";
+    // for(int p = 1; p < parts.size(); p++){
+    //     message += "[ ";
+    //     for(int i = 0; i < 4; i++){
+    //         message += "[ ";
+    //         for(int n = 0; n < parts[p].vector_notes[i].size()-1; n++){
+    //             if(parts[p].m_intervals_brut[i][n].assigned()){
+    //                 message += to_string(parts[p].m_intervals_brut[i][n].val()) + " ";
+    //             } else {
+    //                 message += "...";
+    //             }
+    //         }
+    //         message += "]";
+    //     }
+    //     message += "]\n";
+    // }
+
+    message += "PART off costs : ";
+    for(int p = 1; p < parts.size(); p++){
+        message += "[ ";
+        for(int i = 0; i < parts[p].sol_len; i++){
+            if(parts[p].off_costs[i].assigned()) {message += to_string(parts[p].off_costs[i].val()) + " ";}
+            else {message += "...";}
         }
+        message += "]\n";
     }
+    // message += "SOLUTION ARRAY : [";
+    // for(int i = 0; i < solution_array.size(); i++){
+    //     if(solution_array[i].assigned()){
+    //         message += to_string(solution_array[i].val()) + " ";
+    //     }
+    // }
     
-    message += "]\n";
+    // message += "]\n";
     message += "COST NAMES : [";
     for(int i = 0; i < 14; i++){
         if(!ordered_costs[i].empty()){
@@ -788,15 +820,25 @@ string Problem::toString(){
     //     message += "]\n";
     // }
     // message += "]\n";
-    // message += "LOWEST NOTES : [";
-    // for(int i = 0; i < size; i++){
-    //     if(lowest[0].notes[i].assigned()){
-    //         message += to_string(lowest[0].notes[i].val()) + " ";
-    //     } else {
-    //         message += "... ";
-    //     }
-    // }
-    // message += "]\n";
+    message += "LOWEST NOTES : [";
+    for(int i = 0; i < size; i++){
+        if(lowest[0].notes[i].assigned()){
+            message += to_string(lowest[0].notes[i].val()) + " ";
+        } else {
+            message += "... ";
+        }
+    }
+    message += "]\n";
+
+    message += "lowest.m_intervals_brut : [";
+    for(int i = 0; i < size-1; i++){
+        if(lowest[0].m_intervals_brut[i].assigned()){
+            message += to_string(lowest[0].m_intervals_brut[i].val()) + " ";
+        } else {
+            message += "... ";
+        }
+    }
+    message += "]\n";
     // message += "UPPER NOTES : [";
     // for(int p = 0; p < upper.size(); p++){
     //     message += " UPPER PART : [";
@@ -821,19 +863,19 @@ string Problem::toString(){
     //     }
     // }
     // message += "]\n";
-    // message += "IS LOWEST : [";
-    // for(int p = 0; p < parts.size(); p++){
-    //     message += "IS LOWEST PART : [";
-    //     for(int i = 0; i < size; i++){
-    //         if(parts[p].is_not_lowest[i].assigned()){
-    //             message += to_string(parts[p].is_not_lowest[i].val()) + " ";
-    //         } else {
-    //             message += "... ";
-    //         }
-    //     }
-    //     message += "]\n";
-    // }
-    // message += "]\n";
+    message += "IS LOWEST : [";
+    for(int p = 0; p < parts.size(); p++){
+        message += "IS LOWEST PART : [";
+        for(int i = 0; i < size; i++){
+            if(parts[p].is_not_lowest[i].assigned()){
+                message += to_string(parts[p].is_not_lowest[i].val()) + " ";
+            } else {
+                message += "... ";
+            }
+        }
+        message += "]\n";
+    }
+    message += "]\n";
     
     writeToLogFile(message.c_str());
     return message;
@@ -975,8 +1017,13 @@ void Problem::create_strata(){
             rel(*this, expr(*this, (parts[0].is_not_lowest[i]==1)&&(parts[1].is_not_lowest[i]==1)&&(lowest[0].notes[i]==parts[2].vector_notes[0][i])), IRT_NQ, 1, Reify(parts[2].is_not_lowest[i]));
             rel(*this, expr(*this, (parts[0].is_not_lowest[i]) && (parts[1].is_not_lowest[i]) && (parts[2].is_not_lowest[i])), IRT_NQ, parts[3].is_not_lowest[i]);
 
-            // ensure one and only one is lowest 
-            // assert(parts[0].is_not_lowest[i].val() + parts[1].is_not_lowest[i].val() + parts[2].is_not_lowest[i].val() + parts[3].is_not_lowest[i].val() == 3);
+            // // ensure one and only one is lowest 
+            // rel(*this, parts[0].is_not_lowest[i] + parts[1].is_not_lowest[i] + parts[2].is_not_lowest[i] + parts[3].is_not_lowest[i] == 3);
+            // for (int p = 0; p < parts.size(); p++)
+            // {
+            //     rel(*this, (parts[p].is_not_lowest[i] == 0) >> (parts[p].vector_notes[0][i] == lowest[0].notes[i]));
+            // }
+            
         }
 
         if(i > 0){
@@ -985,11 +1032,16 @@ void Problem::create_strata(){
             BoolVar cf_is_lowest = BoolVar(*this, 0, 1);
             BoolVar cp1_is_lowest = BoolVar(*this, 0, 1);
             BoolVar cp2_is_lowest = BoolVar(*this, 0, 1);
+            BoolVar cp3_is_lowest = BoolVar(*this, 0, 1);
 
             rel(*this, cf_is_lowest, BOT_XOR, parts[0].is_not_lowest[i], 1);
             rel(*this, cp1_is_lowest, BOT_XOR, parts[1].is_not_lowest[i], 1);
             if(parts.size()==3){
                 rel(*this, cp2_is_lowest, BOT_XOR, parts[2].is_not_lowest[i], 1);
+            }
+            if(parts.size()==4){
+                rel(*this, cp2_is_lowest, BOT_XOR, parts[2].is_not_lowest[i], 1);
+                rel(*this, cp3_is_lowest, BOT_XOR, parts[3].is_not_lowest[i], 1);
             }
 
             for(int j = 0; j < parts.size(); j++){
@@ -1008,14 +1060,17 @@ void Problem::create_strata(){
                 }
             }
 
-            rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cf_is_lowest));
-            rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp1_is_lowest));
+            // cout << corresponding_m_intervals[0] << endl;
+            // rel(*this, cf_is_lowest+cp1_is_lowest+cp2_is_lowest+cp3_is_lowest == 1);
+
+            rel(*this, corresponding_m_intervals[0][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cf_is_lowest,RM_IMP));
+            rel(*this, corresponding_m_intervals[1][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp1_is_lowest,RM_IMP));
             if(parts.size()==3){
-                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp2_is_lowest));
+                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp2_is_lowest,RM_IMP));
             }
             if(parts.size()==4){
-                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[2].is_not_lowest[i]));
-                rel(*this, corresponding_m_intervals[3][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(parts[3].is_not_lowest[i]));
+                rel(*this, corresponding_m_intervals[2][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp2_is_lowest,RM_IMP));
+                rel(*this, corresponding_m_intervals[3][i-1], IRT_EQ, lowest[0].m_intervals_brut[i-1], Reify(cp3_is_lowest,RM_IMP));
             }
         }
 

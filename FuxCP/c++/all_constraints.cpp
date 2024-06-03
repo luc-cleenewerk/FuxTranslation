@@ -40,17 +40,25 @@ void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> pa
     for(int k = 0; k < parts.size(); k++){
         for(int i = 0; i < size-1; i++){
             if(k==0){
-                rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+                rel(home, expr(home, parts[k].vector_notes[0][i+1]-parts[k].vector_notes[0][i]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut), TODO put vector_notes instead of notes
                 abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
+                // cout << parts[k].m_intervals_brut[0] << endl;
             } else {
-                rel(home, expr(home, parts[k].vector_notes[0][i]-parts[k].vector_notes[0][i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+                // cout << "vectornotes part " << k  << " index " << i << endl;
+                // cout << parts[k].m_intervals_brut[0][i] << endl;
+                // cout << parts[k].vector_notes[0][i] << endl;
+                rel(home, expr(home, parts[k].vector_notes[0][i+1]-parts[k].vector_notes[0][i]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+                // cout << parts[k].m_intervals_brut[0][i] << endl;
+                // cout << parts[k].vector_notes[0][i] << endl;
                 abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
+                // cout << parts[k].m_intervals_brut[0][i] << endl;
+                // cout << parts[k].m_intervals_brut[0] << endl;
             }
         }
     }
 }
 
-void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, int idx){ //TODO : delete lowest from parameters, not used
+void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, int idx){ 
             for(int i = 0; i < part.size-1; i++){
                 //direct motions help creation
                 BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(lowest[0].m_intervals_brut[i]>0)); //if both parts are going in the same direction
@@ -119,11 +127,36 @@ void imperfect_consonances_are_preferred(const Home &home, int size, Part part, 
         }
 }
 
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
-    for(int p = 1; p < parts.size(); p++){
-        rel(home, (parts[p].isCFB[0][0] == 1) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune (if the cf is the bass)
-        rel(home, (parts[p].isCFB[0][size-1] == 1) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
-    }
+// TODO : pour moi, cette règle est mal formalisée par Anton. Ca devrait etre uniquement la basse qui est tuned à la premiere note du cf. PAS n'importe quel cp qui est en dessous du cf. 
+void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest){ //nothing to change here, it's fine
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].isCFB[0][0] == 0) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune 
+    //     rel(home, (parts[p].isCFB[0][size-1] == 0) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune 
+    // }
+
+    // corrected : 
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].is_not_lowest[0] == 0) >> ((abs(parts[p].vector_notes[0][0] - parts[0].vector_notes[0][0])%12) == 0));
+    //     rel(home, (parts[p].is_not_lowest[size-1] == 0) >> ((abs(parts[p].vector_notes[0][0] - parts[0].vector_notes[0][size-1])%12) == 0)); // normally, the cf should have its last note be the same as its first. so we can link the last note of the bass to be equal to the last or first note of the cf, it will be the same.
+    // }
+
+        // corrected : 
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].is_not_lowest[0] == 0) >> (parts[p].vector_notes[0][0]%12 == parts[0].vector_notes[0][0]%12));
+    //     rel(home, (parts[p].is_not_lowest[size-1] == 0) >> (parts[p].vector_notes[0][size-1]%12 == parts[0].vector_notes[0][size-1]%12)); // normally, the cf should have its last note be the same as its first. so we can link the last note of the bass to be equal to the last or first note of the cf, it will be the same.
+        
+    // }
+
+    // even better formulation : (TODO check that is_not_lowest == 0  <==>  lowest stratum)
+    // rel(home, expr(home, lowest[0].notes[0]%12), IRT_EQ, expr(home, parts[0].vector_notes[0][0]%12));
+    // rel(home, expr(home, lowest[0].notes[size-1]%12), IRT_EQ, expr(home, parts[0].vector_notes[0][0]%12));
+
+    // cout << "lowest : " << endl;
+    // cout << lowest[0].notes[0] << endl; 
+
+    rel(home, lowest[0].notes[0]%12 == parts[0].vector_notes[0][0]%12);
+    rel(home, lowest[0].notes[size-1]%12 == parts[0].vector_notes[0][0]%12);   
+    // cout << lowest[0].notes[0] << endl; 
 }
 
 void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts){
@@ -365,6 +398,8 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
     }
 }
 
+
+// TODO Modify for last measure
 void prefer_harmonic_triads_4v(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs){
     for(int i = 0; i < size; i++){
 
@@ -837,6 +872,8 @@ void no_battuta_3rd_species(const Home &home, Part part){
 // fig 160, page 110
 void test_4v_fux(const Home &home, vector<Part> parts){
 
+    cout << "test 4v fux function" << endl;
+
     // cp3  fa la do si si re do mi re do# re 
     // cp3  65 69 72 71 71 74 72 76 74 73 74
 
@@ -853,11 +890,20 @@ void test_4v_fux(const Home &home, vector<Part> parts){
     vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
 
 
-    for (int i = 0; i < 0; i++)
+    for (int i = 0; i < 11; i++)
     {
-        cout << parts[1].vector_notes[0][i] << endl;
+        // cout << parts[1].vector_notes[0][i] << endl;
         rel(home, parts[1].vector_notes[0][i] == cp1[i]);
         rel(home, parts[2].vector_notes[0][i] == cp2[i]);
         rel(home, parts[3].vector_notes[0][i] == cp3[i]);
     }
+    // for(int k = 0; k < parts.size(); k++){
+    //     for(int i = 0; i < cp1.size()-1; i++){
+    //         if(k==0){
+    //         } else {
+    //             cout << "mintervalsbrut part " << k  << " index " << i << endl;
+    //             cout << parts[k].m_intervals_brut[0][i] << endl;
+    //         }
+    //     }
+    // }
 }

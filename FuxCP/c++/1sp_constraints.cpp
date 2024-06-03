@@ -42,7 +42,7 @@
 
     voices_cannot_play_same_note(home, parts[1].size, parts);
 
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
+    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts, lowest);
 
     no_chromatic_melodies(home, parts[1].size, parts);
 
@@ -104,7 +104,7 @@
 
     voices_cannot_play_same_note(home, parts[1].size, parts);
 
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
+    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts, lowest);
 
     //no_chromatic_melodies(home, parts[1].size, parts);  // in 3v too?
 
@@ -125,7 +125,7 @@
 
     //last chord must be a major triad -> already checked by h_consonances? or is it only 3 voices?
 
-    last_chord_same_fundamental(home, lowest, parts);
+    // last_chord_same_fundamental(home, lowest, parts); // already in H4!!
 
     no_chromatic_melodies(home, parts[0].size, parts); //havent seen it with anton yet
 
@@ -183,7 +183,7 @@
 
     // H1
     if(for_species==1){
-        harmonic_intervals_consonance(home, parts, PENULT_CONS);
+        harmonic_intervals_consonance(home, parts, consonances);
     } else if(for_species == 2){                              
         harmonic_intervals_consonance(home, parts, PENULT_THESIS);
     } else if(for_species==3){
@@ -197,7 +197,7 @@
     // }
 
     // H4
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
+    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts, lowest);
 
     // G7 (G6 dans fux_rules 4v)
     // no_chromatic_melodies(home, parts[1].size, parts);  // TODO : relax in 4v (cost, not interdiction)
@@ -218,7 +218,7 @@
     // no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);       // suspended for 4 voices
 
     // G10 (G9 dans fux_rules 4v)
-    last_chord_same_fundamental(home, lowest, parts);
+    // last_chord_same_fundamental(home, lowest, parts); // ALREADY IN H4 ! 
 
     if(for_species==1){
 
@@ -249,6 +249,6 @@
         avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
         // H8
-        prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs);              // TODO modify 4v
-        }
+        prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs); 
+    }
  }

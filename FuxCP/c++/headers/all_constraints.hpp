@@ -50,7 +50,7 @@ void perfect_consonance_constraints(const Home &home, int size, vector<Part> par
 /**
  * Constraint H4 : The key tone is tuned to the first note of the cantus firmus
 */
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts);
+void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest);
 
 /**
  * Constraint H5 : The voices cannot play the same note at the same time (except in the first and last measure) 
