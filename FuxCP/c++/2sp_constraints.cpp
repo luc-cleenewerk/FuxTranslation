@@ -4,6 +4,26 @@
 void second_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE, 
     int list_index, int for_species){
 
+    link_harmonic_arrays_2nd_species(home, parts[list_index].size, parts[list_index], lowest);
+
+    link_melodic_arrays_2nd_species_next_meas(home, parts[list_index].size, parts[list_index]);
+
+    link_melodic_arrays_2nd_species_in_meas(home, parts[list_index].size, parts[list_index]);
+
+    link_m2_arrays_2nd_species(home, parts[list_index]);
+
+    link_melodic_self_arrays_2nd_species(home, parts[list_index]);
+
+    link_motions_arrays_2nd_species(home, parts[list_index], lowest);
+    
+    link_real_motions_arrays_2nd_species(home, parts[list_index]);
+
+    link_ta_dim_array_2nd_species(home, parts[list_index]);
+
+    link_cfb_array_2nd_species(home, parts[list_index].size-1, parts[list_index], parts[0]);
+
+    link_is_neighbour_array_2nd_species(home, parts[list_index], lowest);
+
     first_species_2v(home, parts, lowest, upper, for_species);
 
     h_cons_arsis(home, parts[list_index], PENULT_CONS);
@@ -32,7 +52,27 @@ void second_species_2v(const Home &home, vector<Part> parts, vector<Stratum> low
 void second_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE, 
     int list_index, IntVarArray triad_costs, IntVarArray succ_cost, int for_species){
 
-    first_species_3v(home, parts, lowest, upper, triad_costs, succ_cost, for_species);
+    link_harmonic_arrays_2nd_species(home, parts[list_index].size, parts[list_index], lowest);
+
+    link_melodic_arrays_2nd_species_next_meas(home, parts[list_index].size, parts[list_index]);
+
+    link_melodic_arrays_2nd_species_in_meas(home, parts[list_index].size, parts[list_index]);
+
+    link_m2_arrays_2nd_species(home, parts[list_index]);
+
+    link_melodic_self_arrays_2nd_species(home, parts[list_index]);
+
+    link_motions_arrays_2nd_species(home, parts[list_index], lowest);
+    
+    link_real_motions_arrays_2nd_species(home, parts[list_index]);
+
+    link_ta_dim_array_2nd_species(home, parts[list_index]);
+
+    link_cfb_array_2nd_species(home, parts[list_index].size-1, parts[list_index], parts[0]);
+
+    link_is_neighbour_array_2nd_species(home, parts[list_index], lowest);
+
+    first_species_3v(home, parts[list_index], parts[0], lowest, upper, triad_costs, for_species);
 
     h_cons_arsis(home, parts[list_index], PENULT_CONS);
 
@@ -55,9 +95,5 @@ void second_species_3v(const Home &home, vector<Part> parts, vector<Stratum> low
 
     set_penult_sixth_cost(home, parts[list_index]);
 
-    avoid_perfect_consonances(home, parts[list_index].size, parts, succ_cost);
-
-    variety_cost_constraint(home, parts[list_index].size, parts);
-
-    prefer_harmonic_triads(home, parts[list_index].size, parts, lowest, upper, triad_costs);
+    variety_cost_constraint(home, parts[list_index]);
 }

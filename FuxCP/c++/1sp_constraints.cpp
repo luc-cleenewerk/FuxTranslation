@@ -11,244 +11,166 @@
  * First species dispatcher for 2 voices. Calls necessary constraints given the species
 */
 
- void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int for_species){
-
-    link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
-
-    link_melodic_arrays_1st_species(home, parts[1].size, parts);
-
-    link_cfb_arrays_1st_species(home, parts[1].size, parts[1], parts[0], 0);
+ void first_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, int list_index, int for_species){
 
     for(int p = 0; p < parts.size(); p++){
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0); //cost
+        link_harmonic_arrays_1st_species(home, parts[p], lowest, upper, list_index-1); //also cf
 
-        link_p_cons_array(home, parts[p]);
+        link_motions_arrays(home, parts[p], lowest, 0); //also cf
+
+        link_p_cons_array(home, parts[p]); //also cf
+
+        link_melodic_arrays_1st_species(home, parts[p]); //also cf
+
+        link_cfb_arrays_1st_species(home, parts[1].size, parts[1], parts[0], 0); //also cf
 
         if(p!=0){
-            set_step_costs(home, parts[1].size, parts[p], 0); //cost
-        }
-    }
 
-    set_off_costs(home, parts[1].size, parts); //cost
-    
-    if(for_species==1){
-        harmonic_intervals_consonance(home, parts, PENULT_CONS);
-    } else if(for_species == 2){
-        harmonic_intervals_consonance(home, parts, PENULT_THESIS);
-    } else if(for_species==3){
-        harmonic_intervals_consonance(home, parts, PENULT_Q);
-    }
+            set_step_costs(home, parts[1].size, parts[p], 0); //only cp
 
-    voices_cannot_play_same_note(home, parts[1].size, parts);
+            set_off_costs(home, parts[p]); //only cp
 
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
+            no_chromatic_melodies(home, parts[p]); //only cp
 
-    no_chromatic_melodies(home, parts[1].size, parts);
-
-    if(for_species==1 || for_species==2 || for_species==3){
-        perfect_consonance_constraints(home, parts[1].size, parts);
-    }
-
-    if(for_species==1){
-
-        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts, parts[0].NINE, parts[0].THREE, upper);
-
-        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);
-
-        no_direct_perfect_consonance(home, parts[1].size, parts, for_species, upper);
-
-        no_battuta(home, parts[1].size, parts);
-
-        for(int i = 1; i < parts.size(); i++){
-            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
         }
 
-        no_tritonic_intervals(home, parts[1].size, parts);
+        if(for_species==1){
+            harmonic_intervals_consonance(home, parts[p], PENULT_CONS); //also cf
+        } else if(for_species == 2){
+            harmonic_intervals_consonance(home, parts[p], PENULT_THESIS); //also cf
+        } else if(for_species==3){
+            harmonic_intervals_consonance(home, parts[p], PENULT_Q);  //also cf
+        }
+
+        if(for_species==1 || for_species==2 || for_species==3){
+            perfect_consonance_constraints(home, parts[p]); //also cf
+        }
+
+        if(for_species==1){
+
+            penultimate_note_must_be_major_sixth_or_minor_third(home, parts[p], parts[0].NINE, parts[0].THREE); //also cf
+
+            no_direct_perfect_consonance(home, parts[p], parts[1].speciesList.size()); //also cf
+
+            if(p!=0){
+                melodic_intervals_not_exceed_minor_sixth(home, parts[p]); //only cp
+
+                no_battuta(home, parts[p], parts[0]); //only cp
+
+                imperfect_consonances_are_preferred(home, parts[1].size, parts[p], 0); //only cp
+            }
+        }
+
     }
+
+    voices_cannot_play_same_note(home, parts); //also cf (keep out of loop since the loop is important in the constraint)
+
+    key_tone_tuned_to_cantusfirmus(home, parts[0], lowest); //only cf (keep out of loop)
 
  }
 
  /**
  * First species dispatcher for 3 voices. Calls necessary constraints given the species
 */
- void first_species_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, IntVarArray succ_cost,
-    int for_species){
+ void first_species_3v(const Home &home, Part part, Part cf, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, int list_index, int for_species){
 
-    link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
+    link_harmonic_arrays_1st_species(home, part, lowest, upper, list_index-1);
 
-    link_melodic_arrays_1st_species(home, parts[1].size, parts);
+    link_melodic_arrays_1st_species(home, part);
 
-    for(int p = 0; p < parts.size(); p++){
+    link_cfb_arrays_1st_species(home, part.size, part, cf, 0);
 
-        link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
+    link_motions_arrays(home, part, lowest, 0);
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+    link_p_cons_array(home, part);
 
-        link_p_cons_array(home, parts[p]);
+    if(part.species!=0){
+        set_step_costs(home, part.size, part, 0); //cost
 
-        if(p!=0){
-            set_step_costs(home, parts[1].size, parts[p], 0); //cost
-        }
+        set_off_costs(home, part);
+
+        no_chromatic_melodies(home, part);
+
+        last_chord_no_minor_third(home, part); //only cp
+
+        no_tenth_in_last_chord(home, upper, list_index-1); //only upper, so if we don't include the cantusFirmus we have the size of the upper vector
     }
 
-    set_off_costs(home, parts[1].size, parts);
-
     if(for_species==1){
-        harmonic_intervals_consonance(home, parts, PENULT_CONS);
+        harmonic_intervals_consonance(home, part, PENULT_CONS);
     } else if(for_species == 2){
-        harmonic_intervals_consonance(home, parts, PENULT_THESIS);
+        harmonic_intervals_consonance(home, part, PENULT_THESIS);
     } else if(for_species==3){
-        harmonic_intervals_consonance(home, parts, PENULT_Q);
+        harmonic_intervals_consonance(home, part, PENULT_Q);
     }
-
-    voices_cannot_play_same_note(home, parts[1].size, parts);
-
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
-
-    //no_chromatic_melodies(home, parts[1].size, parts);  // in 3v too?
-
-    // if(for_species==1 || for_species==2){                                        
-    //     perfect_consonance_constraints(home, parts[1].size, parts);              // suspended in 3v
-    // }
-
-
-    // APPLY 3V GENERAL : 
-
-    //voices cannot play the same note except on first and last beat already checked off in first species calls
-
-    no_same_direction(home, parts[1].size, parts); //here issue
-
-    last_chord_no_minor_third(home, parts[0].size, parts);
-
-    no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);
-
-    //last chord must be a major triad -> already checked by h_consonances? or is it only 3 voices?
-
-    last_chord_same_fundamental(home, lowest, parts);
-
-    no_chromatic_melodies(home, parts[0].size, parts); //havent seen it with anton yet
-
 
     if(for_species==1){
 
-        penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts, parts[0].NINE, parts[0].THREE, upper);
+        penultimate_note_must_be_major_sixth_or_minor_third(home, part, cf.NINE, cf.THREE);
+
+        no_direct_perfect_consonance(home, part, part.speciesList.size());
     
-        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts); //here issue
+        if(part.species!=0){
+            melodic_intervals_not_exceed_minor_sixth(home, part);
 
-        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size(), upper);
+            no_battuta(home, part, cf);
 
-        no_battuta(home, parts[1].size, parts);
+            imperfect_consonances_are_preferred(home, part.size, part, 0);
 
-        for(int i = 1; i < parts.size(); i++){
-            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
+            variety_cost_constraint(home, part); //only cp
         }
-
-        no_tritonic_intervals(home, parts[1].size, parts);
-
-        no_successive_ascending_sixths(home, parts[1].size, parts);
-
-        variety_cost_constraint(home, parts[1].size, parts);
-
-        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
-
-        prefer_harmonic_triads(home, parts[1].size, parts, lowest, upper, triad_costs);
     }
  }
 
  /**
  * First species dispatcher for 4 voices. Calls necessary constraints given the species
 */
- void first_species_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, 
-    IntVarArray succ_cost, int for_species){
+ void first_species_4v(const Home &home, Part part, Part cf, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, 
+    IntVarArray succ_cost, int list_index, int for_species){
     
-    link_harmonic_arrays_1st_species(home, parts[1].size, parts, lowest, upper);
+    link_harmonic_arrays_1st_species(home, part, lowest, upper, list_index-1);
 
-    link_melodic_arrays_1st_species(home, parts[1].size, parts);
+    link_melodic_arrays_1st_species(home, part);
 
-    for(int p = 0; p < parts.size(); p++){
+    link_cfb_arrays_1st_species(home, part.size, part, cf, 0);
 
-        link_cfb_arrays_1st_species(home, parts[1].size, parts[p], parts[0], 0);
+    link_motions_arrays(home, part, lowest, 0);
 
-        link_motions_arrays(home, parts[p], parts[0], lowest, 0);
+    link_p_cons_array(home, part);
 
-        link_p_cons_array(home, parts[p]);
+    if(part.species!=0){
+        set_step_costs(home, part.size, part, 0); //cost
 
-        if(p!=0){
-            set_step_costs(home, parts[1].size, parts[p], 0); //cost
-        }
+        set_off_costs(home, part);
+
+        last_chord_no_minor_third(home, part);
     }
-    
-    set_off_costs(home, parts[1].size, parts);
 
     // H1
     if(for_species==1){
-        harmonic_intervals_consonance(home, parts, PENULT_CONS);
+        harmonic_intervals_consonance(home, part, consonances);
     } else if(for_species == 2){                              
-        harmonic_intervals_consonance(home, parts, PENULT_THESIS);
+        harmonic_intervals_consonance(home, part, PENULT_THESIS);
     } else if(for_species==3){
-        harmonic_intervals_consonance(home, parts, PENULT_Q);
+        harmonic_intervals_consonance(home, part, PENULT_Q);
     }
 
-    
-
-    // if(for_species <= 10){                                               // H5 : only for 2 or 3 voices, too restrictive for 4 voices. or maybe just relax it?
-    //     voices_cannot_play_same_note(home, parts[1].size, parts);
-    // }
-
-    // H4
-    key_tone_tuned_to_cantusfirmus(home, parts[1].size, parts);
-
-    // G7 (G6 dans fux_rules 4v)
-    // no_chromatic_melodies(home, parts[1].size, parts);  // TODO : relax in 4v (cost, not interdiction)
-
-    // if(for_species==1 || for_species==6){
-    //     penultimate_note_must_be_major_sixth_or_minor_third(home, parts[1].size, parts);    // suspended for 4 voices
-    // }
-
-
-    // APPLY 3V GENERAL : 
-
-    // P6
-    no_same_direction(home, parts[1].size, parts);
-
-    // H12
-    last_chord_no_minor_third(home, parts[0].size, parts);
-
-    // no_tenth_in_last_chord(home, parts[1].size, parts, upper, lowest);       // suspended for 4 voices
-
-    // G10 (G9 dans fux_rules 4v)
-    last_chord_same_fundamental(home, lowest, parts);
-
     if(for_species==1){
-
-        // M2/M6
-        melodic_intervals_not_exceed_minor_sixth(home, parts[1].size, parts);   // TODO modify for 4 voices : should accept octave
-
-        // P1
-        no_direct_perfect_consonance(home, parts[1].size, parts, parts[1].speciesList.size(), upper);
-
-        // P3
-        no_battuta(home, parts[1].size, parts);     
-
-        // H6
-        for(int i = 1; i < parts.size(); i++){
-            imperfect_consonances_are_preferred(home, parts[1].size, parts[i], 0); //2 cost
-        }
         
-        // M1
-        no_tritonic_intervals(home, parts[1].size, parts);
+        no_direct_perfect_consonance(home, part, part.speciesList.size());
 
-        // P7
-        no_successive_ascending_sixths(home, parts[1].size, parts);
+        if(part.species!=0){
+        
+            melodic_intervals_not_exceed_minor_sixth(home, part);
 
-        // M4
-        variety_cost_constraint(home, parts[1].size, parts);
+            no_battuta(home, part, cf);
 
-        // P4
-        avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
+            imperfect_consonances_are_preferred(home, part.size, part, 0);
 
-        // H8
-        prefer_harmonic_triads_4v(home, parts[1].size, parts, lowest, upper, triad_costs);              // TODO modify 4v
+            variety_cost_constraint(home, part); //only cp
         }
+
+    }
+
  }

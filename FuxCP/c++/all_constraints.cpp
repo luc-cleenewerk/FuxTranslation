@@ -9,22 +9,15 @@
   * @param hIntervalsCpCf the variable array for the harmonic intervals between the cp and the cf
   * @param cantusFirmus the cantus firmus
   */
-void link_harmonic_arrays_1st_species(const Home &home, int size, vector<Part> parts,vector<Stratum> lowest, 
-    vector<Stratum> upper){
-    for(int j = 0; j < parts.size(); j++){
-        for(int i = 0; i < size; i++){
-            rel(home, parts[j].hIntervalsCpCf[0][i] == abs(parts[j].vector_notes[0][i] - lowest[0].notes[i])%12); //assigns the hIntervals
-        }
+void link_harmonic_arrays_1st_species(const Home &home, Part part, vector<Stratum> lowest, vector<Stratum> upper, int list_index){
+    for(int i = 0; i < part.size; i++){
+        rel(home, part.hIntervalsCpCf[0][i] == abs(part.vector_notes[0][i] - lowest[0].notes[i])%12); //assigns the hIntervals
     }
 
-    if(parts.size()>2){
-        for(int p = 0; p < parts.size()-1; p++){
-            for(int i = 0; i < size; i++){
-                //rel(home, expr(home, (lowest[0].notes[i]-lowest[0].notes[i])%12), IRT_EQ, lowest[0].hIntervalsBrut[i]);
-                //abs(home, lowest[0].hIntervalsBrut[i], lowest[0].hIntervalsAbs[i]);
-                rel(home, expr(home, (lowest[0].notes[i]-upper[p].notes[i])%12), IRT_EQ, upper[p].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
-                abs(home, upper[p].hIntervalsBrut[i], upper[p].hIntervalsAbs[i]); //also creates the absolute hInterval
-            }
+    if(part.speciesList.size()>1){
+        for(int i = 0; i < part.size; i++){
+            rel(home, expr(home, (lowest[0].notes[i]-upper[list_index].notes[i])%12), IRT_EQ, upper[list_index].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
+            abs(home, upper[list_index].hIntervalsBrut[i], upper[list_index].hIntervalsAbs[i]); //also creates the absolute hInterval
         }
     }
 }
@@ -35,23 +28,15 @@ void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf,
     }
 }
 
-void link_melodic_arrays_1st_species(const Home &home, int size, vector<Part> parts){
-    //works
-    for(int k = 0; k < parts.size(); k++){
-        for(int i = 0; i < size-1; i++){
-            if(k==0){
-                rel(home, expr(home, parts[k].notes[i]-parts[k].notes[i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
-                abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
-            } else {
-                rel(home, expr(home, parts[k].vector_notes[0][i]-parts[k].vector_notes[0][i+1]), IRT_EQ, parts[k].m_intervals_brut[0][i]); //assigns the melodic interval (brut)
-                abs(home, parts[k].m_intervals_brut[0][i], parts[k].m_intervals[0][i]); //assigns the melodic interval (absolute)
-            }
-        }
+void link_melodic_arrays_1st_species(const Home &home, Part part){
+    for(int i = 0; i < part.size-1; i++){
+        rel(home, expr(home, part.vector_notes[0][i+1]-part.vector_notes[0][i]), IRT_EQ, part.m_intervals_brut[0][i]); //assigns the melodic interval (brut)
+        abs(home, part.m_intervals_brut[0][i], part.m_intervals[0][i]); //assigns the melodic interval (absolute)
     }
 }
 
-void link_motions_arrays(const Home &home, Part part, Part cf, vector<Stratum> lowest, int idx){ //TODO : delete lowest from parameters, not used
-            for(int i = 0; i < cf.size-1; i++){
+void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, int idx){ 
+            for(int i = 0; i < part.size-1; i++){
                 //direct motions help creation
                 BoolVar both_up = expr(home, (part.m_intervals_brut[idx][i]>0)&&(lowest[0].m_intervals_brut[i]>0)); //if both parts are going in the same direction
                 BoolVar both_stay = expr(home, (part.m_intervals_brut[idx][i]==0)&&(lowest[0].m_intervals_brut[i]==0)); //if both parts are staying
@@ -88,25 +73,21 @@ void link_p_cons_array(const Home &home, Part part){ //nothing to change here, i
     }
 }
 
-void harmonic_intervals_consonance(const Home &home, vector<Part> parts, IntSet pen){ //nothing to change here, it's fine
-    for(int p = 0; p < parts.size(); p++){
-        for(int i = 0; i < parts[p].hIntervalsCpCf[0].size(); i++){
-            if(i==parts[p].size-1 && parts[p].speciesList.size()>1){
-                dom(home, parts[p].hIntervalsCpCf[0][i], any_h_triad); // G9: h triad constraint (TODO LUC CHECK)
-            } else if(i==parts[p].size-2){
-                dom(home, parts[p].hIntervalsCpCf[0][i], pen);
-            } else {
-                dom(home, parts[p].hIntervalsCpCf[0][i], consonances); //constraint : all intervals are consonances 
-            }
+void harmonic_intervals_consonance(const Home &home, Part part, IntSet pen){ //nothing to change here, it's fine
+    for(int i = 0; i < part.hIntervalsCpCf[0].size(); i++){
+        if(i==part.size-1 && part.speciesList.size()>1){
+            dom(home, part.hIntervalsCpCf[0][i], any_h_triad); // G9: h triad constraint (TODO LUC CHECK)
+        } else if(i==part.size-2){
+            dom(home, part.hIntervalsCpCf[0][i], pen);
+        } else {
+            dom(home, part.hIntervalsCpCf[0][i], consonances); //constraint : all intervals are consonances 
         }
     }
 }
 
-void perfect_consonance_constraints(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
-        for(int p = 0; p < parts.size(); p++){
-            dom(home, parts[p].hIntervalsCpCf[0][0], perfect_consonance); //first is a perfect consonance
-            dom(home, parts[p].hIntervalsCpCf[0][size-1], perfect_consonance); //last is a perfect consonance
-        }
+void perfect_consonance_constraints(const Home &home, Part part){ //nothing to change here, it's fine
+    dom(home, part.hIntervalsCpCf[0][0], perfect_consonance); //first is a perfect consonance
+    dom(home, part.hIntervalsCpCf[0][part.size-1], perfect_consonance); //last is a perfect consonance
 }
 
 void imperfect_consonances_are_preferred(const Home &home, int size, Part part, int idx){
@@ -119,24 +100,49 @@ void imperfect_consonances_are_preferred(const Home &home, int size, Part part, 
         }
 }
 
-void key_tone_tuned_to_cantusfirmus(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
-    for(int p = 1; p < parts.size(); p++){
-        rel(home, (parts[p].isCFB[0][0] == 1) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune (if the cf is the bass)
-        rel(home, (parts[p].isCFB[0][size-1] == 1) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune (if the cf is the bass)
-    }
+// TODO : pour moi, cette règle est mal formalisée par Anton. Ca devrait etre uniquement la basse qui est tuned à la premiere note du cf. PAS n'importe quel cp qui est en dessous du cf. 
+void key_tone_tuned_to_cantusfirmus(const Home &home, Part part, vector<Stratum> lowest){ //nothing to change here, it's fine
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].isCFB[0][0] == 0) >> (parts[p].hIntervalsCpCf[0][0]==0)); //tuning the first to the key tune 
+    //     rel(home, (parts[p].isCFB[0][size-1] == 0) >> (parts[p].hIntervalsCpCf[0][size-1]==0)); //tuning the last to the key tune 
+    // }
+
+    // corrected : 
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].is_not_lowest[0] == 0) >> ((abs(parts[p].vector_notes[0][0] - parts[0].vector_notes[0][0])%12) == 0));
+    //     rel(home, (parts[p].is_not_lowest[size-1] == 0) >> ((abs(parts[p].vector_notes[0][0] - parts[0].vector_notes[0][size-1])%12) == 0)); // normally, the cf should have its last note be the same as its first. so we can link the last note of the bass to be equal to the last or first note of the cf, it will be the same.
+    // }
+
+        // corrected : 
+    // for(int p = 1; p < parts.size(); p++){
+    //     rel(home, (parts[p].is_not_lowest[0] == 0) >> (parts[p].vector_notes[0][0]%12 == parts[0].vector_notes[0][0]%12));
+    //     rel(home, (parts[p].is_not_lowest[size-1] == 0) >> (parts[p].vector_notes[0][size-1]%12 == parts[0].vector_notes[0][size-1]%12)); // normally, the cf should have its last note be the same as its first. so we can link the last note of the bass to be equal to the last or first note of the cf, it will be the same.
+        
+    // }
+
+    // even better formulation : (TODO check that is_not_lowest == 0  <==>  lowest stratum)
+    // rel(home, expr(home, lowest[0].notes[0]%12), IRT_EQ, expr(home, parts[0].vector_notes[0][0]%12));
+    // rel(home, expr(home, lowest[0].notes[size-1]%12), IRT_EQ, expr(home, parts[0].vector_notes[0][0]%12));
+
+    // cout << "lowest : " << endl;
+    // cout << lowest[0].notes[0] << endl; 
+
+    rel(home, lowest[0].notes[0]%12 == part.vector_notes[0][0]%12);
+    rel(home, lowest[0].notes[part.size-1]%12 == part.vector_notes[0][0]%12);   
+    // cout << lowest[0].notes[0] << endl; 
 }
 
-void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts){
+void voices_cannot_play_same_note(const Home &home, vector<Part> parts){
     // TODO  check
     for(int p1 = 0; p1 < parts.size(); p1++){
         for(int p2 = p1+1; p2 < parts.size(); p2++){
             for(int k = 0; k < 4; k++){
                 if(k==0){ //add no unison
-                    for(int i = 1; i < size-1; i++){
+                    for(int i = 1; i < parts[p1].size-1; i++){
                         rel(home, parts[p1].vector_notes[k][i], IRT_NQ, parts[p2].vector_notes[k][i]);
                     }
                 } else { //add no unison at all
-                    for(int i = 0; i < size-1; i++){
+                    for(int i = 0; i < parts[p1].size-1; i++){
                         rel(home, parts[p1].vector_notes[k][i], IRT_NQ, parts[p2].vector_notes[k][i]);
                     }
                 }
@@ -145,138 +151,108 @@ void voices_cannot_play_same_note(const Home &home, int size, vector<Part> parts
     }
 }
 
-void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, int size, vector<Part> parts, IntVar NINE, IntVar THREE, vector<Stratum> upper){
-    int p = size-2;
+void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, Part part, IntVar NINE, IntVar THREE){
+    int p = part.size-2;
     //nothing to change here, it's fine
-    if(parts.size()==3){ //if it is 3 voices
-        for(int p = 0; p < parts.size(); p++){
-            if(parts[p].is_not_lowest[size-2].assigned()){
-                if(parts[p].is_not_lowest[size-2].val()==1){
-                    //constraint that penultimate note is either a minor third, perfect fifth, major sixth or octave
-                    dom(home, parts[p].hIntervalsCpCf[0][size-2], MIN3_PERF5_MAJ6_OCT);
-                }
+    if(part.speciesList.size()==2){ //if it is 3 voices
+        if(part.is_not_lowest[part.size-2].assigned()){
+            if(part.is_not_lowest[part.size-2].val()==1){
+                //constraint that penultimate note is either a minor third, perfect fifth, major sixth or octave
+                dom(home, part.hIntervalsCpCf[0][part.size-2], MIN3_PERF5_MAJ6_OCT);
             }
         }
     } else { //else 2 voice constraints
         //ite(home, parts[0].is_not_lowest[size-2], NINE, THREE, parts[1].hIntervalsCpCf[0][size-2]);
-        for(int p = 0; p < parts.size(); p++){
-            if(parts[p].species==0){
-                if(parts[p].penult_rule_check==1){
-                    rel(home, parts[p].hIntervalsCpCf[0][size-2], IRT_EQ, THREE, Reify(parts[p].is_not_lowest[size-2], RM_IMP));
-                }
+        if(part.species==0){
+            if(part.penult_rule_check==1){
+                rel(home, part.hIntervalsCpCf[0][part.size-2], IRT_EQ, THREE, Reify(part.is_not_lowest[part.size-2], RM_IMP));
             }
-            if(parts[p].species==1){
-                if(parts[p].penult_rule_check==1){
-                    rel(home, parts[p].hIntervalsCpCf[0][size-2], IRT_EQ, NINE, Reify(parts[p].is_not_lowest[size-2], RM_IMP));
-                }
+        }
+        if(part.species==1){
+            if(part.penult_rule_check==1){
+                rel(home, part.hIntervalsCpCf[0][part.size-2], IRT_EQ, NINE, Reify(part.is_not_lowest[part.size-2], RM_IMP));
             }
         }
     }
 }
 
-void no_tritonic_intervals(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){
-        for(int j = 0; j < size-1; j++){
-            rel(home, (parts[p].m_intervals[0][j]==6) >> (parts[p].M_deg_cost[j]==parts[p].tritone_cost)); //if it is a tritone : set a cost
-            rel(home, (parts[p].m_intervals[0][j]!=6) >> (parts[p].M_deg_cost[j]==0)); //if not, the cost is 0
+void melodic_intervals_not_exceed_minor_sixth(const Home &home, Part part){  // TODO check 4v
+    if (part.speciesList.size() <= 2){
+        for(int j = 0; j < part.size-1; j++){
+            rel(home, part.m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
+        }
+    }else{
+        for(int j = 0; j < part.size-1; j++){
+            rel(home, part.m_intervals[0][j] <= 8 || part.m_intervals[0][j] == 12); //constraint : must not exceed a minor sixth, or can be an octave jump
         }
     }
 }
 
-void melodic_intervals_not_exceed_minor_sixth(const Home &home, int size, vector<Part> parts){  // TODO check 4v
-    if (parts.size() == 3){
-        for(int p = 1; p < parts.size(); p++){
-            for(int j = 0; j < size-1; j++){
-                rel(home, parts[p].m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
-            }
-        }
-    }else if (parts.size() == 4){
-        for(int p = 1; p < parts.size(); p++){
-            for(int j = 0; j < size-1; j++){
-                rel(home, parts[p].m_intervals[0][j] <= 8 || parts[p].m_intervals[0][j] == 12); //constraint : must not exceed a minor sixth, or can be an octave jump
-            }
-        }
-    }
-}
-
-void no_direct_perfect_consonance(const Home &home, int size, vector<Part> parts, int n_species, vector<Stratum> upper){
+void no_direct_perfect_consonance(const Home &home, Part part, int n_species){
     if(n_species==1){ //if 2 voices
-        for(int j = 0; j < size-1; j++){
-            for(int p = 0; p < parts.size(); p++){
-                rel(home, parts[p].motions[0][j], IRT_NQ, 2, Reify(expr(home, parts[p].is_not_lowest[j+1]==1 && parts[p].is_P_cons[j+1]==1), RM_IMP));
-            }
+        for(int j = 0; j < part.size-1; j++){
+            rel(home, part.motions[0][j], IRT_NQ, 2, Reify(expr(home, part.is_not_lowest[j+1]==1 && part.is_P_cons[j+1]==1), RM_IMP));
         }
-    } else { //else if 3 voices
-        for(int p = 1; p < parts.size(); p++){ //should be fine i guess
-            if(parts[p].species==1){
-                for(int j = 0; j < size-2; j++){
-                    //set a cost when it is reached through direct motion, it is 0 when not
-                    rel(home, (parts[p].motions[0][j]==2&&(parts[p].hIntervalsCpCf[0][j+1]==0||parts[p].hIntervalsCpCf[0][j+1]==7))>>(parts[p].direct_move_cost[j]==parts[p].direct_move));
-                    rel(home, (parts[p].motions[0][j]!=2||(parts[p].hIntervalsCpCf[0][j+1]!=0&&parts[p].hIntervalsCpCf[0][j+1]!=7))>>(parts[p].direct_move_cost[j]==0));
-                }
+    } else if(n_species==2){ //else if 3+ voices
+        //if(parts[p].species==1){
+            for(int j = 0; j < part.size-2; j++){
+                //set a cost when it is reached through direct motion, it is 0 when not
+                rel(home, (part.motions[0][j]==2&&(part.hIntervalsCpCf[0][j+1]==0||part.hIntervalsCpCf[0][j+1]==7))>>(part.direct_move_cost[j]==part.direct_move));
+                rel(home, (part.motions[0][j]!=2||(part.hIntervalsCpCf[0][j+1]!=0&&part.hIntervalsCpCf[0][j+1]!=7))>>(part.direct_move_cost[j]==0));
             }
-        }
+        //}
     }
 }
 
-void no_battuta(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){
-            for(int j = 0; j < size-1; j++){
-            //constraints avoiding a battuta kind of motion
-            rel(home, expr(home, ((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[p].m_intervals_brut[0][j]<-4)&&(parts[p].is_not_lowest[j]==1))), IRT_EQ, 0);
-            rel(home, expr(home, ((parts[p].hIntervalsCpCf[0][j+1]==0)&&(parts[p].motions[0][j]==0)&&(parts[0].m_intervals_brut[0][j]<-4)&&(parts[p].is_not_lowest[j]==0))), IRT_EQ, 0);
-        }
+void no_battuta(const Home &home, Part part, Part cf){
+    for(int j = 0; j < part.size-1; j++){
+        //constraints avoiding a battuta kind of motion
+        rel(home, expr(home, ((part.hIntervalsCpCf[0][j+1]==0)&&(part.motions[0][j]==0)&&(part.m_intervals_brut[0][j]<-4)&&(part.is_not_lowest[j]==1))), IRT_EQ, 0);
+        rel(home, expr(home, ((part.hIntervalsCpCf[0][j+1]==0)&&(part.motions[0][j]==0)&&(cf.m_intervals_brut[0][j]<-4)&&(part.is_not_lowest[j]==0))), IRT_EQ, 0);
     }
 }
 
-void no_tenth_in_last_chord(const Home &home, int size, vector<Part> parts, vector<Stratum> upper, vector<Stratum> lowest){ //TODO : delete lowest from parameters, not used
-
-    for(int p = 0; p < parts.size()-1; p++){
+void no_tenth_in_last_chord(const Home &home, vector<Stratum> upper, int list_index){ //TODO : delete lowest from parameters, not used
         //prohibiting tenths by checking the hInterval
-        rel(home, (upper[p].hIntervalsBrut[size-1]>12) >> (upper[p].hIntervals[size-1]!=3 && upper[p].hIntervals[size-1]!=4));
-    }
-
+        rel(home, (upper[list_index].hIntervalsBrut[upper[list_index].size-1]>12) >> 
+            (upper[list_index].hIntervals[upper[list_index].size-1]!=3 && upper[list_index].hIntervals[upper[list_index].size-1]!=4));
 }
 
-void last_chord_no_minor_third(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
-    for(int p = 1; p < parts.size(); p++){
-        if(parts[p].is_not_lowest[size-1].assigned()){
-            if(parts[p].is_not_lowest[size-1].val()==1){
-                //prohibiting minor thirds in the last chord
-                rel(home, parts[p].hIntervalsCpCf[0][size-1], IRT_NQ, 3);
-            }
+void last_chord_no_minor_third(const Home &home, Part part){ //nothing to change here, it's fine
+    if(part.is_not_lowest[part.size-1].assigned()){
+        if(part.is_not_lowest[part.size-1].val()==1){
+            //prohibiting minor thirds in the last chord
+            rel(home, part.hIntervalsCpCf[0][part.size-1], IRT_NQ, 3);
         }
     }
 }
 
-void variety_cost_constraint(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){ //cantusFirmus not taken into account
-        int temp = 0;
-        for(int j = 0; j < size-1; j++){
-            int upbnd = 0;
-            if(j+3<size){
-                upbnd = j+4;
-            } else {upbnd = size;}
-            for(int k = j+1; k < upbnd;k++){
-                //setting a cost if notes inside a window are the same in a part
-                rel(home, (parts[p].vector_notes[0][j]==parts[p].vector_notes[0][k])>>(parts[p].varietyArray[temp]==parts[p].variety_cost));
-                rel(home, (parts[p].vector_notes[0][j]!=parts[p].vector_notes[0][k])>>(parts[p].varietyArray[temp]==0));
-                temp++;
-            }
+void variety_cost_constraint(const Home &home, Part part){
+    int temp = 0;
+    for(int j = 0; j < part.size-1; j++){
+        int upbnd = 0;
+        if(j+3<part.size){
+            upbnd = j+4;
+        } else {upbnd = part.size;}
+        for(int k = j+1; k < upbnd;k++){
+            //setting a cost if notes inside a window are the same in a part
+            rel(home, (part.vector_notes[0][j]==part.vector_notes[0][k])>>(part.varietyArray[temp]==part.variety_cost));
+            rel(home, (part.vector_notes[0][j]!=part.vector_notes[0][k])>>(part.varietyArray[temp]==0));
+            temp++;
         }
     }
 }
 
 void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, IntVarArray succ_cost){ //nothing to change here, it's fine
     int idx = 0;
-    cout << "SUCC SIZE :" + to_string(succ_cost.size()) << endl;
+    // cout << "SUCC SIZE :" + to_string(succ_cost.size()) << endl;
     for(int p1 = 0; p1 < parts.size(); p1++){
         for(int p2 = p1+1; p2 < parts.size(); p2++){
-            cout << "Part 1 : " << to_string(parts[p1].species) << endl;
-            cout << "Part 2 : " << to_string(parts[p2].species) << endl;
+            // cout << "Part 1 : " << to_string(parts[p1].species) << endl;
+            // cout << "Part 2 : " << to_string(parts[p2].species) << endl;
             if(parts[p1].species!= 2 && parts[p2].species!=2){
                 for(int i = 0; i < parts[p1].is_P_cons.size()-1; i++){
-                    cout << "IDX : " + to_string(idx) << endl;
+                    // cout << "IDX : " + to_string(idx) << endl;
                     rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1)));
                     idx++;
                 }        
@@ -310,19 +286,18 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
     }
 }
 
-void no_same_direction(const Home &home, int size, vector<Part> parts){
+void no_same_direction_3v(const Home &home, int size, vector<Part> parts){
     IntSet t = IntSet(0, 1);
     for(int n = 0; n < size-1; n++){
-        rel(home, (parts[0].motions[0][n]==0 || parts[0].motions[0][n]==1) || (parts[1].motions[0][n]==0 || parts[1].motions[0][n]==1) || 
-            (parts[2].motions[0][n]==0 || parts[2].motions[0][n]==1));
+        rel(home, parts[0].motions[0][n]!=2 || parts[1].motions[0][n]!=2 || parts[2].motions[0][n]!=2);
     }
-    //for(int p1 = 0; p1 < parts.size(); p1++){
-    //    for(int p2 = p1+1; p2 < parts.size(); p2++){
-    //        if(p1!=p2){
-    //            
-    //        }
-    //    }
-    //}
+}
+
+void no_same_direction_4v(const Home &home, int size, vector<Part> parts){
+    IntSet t = IntSet(0, 1);
+    for(int n = 0; n < size-1; n++){
+        rel(home, parts[0].motions[0][n]!=2 || parts[1].motions[0][n]!=2 || parts[2].motions[0][n]!=2 || parts[3].motions[0][n]!=2);  
+    }
 }
 
 void no_successive_ascending_sixths(const Home &home, int size, vector<Part> parts){ //nothing to change here, it's fine
@@ -342,8 +317,8 @@ void no_successive_ascending_sixths(const Home &home, int size, vector<Part> par
         }
 }
 
-void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs){
-    for(int i = 0; i < size; i++){
+void prefer_harmonic_triads(const Home &home, vector<Part> parts, IntVarArray triad_costs){
+    for(int i = 0; i < parts[0].size; i++){
         BoolVar is_h1_third = expr(home, parts[1].hIntervalsCpCf[0][i]==3 || parts[1].hIntervalsCpCf[0][i]==4);
         rel(home, is_h1_third, BOT_AND, expr(home, parts[2].hIntervalsCpCf[0][i]==7), parts[1].is_h1_poss);
         BoolVar is_h2_third = expr(home, parts[2].hIntervalsCpCf[0][i]==3 || parts[2].hIntervalsCpCf[0][i]==4);
@@ -355,8 +330,10 @@ void prefer_harmonic_triads(const Home &home, int size, vector<Part> parts, vect
     }
 }
 
-void prefer_harmonic_triads_4v(const Home &home, int size, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs){
-    for(int i = 0; i < size; i++){
+
+// TODO Modify for last measure
+void prefer_harmonic_triads_4v(const Home &home, vector<Stratum> upper, IntVarArray triad_costs){
+    for(int i = 0; i < upper[0].size; i++){
 
         IntVar H_b = upper[0].hIntervalsAbs[i];
         IntVar H_c = upper[1].hIntervalsAbs[i];
@@ -407,12 +384,10 @@ void prefer_harmonic_triads_4v(const Home &home, int size, vector<Part> parts, v
     }
 }
 
-void set_off_costs(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < parts[p].sol_len; i++){
-            rel(home, (parts[p].is_off[i]==1) >> (parts[p].off_costs[i]==parts[p].off_cst));
-            rel(home, (parts[p].is_off[i]==0) >> (parts[p].off_costs[i]==0));
-        }
+void set_off_costs(const Home &home, Part part){
+    for(int i = 0; i < part.sol_len; i++){
+        rel(home, (part.is_off[i]==1) >> (part.off_costs[i]==part.off_cst));
+        rel(home, (part.is_off[i]==0) >> (part.off_costs[i]==0));
     }
 }
 
@@ -429,17 +404,15 @@ void set_step_costs(const Home &home, int size, Part part, int idx){
         }
 }
 
-void no_chromatic_melodies(const Home &home, int size, vector<Part> parts){
-    for(int p = 1; p < parts.size(); p++){
-        for(int i = 0; i < size-2; i++){
-            rel(home, expr(home, parts[p].m_intervals_brut[0][i]==1), BOT_AND, expr(home, parts[p].m_intervals_brut[0][i+1]==1), 0);
-            rel(home, expr(home, parts[p].m_intervals_brut[0][i]==-1), BOT_AND, expr(home, parts[p].m_intervals_brut[0][i+1]==-1), 0);
-        }
+void no_chromatic_melodies(const Home &home, Part part){
+    for(int i = 0; i < part.size-2; i++){
+        rel(home, expr(home, part.m_intervals_brut[0][i]==1), BOT_AND, expr(home, part.m_intervals_brut[0][i+1]==1), 0);
+        rel(home, expr(home, part.m_intervals_brut[0][i]==-1), BOT_AND, expr(home, part.m_intervals_brut[0][i+1]==-1), 0);
     }
 }
 
 void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vector<Part> parts){
-    rel(home, expr(home, lowest[0].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].notes[0]%12));
+    rel(home, expr(home, lowest[0].notes[parts[0].size-1]%12), IRT_EQ, expr(home, parts[0].vector_notes[0][0]%12));
 }
 
 /**
@@ -494,8 +467,8 @@ void link_melodic_self_arrays_2nd_species(const Home &home, Part part){
     }
 }
 
-void link_motions_arrays_2nd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest){
-    link_motions_arrays(home, part, cf, lowest, 2);
+void link_motions_arrays_2nd_species(const Home &home, Part part, vector<Stratum> lowest){
+    link_motions_arrays(home, part, lowest, 2);
 }
 
 void link_real_motions_arrays_2nd_species(const Home &home, Part part){
@@ -683,8 +656,8 @@ void link_melodic_self_arrays_3rd_species(const Home &home, Part part){
     link_melodic_self_arrays_2nd_species(home, part);
 }
 
-void link_motions_arrays_3rd_species(const Home &home, Part part, Part cf, vector<Stratum> lowest){
-    link_motions_arrays(home, part, cf, lowest, 3);
+void link_motions_arrays_3rd_species(const Home &home, Part part, vector<Stratum> lowest){
+    link_motions_arrays(home, part, lowest, 3);
 }
 
 void link_cfb_array_3rd_species(const Home &home, int size, Part part, Part cf){
@@ -827,6 +800,8 @@ void no_battuta_3rd_species(const Home &home, Part part){
 // fig 160, page 110
 void test_4v_fux(const Home &home, vector<Part> parts){
 
+    cout << "test 4v fux function" << endl;
+
     // cp3  fa la do si si re do mi re do# re 
     // cp3  65 69 72 71 71 74 72 76 74 73 74
 
@@ -843,10 +818,20 @@ void test_4v_fux(const Home &home, vector<Part> parts){
     vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
 
 
-    for (int i = 0; i < cp1.size(); i++)
+    for (int i = 0; i < 11; i++)
     {
-        rel(home, parts[0].vector_notes[0][i] == cp1[i]);
-        rel(home, parts[1].vector_notes[0][i] == cp2[i]);
-        rel(home, parts[2].vector_notes[0][i] == cp3[i]);
+        // cout << parts[1].vector_notes[0][i] << endl;
+        rel(home, parts[1].vector_notes[0][i] == cp1[i]);
+        rel(home, parts[2].vector_notes[0][i] == cp2[i]);
+        rel(home, parts[3].vector_notes[0][i] == cp3[i]);
     }
+    // for(int k = 0; k < parts.size(); k++){
+    //     for(int i = 0; i < cp1.size()-1; i++){
+    //         if(k==0){
+    //         } else {
+    //             cout << "mintervalsbrut part " << k  << " index " << i << endl;
+    //             cout << parts[k].m_intervals_brut[0][i] << endl;
+    //         }
+    //     }
+    // }
 }

@@ -11,12 +11,8 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst, vector<in
     penult_rule_check = general_parameters[7];
     NINE = IntVar(home, 9, 9);
     THREE = IntVar(home, 3, 3);
-    notes = IntVarArray(home, size, 0, 127);
     is_P_cons = BoolVarArray(home, size, 0, 1);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
-    for(int i = 0; i < size; i++){
-        notes[i] = IntVar(home, cf_notes[i], cf_notes[i]);
-    }
     vector_notes = {IntVarArray(home, size, 0, 127), IntVarArray(home, size, 0, 127), IntVarArray(home, size-1, 0, 127), IntVarArray(home, size, 0, 127)};
     for(int i = 0; i < size; i++){
         vector_notes[0][i] = IntVar(home, cf_notes[i], cf_notes[i]);
@@ -43,6 +39,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     size = s;
     lower_bound = (6 * voice_type - 6) + cf[0];
     upper_bound = (6 * voice_type + 12) + cf[0];
+    // cout << "vtype : " << v_type << " , lb, ub : " << lower_bound << " , " << upper_bound << endl;
     species = sp;
     cantusFirmus = cf;
     speciesList = splist;
@@ -120,15 +117,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
 
     off_scale = off_key;
 
-    /// variable initialization todo depends on the species
-    notes = IntVarArray(home, size, IntSet(extended));
-
-    if(species==1){
-        if(b_mode!=0){
-            notes[size-2] = IntVar(home, IntSet(chrom_scale));
-        }
-    }
-
+    // last measure is a whole note, so size-1 for the three last IntVarArrays. 
     vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended))};
 
     if(species==1){
@@ -151,8 +140,6 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
-    P_cons_cost = IntVarArray(home, size, 0, 64);
-    M_deg_cost = IntVarArray(home, size-1, 0, 64);
     motions = {IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2)};
     motions_cost = {IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost})),
         IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost})),
@@ -165,7 +152,7 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     succ_cost = IntVarArray(home, size-2, IntSet({0, 2}));
     triad_costs = IntVarArray(home, size, IntSet({0, h_triad_cost}));
     is_off = BoolVarArray(home, sol_len, 0, 1);
-    off_costs = IntVarArray(home, sol_len, 0, 1); //cost here is 1 for now
+    off_costs = IntVarArray(home, sol_len, IntSet({0, off_cst})); 
     m_degrees_cost = {IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2})),IntVarArray(home, size-1, IntSet({0,1,2}))};
     fifth_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
     octave_costs = {IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1)),IntVarArray(home, size-1, IntSet(0,1)),IntVarArray(home, size, IntSet(0,1))};
@@ -182,18 +169,14 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     }
 }
 
-IntVarArray Part::getNotes(){
-    return notes;
-}
-
 void Part::create_member_array(int idx){
     //creates is_off with the index being the same as the notes in the solution array, watch out for species higher than 1
         for(int i = 0; i < sol_len; i++){
             IntVarArray res = IntVarArray(home, off_scale.size(), 0, 1);
             IntVar sm = IntVar(home, 0, off_scale.size());
-            for(int l = 0; l < off_scale.size(); l++){
+            for(int l = 0; l < off_scale.size(); l++){      // TODO il y a d'office une meilleure manière de faire que double boucle for
                 BoolVar b1 = BoolVar(home, 0, 1);
-                rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));
+                rel(home, solution_array[i], IRT_EQ, off_scale[l], Reify(b1));   // REIFY RM_PMI?
                 ite(home, b1, IntVar(home, 1, 1), IntVar(home, 0, 0), res[l]);
             }
             IntVarArgs x(res.size());
@@ -201,7 +184,7 @@ void Part::create_member_array(int idx){
                 x[t] = res[t];
             }
             rel(home, sm, IRT_EQ, expr(home, sum(x)));
-            rel(home, sm, IRT_GR, 0, Reify(is_off[i]));
+            rel(home, sm, IRT_GR, 0, Reify(is_off[i]));  // REIFY RM_PMI?
         }
 }
 
