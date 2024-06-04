@@ -1,6 +1,32 @@
 #include "headers/all_constraints.hpp"
 #include "headers/Utilities.hpp"
 
+void general_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, IntVarArray succ_cost, IntVarArray triad_cost){
+    voices_cannot_play_same_note(home, parts);
+
+    no_successive_ascending_sixths(home, parts[1].size, parts);
+
+    key_tone_tuned_to_cantusfirmus(home, parts[0], lowest);
+
+    no_same_direction_3v(home, parts[1].size, parts);  
+
+    avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
+
+    prefer_harmonic_triads(home, parts, triad_cost);
+}
+
+void general_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, IntVarArray triad_cost){
+    key_tone_tuned_to_cantusfirmus(home, parts[0], lowest);
+
+    no_successive_ascending_sixths(home, parts[1].size, parts);
+
+    no_same_direction_4v(home, parts[1].size, parts);
+
+    avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
+
+    prefer_harmonic_triads_4v(home, upper, triad_cost);
+}
+
 /**
   * Link the harmonic intervals arrays for the first species
   * @param home the problem

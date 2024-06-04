@@ -9,6 +9,10 @@
 using namespace Gecode;
 using namespace std;
 
+void general_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, IntVarArray succ_cost, IntVarArray triad_cost);
+
+void general_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, IntVarArray triad_cost);
+
 /**
  * Initialization and calculation of the hIntervals
 */

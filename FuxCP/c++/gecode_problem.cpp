@@ -88,7 +88,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
-    test_4v_fux(*this, parts);
+    //test_4v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -872,17 +872,7 @@ void Problem::dispatch(){
                 second_species_3v(*this, parts, lowest, upper, NINE, THREE, i, triad_costs, succ_cost);
             }
         }
-        voices_cannot_play_same_note(*this, parts);
-
-        no_successive_ascending_sixths(*this, parts[1].size, parts);
-
-        key_tone_tuned_to_cantusfirmus(*this, parts[0], lowest);
-
-        no_same_direction_3v(*this, parts[1].size, parts);  
-
-        avoid_perfect_consonances(*this, parts[1].size, parts, succ_cost);
-
-        prefer_harmonic_triads(*this, parts, triad_costs);      
+        general_3v(*this, parts, lowest, succ_cost, triad_costs);      
 
     } else if(speciesList.size()==3){
         for(int i = 0; i < parts.size(); i++){
@@ -892,16 +882,7 @@ void Problem::dispatch(){
  
             }
         }
-
-        key_tone_tuned_to_cantusfirmus(*this, parts[0], lowest);
-
-        no_successive_ascending_sixths(*this, parts[1].size, parts);
-
-        no_same_direction_4v(*this, parts[1].size, parts);
-
-        avoid_perfect_consonances(*this, parts[1].size, parts, succ_cost);
-
-        prefer_harmonic_triads_4v(*this, upper, triad_costs);
+        general_4v(*this, parts, lowest, upper, succ_cost, triad_costs);
     }
 }
 
@@ -1006,6 +987,7 @@ void Problem::order_costs(){
                                 }
                             } else if(speciesList.size()==3){
                                 if(highest_species==1){
+                                    cout << "HEREEEEEEEEEe" << endl;
                                     idx = getIndex(factors_order_1_3, cost_names[t]);
                                 }
                             }
