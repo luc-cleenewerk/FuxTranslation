@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     int species = 0;
     vector<int> cantusFirmus = {60, 62, 65, 64, 67, 65, 64, 62, 60};
     cantusFirmus = {62, 65, 64, 62, 67, 65, 69, 67, 65, 64, 62};   // cf from fux fig 160 (test_4v_fux)
-    vector<int> speciesList = {1,2, 1};
+    vector<int> speciesList = {1,1, 1};
     // vector<int> voice_types = {2, 1};
     vector<int> voice_types = {-2,-1, 1};
     int size = cantusFirmus.size();
@@ -31,22 +31,26 @@ int main(int argc, char* argv[]) {
     //penult sixth, non-ciambata, con m after skip, h triad 3rd species, m2 eq zero, no syncopation, pref species slider
     vector<int> specific_params = {8 , 4 , 0 , 2 , 1 , 8 , 50};
     // create a new problem
-            Problem* p = new Problem(cantusFirmus, size, 2, speciesList, voice_types, b_mode, 0, general_params, motion_params, melodic_params, specific_params, 
-                importance, t_off, scale, scale.size(), c_scale, c_scale.size(), b_scale, b_scale.size());
+    Problem* p = new Problem(cantusFirmus, size, 2, speciesList, voice_types, b_mode, 0, general_params, motion_params, melodic_params, specific_params, 
+        importance, t_off, scale, scale.size(), c_scale, c_scale.size(), b_scale, b_scale.size());
 
-            // create a new search engine
-            Search::Base<Problem>* e = make_solver(p, bab_solver);
-            delete p;
 
-            int nb_sol = 0;
 
-            while(Problem * pb = get_next_solution_space(e)){
-                nb_sol++;
-                cout << "Solution " << nb_sol << ": " << endl;
-                cout << pb->toString() << endl;
-                delete pb;
-            }
-            cout << "No (more) solutions." << endl;
+    // create a new search engine
+    Search::Base<Problem>* e = make_solver(p, bab_solver);
+    delete p;
+
+    int nb_sol = 0;
+
+    while(Problem * pb = get_next_solution_space(e)){
+        nb_sol++;
+        cout << "Solution " << nb_sol << ": " << endl;
+        cout << pb->toString() << endl;
+        delete pb;
+    }
+    cout << "No (more) solutions." << endl;
+
+    
     return 0;
 }
 

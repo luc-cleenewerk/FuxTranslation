@@ -202,11 +202,11 @@ void penultimate_note_must_be_major_sixth_or_minor_third(const Home &home, Part 
 }
 
 void melodic_intervals_not_exceed_minor_sixth(const Home &home, Part part){  // TODO check 4v
-    if (part.speciesList.size() <= 2){
+    if (part.speciesList.size() == 2){
         for(int j = 0; j < part.size-1; j++){
             rel(home, part.m_intervals[0][j], IRT_LQ, 8); //constraint : must not exceed a minor sixth
         }
-    }else{
+    }else if (part.speciesList.size()==3){
         for(int j = 0; j < part.size-1; j++){
             rel(home, part.m_intervals[0][j] <= 8 || part.m_intervals[0][j] == 12); //constraint : must not exceed a minor sixth, or can be an octave jump
         }

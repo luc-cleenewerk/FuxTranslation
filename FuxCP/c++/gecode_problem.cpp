@@ -122,7 +122,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     
     create_solution_array(solution_array, parts);
-    branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+    // branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
     
