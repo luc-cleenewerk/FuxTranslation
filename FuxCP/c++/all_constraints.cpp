@@ -16,15 +16,21 @@ void general_3v(const Home &home, vector<Part> parts, vector<Stratum> lowest, In
 }
 
 void general_4v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray succ_cost, IntVarArray triad_cost){
+
+    // H4 (and G10)
     key_tone_tuned_to_cantusfirmus(home, parts[0], lowest);
 
+    // P7
     no_successive_ascending_sixths(home, parts[1].size, parts);
 
+    // P6
     no_same_direction_4v(home, parts[1].size, parts);
 
+    // P4
     avoid_perfect_consonances(home, parts[1].size, parts, succ_cost);
 
-    prefer_harmonic_triads_4v(home, upper, triad_cost);
+    // H8
+    prefer_harmonic_triads_4v(home, upper, triad_cost);  // TODO add last measure allows doubling the octave
 }
 
 /**
@@ -288,12 +294,12 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
                 }
             }
             else if(parts[p2].species==2){
-                cout << "P cons size : " + to_string(parts[p1].is_P_cons.size()) << endl;
-                cout << "M succ size : " + to_string(parts[p2].m_succ_intervals[0].size()) << endl;
+                // cout << "P cons size : " + to_string(parts[p1].is_P_cons.size()) << endl;
+                // cout << "M succ size : " + to_string(parts[p2].m_succ_intervals[0].size()) << endl;
                 for(int i = 0; i < parts[p1].is_P_cons.size()-1; i++){
                     BoolVar case1 = expr(home, (parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1) && 
                         (parts[p1].hIntervalsCpCf[0][i]!=PERFECT_FIFTH || parts[p2].hIntervalsCpCf[0][i]!=PERFECT_FIFTH));
-                    cout << "i : " + to_string(i) << endl;
+                    // cout << "i : " + to_string(i) << endl;
                     BoolVar case2 = expr(home, (parts[p2].m_succ_intervals[0][i]!=MINOR_THIRD && parts[p2].m_succ_intervals[0][i]!=MAJOR_THIRD) && 
                         (parts[p1].hIntervalsCpCf[0][i]==PERFECT_FIFTH && parts[p2].hIntervalsCpCf[0][i]==PERFECT_FIFTH));
                     //first expression states that the melodic succ interval is not a third, second that we have successive fifths
@@ -839,18 +845,40 @@ void test_4v_fux(const Home &home, vector<Part> parts){
 
     for (int i = 0; i < 11; i++)
     {
+        rel(home, parts[1].vector_notes[0][i] == cp1[i]);
+        rel(home, parts[2].vector_notes[0][i] == cp2[i]);
+        rel(home, parts[3].vector_notes[0][i] == cp3[i]);
+    }
+}
+
+
+
+void test_4v_2sp_fux(const Home &home, vector<Part> parts){
+
+    cout << "test 4v 2sp fux function enabled " << endl;
+
+    // cf : re fa mi re so fa la so fa mi re
+    //      62 65 64 62 67 65 69 67 65 64 62
+
+    // cp1  la re so so si re do mi re do# re
+    //    : 57 62 55 55 59 62 60 64 62 61 62
+
+    // cp2  -- fa | la si | do sol | si la | sol mi | la fa | mi fa | mi do | la fa |  la  |   la  
+    //      -- 53   57 59   60 55    59 57   55  52   57 53   52 53   52 60   57 53    57      57 
+
+    // cp3  re re do so mi re la do re la re
+    //      50 50 48 55 52 50 45 48 50 45 50 
+
+    vector<int> cp1 = {};
+    vector<int> cp2 = {};
+    vector<int> cp3 = {};
+
+
+    for (int i = 0; i < 11; i++)
+    {
         // cout << parts[1].vector_notes[0][i] << endl;
         rel(home, parts[1].vector_notes[0][i] == cp1[i]);
         rel(home, parts[2].vector_notes[0][i] == cp2[i]);
         rel(home, parts[3].vector_notes[0][i] == cp3[i]);
     }
-    // for(int k = 0; k < parts.size(); k++){
-    //     for(int i = 0; i < cp1.size()-1; i++){
-    //         if(k==0){
-    //         } else {
-    //             cout << "mintervalsbrut part " << k  << " index " << i << endl;
-    //             cout << parts[k].m_intervals_brut[0][i] << endl;
-    //         }
-    //     }
-    // }
 }

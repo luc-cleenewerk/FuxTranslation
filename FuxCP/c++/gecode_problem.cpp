@@ -88,7 +88,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
-    //test_4v_fux(*this, parts);
+    // test_4v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -889,6 +889,10 @@ void Problem::dispatch(){
             
                 first_species_4v(*this, parts[i], parts[0], lowest, upper, triad_costs, succ_cost, i); //dispatch 4 voices 1st species
  
+            }else if(parts[i].species==2){
+                IntVar NINE = IntVar(*this, 9,9);
+                IntVar THREE = IntVar(*this,3,3);
+                second_species_4v(*this, parts, lowest, upper, NINE, THREE, i, triad_costs, succ_cost);
             }
         }
         general_4v(*this, parts, lowest, upper, succ_cost, triad_costs);
@@ -959,13 +963,15 @@ void Problem::init_aux_vars(vector<int> specific){
 
 void Problem::order_costs(){
     vector<string> factors_order_1_1 = {"fifth", "octave", "borrow", "melodic", "motion"};
-    vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"};
+    vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"}; // 2sp 1ctp
     vector<string> factors_order_3_1 = {"fifth", "octave", "borrow", "melodic", "motion", "cambiatta", "m2"};
 
     vector<string> factors_order_1_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct"};
     vector<string> factors_order_2_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
     
     vector<string> factors_order_1_3 = factors_order_1_2;
+    vector<string> factors_order_2_3 = factors_order_2_2;
+    
     //putting the name of the cost in the ordered costs list at the index of its importance
         for(const auto& entry : prefs){ 
             int val = entry.second-1;
@@ -996,8 +1002,10 @@ void Problem::order_costs(){
                                 }
                             } else if(speciesList.size()==3){
                                 if(highest_species==1){
-                                    cout << "HEREEEEEEEEEe" << endl;
+                                    // cout << "HEREEEEEEEEEe" << endl;
                                     idx = getIndex(factors_order_1_3, cost_names[t]);
+                                } else if(highest_species==2){
+                                    idx = idx = getIndex(factors_order_2_3, cost_names[t]);
                                 }
                             }
                             // cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
@@ -1053,6 +1061,10 @@ void Problem::add_costs(vector<int> importance){
             prefs.insert({importance_names[9], importance[8]});
         }
         if(speciesList.size()==2){
+            add_penult_cost(*this, cost_factors[9], size, speciesList, parts);
+            prefs.insert({importance_names[9], importance[8]});
+        }
+        if(speciesList.size()==3){
             add_penult_cost(*this, cost_factors[9], size, speciesList, parts);
             prefs.insert({importance_names[9], importance[8]});
         }

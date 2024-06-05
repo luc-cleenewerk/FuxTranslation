@@ -20,5 +20,5 @@ clean:
 	rm -f *.o *.so *.dylib ../sources/*.so ../sources/*.dylib Main
 
 compiletmp:
-	g++ -std=c++11 main.cpp -o launch gecode_problem.cpp Utilities.cpp Part.cpp Stratum.cpp all_constraints.cpp 1sp_constraints.cpp 2sp_constraints.cpp 3sp_constraints.cpp -lgecodekernel -lgecodesearch -lgecodeint -lgecodedriver -lgecodeminimodel -lgecodesupport
+	g++ -g -std=c++11 main.cpp -o launch gecode_problem.cpp Utilities.cpp Part.cpp Stratum.cpp all_constraints.cpp 1sp_constraints.cpp 2sp_constraints.cpp 3sp_constraints.cpp -lgecodekernel -lgecodesearch -lgecodeint -lgecodedriver -lgecodeminimodel -lgecodesupport
 	./launch

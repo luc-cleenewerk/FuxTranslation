@@ -135,19 +135,23 @@
 
     link_cfb_arrays_1st_species(home, part.size, part, cf, 0);
 
-    link_motions_arrays(home, part, lowest, 0);
+    link_motions_arrays(home, part, lowest, 0);   // P2 implemented in here
 
     link_p_cons_array(home, part);
 
     if(part.species!=0){
-        set_step_costs(home, part.size, part, 0); //cost
+        set_step_costs(home, part.size, part, 0); // G8 and M1 implemented in here
 
         set_off_costs(home, part);
 
+        // H12
         last_chord_no_minor_third(home, part);
+
+        // G7
+        // TODO add no_chromatic_melodies relaxation here
     }
 
-    // H1
+    // H1, G9
     if(for_species==1){
         harmonic_intervals_consonance(home, part, consonances);
     } else if(for_species == 2){                              
@@ -158,17 +162,22 @@
 
     if(for_species==1){
         
+        // P1
         no_direct_perfect_consonance(home, part, part.speciesList.size());
 
         if(part.species!=0){
-        
+            
+            // M2/M6
             melodic_intervals_not_exceed_minor_sixth(home, part);
-
+            
+            // P3
             no_battuta(home, part, cf);
 
+            // H6
             imperfect_consonances_are_preferred(home, part.size, part, 0);
 
-            variety_cost_constraint(home, part); //only cp
+            // M4
+            variety_cost_constraint(home, part); 
         }
 
     }
