@@ -39,13 +39,6 @@ void link_harmonic_arrays_1st_species(const Home &home, Part part, vector<Stratu
     for(int i = 0; i < part.size; i++){
         rel(home, part.hIntervalsCpCf[0][i] == abs(part.vector_notes[0][i] - lowest[0].notes[i])%12); //assigns the hIntervals
     }
-
-    if(part.speciesList.size()>1){
-        for(int i = 0; i < part.size; i++){
-            rel(home, expr(home, (lowest[0].notes[i]-upper[list_index].notes[i])%12), IRT_EQ, upper[list_index].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
-            abs(home, upper[list_index].hIntervalsBrut[i], upper[list_index].hIntervalsAbs[i]); //also creates the absolute hInterval
-        }
-    }
 }
 
 void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf, int idx){
@@ -219,7 +212,7 @@ void no_direct_perfect_consonance(const Home &home, Part part, int n_species){
         for(int j = 0; j < part.size-1; j++){
             rel(home, part.motions[0][j], IRT_NQ, 2, Reify(expr(home, part.is_not_lowest[j+1]==1 && part.is_P_cons[j+1]==1), RM_IMP));
         }
-    } else if(n_species==2){ //else if 3+ voices
+    } else if(n_species>=2){ //else if 3+ voices
         //if(parts[p].species==1){
             for(int j = 0; j < part.size-2; j++){
                 //set a cost when it is reached through direct motion, it is 0 when not

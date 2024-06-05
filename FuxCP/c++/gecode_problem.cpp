@@ -788,6 +788,15 @@ void Problem::create_strata(){
         }
 
     }
+
+    if(parts.size()>2){
+        for(int p = 0; p < upper.size(); p++){
+            for(int i = 0; i < parts[0].size; i++){
+                rel(*this, expr(*this, (lowest[0].notes[i]-upper[p].notes[i])%12), IRT_EQ, upper[p].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
+                abs(*this, upper[p].hIntervalsBrut[i], upper[p].hIntervalsAbs[i]); //also creates the absolute hInterval
+            }
+        }
+    }
 }
 
 void Problem::init_costs(vector<int> general_params){
@@ -876,9 +885,9 @@ void Problem::dispatch(){
 
     } else if(speciesList.size()==3){
         for(int i = 0; i < parts.size(); i++){
-            if(speciesList[i]==1){
+            if(parts[i].species==1 || parts[i].species==0){
             
-                first_species_4v(*this, parts[i], parts[0], lowest, upper, triad_costs, succ_cost, i+1); //dispatch 4 voices 1st species
+                first_species_4v(*this, parts[i], parts[0], lowest, upper, triad_costs, succ_cost, i); //dispatch 4 voices 1st species
  
             }
         }
