@@ -407,6 +407,7 @@ void add_cambiatta_cost(const Home &home, IntVar cost_factor, int size, vector<i
 
 void add_m2_cost(const Home &home, IntVar cost_factor, int size, vector<int> splist, vector<Part> parts, bool set_to_zero = false);
 
+
 const int not_harmonic_triad_cost  = 16;
 const int double_fifths_cost       = 8;
 const int double_thirds_cost       = 6;

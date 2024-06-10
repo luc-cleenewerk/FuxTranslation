@@ -71,7 +71,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     h_triad_cost = general_params[5];
     triad_costs = IntVarArray(*this, size, IntSet({0, not_harmonic_triad_cost, double_fifths_cost, double_thirds_cost, triad_with_octave_cost}));  // TODO MODIFY
     global_cost = IntVar(*this, 0, 10000);
-    highest_species = 0;
+    
 
     // check that the cantus firmus ends at home 
     assert(cantusFirmus[0] == cantusFirmus[size-1]);
@@ -79,7 +79,52 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     //creating the map with the names of the costs and their importance
 
-    init_costs(general_params);
+    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic", "direct", "penult", "cambiatta", "m2"};
+    prefs = {};
+    
+    //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
+
+    cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult", "cambiatta", "m2"};
+
+    //initializing the ordered costs list, aka the list containing the costs according to their importance
+
+    ordered_factors = IntVarArray(*this, 14, 0, 1000);
+    for(int i = 0; i < 14; i++){
+        vector<string> tmp = {};
+        ordered_costs.push_back(tmp);
+    }
+
+    P_cons_cost = IntVarArray(*this, size, 0, 1000);
+
+    //initializing the cost_factors list
+
+    int highest_species = 0;
+    for(int s = 0; s < splist.size(); s++){
+        if(splist[s]>highest_species){
+            highest_species = splist[s];
+        }
+    }
+
+    if(speciesList.size()==1){ //si 2 voix
+        if(highest_species==2){
+            cost_size+=1;
+        } else if(highest_species==3){
+            cost_size+=2;
+        }
+    } else if(speciesList.size()==2){ //si 3 voix
+        if(highest_species==1){ //if the cp is of species 1
+            cost_size += 4;
+        } else if(highest_species==2){
+            cost_size += 5;
+        }
+    } else if(speciesList.size()==3){ // 4 voix; // add here any additional costs for 4 voices
+        if(highest_species==1){ //if the cp is of species 1
+            cost_size += 4;
+        } else if(highest_species==2){
+            cost_size += 5;
+        }
+    }
+    cost_factors = IntVarArray(*this, cost_size, 0, 1000);
 
     //parts contains the cantusFirmus in the first position, the rest are the counterpoints
     parts.push_back(Part(*this, cf, s, general_params[3], general_params)); //putting the cantusFirmus in first position
@@ -88,7 +133,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
-    //test_4v_fux(*this, parts);
+    test_4v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -102,26 +147,264 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         upper[j].notes = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
     }
 
+    int scc_cz = size-1;
+    if(speciesList.size()==2){
+        scc_cz += 2*(size-1);
+    } else if(speciesList.size()==3){
+        scc_cz += 5*(size-1);
+    }
+    succ_cost = IntVarArray(*this, scc_cz, IntSet({0, general_params[3]}));
+
+    //creation of the strata and putting the correct notes in each strata
+
     create_strata();
 
-    init_aux_vars(specific);
+    // if(speciesList.size()==2){
+    //     apply_3v_general(*this, size, parts, lowest, upper);
+    // }
 
-    dispatch();
-    
-    add_costs(importance);
+    //init arrays for second species, if ever they are called from a first species it won't pose an issue
+    for(int p = 1; p < parts.size(); p++){
+        if(parts[p].species==2){
+            parts[p].hIntervalsAbs = IntVarArray(*this, size, 0, 127);
+            parts[p].hIntervalsBrut = IntVarArray(*this, size, -127, 127);
 
-    order_costs();
+            link_harmonic_arrays_2nd_species(*this, size, parts[p], lowest);
 
-    set_global_cost(*this, ordered_factors, global_cost, cost_size);
+            link_melodic_arrays_2nd_species_next_meas(*this, size, parts[p]);
 
+            parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
+            parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, -12, 12));
+
+            link_melodic_arrays_2nd_species_in_meas(*this, size, parts[p]);
+
+            parts[p].m2_len = 2*(size-1)-1;
+            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
+            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
+
+            link_m2_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].total_m_len = 2*(size-1);
+            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
+            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
+
+            link_melodic_self_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].real_motions = IntVarArray(*this, size-1, -1, 2);
+            parts[p].real_motions_cost = IntVarArray(*this, size-1, IntSet({0, parts[p].con_motion_cost, parts[p].dir_motion_cost, parts[p].obl_motion_cost}));
+
+            link_motions_arrays_2nd_species(*this, parts[p], lowest);
+            link_real_motions_arrays_2nd_species(*this, parts[p]);
+
+            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
+
+            link_ta_dim_array_2nd_species(*this, parts[p]);
+
+            link_cfb_array_2nd_species(*this, parts[p].size-1, parts[p], parts[0]);
+
+            parts[p].is_neighbour = BoolVarArray(*this, parts[p].size-1, 0, 1);
+
+            link_is_neighbour_array_2nd_species(*this, parts[p], lowest);
+        }
+        if(parts[p].species==3){
+            for(int i = 0; i < 3; i++){
+                parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
+                parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, 12, 12));
+            }
+            
+            parts[p].m2_len = 4*(size-1)-1;
+            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
+            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
+
+            parts[p].total_m_len = 4*(size-1);
+            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
+            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
+
+            parts[p].is_qn_linked = BoolVarArray(*this, size-1, 0, 1);
+
+            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
+
+            for(int i = 0; i < 4; i++){
+                if(i==0){
+                    parts[p].is_consonant.push_back(BoolVarArray(*this, size, 0, 1));
+                } else {
+                    parts[p].is_consonant.push_back(BoolVarArray(*this, size-1, 0, 1));
+                }
+            }
+
+            parts[p].is_not_ciambatta = BoolVarArray(*this, size-1, 0, 1);
+
+            parts[p].not_cambiatta_cost = IntVarArray(*this, size-1, IntSet({0, specific[1]}));
+
+            parts[p].m2_eq_zero_costs = IntVarArray(*this, parts[p].m2_len, IntSet({0, specific[4]}));
+        }
+    }
+
+    if(speciesList.size()==1){
+        if(speciesList[0]==1){
+            first_species_2v(*this, parts, lowest, upper); //dispatch 2 voices 1st species
+        }
+        else if(speciesList[0]==2){
+            IntVar NINE = IntVar(*this, 9,9);
+            IntVar THREE = IntVar(*this,3,3);
+            second_species_2v(*this, parts, lowest, upper, NINE, THREE, 1);
+        }
+        else if(speciesList[0]==3){
+            IntVar NINE = IntVar(*this, 9,9);
+            IntVar THREE = IntVar(*this,3,3);
+            IntVar ZERO = IntVar(*this, 0, 0);
+            third_species_2v(*this, parts, lowest, upper, NINE, THREE, ZERO, 1);
+        }
+    } else if(speciesList.size()==2){
+        for(int i = 0; i < speciesList.size(); i++){
+            if(speciesList[i]==1){
+                first_species_3v(*this, parts, lowest, upper, triad_costs, succ_cost); //dispatch 3 voices 1st species
+            }
+            else if(speciesList[i]==2){
+                IntVar NINE = IntVar(*this, 9,9);
+                IntVar THREE = IntVar(*this,3,3);
+                second_species_3v(*this, parts, lowest, upper, NINE, THREE, i+1, triad_costs, succ_cost);
+            }
+        }
+    } else if(speciesList.size()==3){
+        for(int i = 0; i < speciesList.size(); i++){
+            if(speciesList[i]==1){
+                first_species_4v(*this, parts, lowest, upper, triad_costs, succ_cost); //dispatch 4 voices 1st species
+            }
+        }
+    }
+
+    //adding the costs to the list
+    //add general costs and p_cons_cost
+
+    /// constraints
+
+    //going through parts to check for second species
     int solution_len = 0;
     for(int p = 1; p < parts.size(); p++){
+
         solution_len+=parts[p].sol_len;
+
     }
+    vector<string> factors_order_1_1 = {"fifth", "octave", "borrow", "melodic", "motion"};
+    vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"};
+    vector<string> factors_order_3_1 = {"fifth", "octave", "borrow", "melodic", "motion", "cambiatta", "m2"};
+
+    vector<string> factors_order_1_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct"};
+    vector<string> factors_order_2_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
+    
+    vector<string> factors_order_1_3 = factors_order_1_2;
+    //following two costs are for the imperfect consonances are preferred clause
+    add_fifth_cost(*this, cost_factors[0], size, splist, parts);
+    prefs.insert({importance_names[1], importance[1]});
+    add_octave_cost(*this, cost_factors[1], size, splist, parts);
+    prefs.insert({importance_names[2], importance[2]});
+
+    //following two costs are equal to setting general costs in the lisp code
+    add_off_cost(*this, cost_factors[2], size, splist, parts);
+    prefs.insert({importance_names[0], importance[0]});
+
+    add_melodic_cost(*this, cost_factors[3], size, splist, parts);
+    prefs.insert({importance_names[7], importance[13]});
+    
+    //adding motion costs
+    add_motion_cost(*this, cost_factors[4], size, splist, parts);
+    prefs.insert({importance_names[6], importance[7]});
+
+    if(speciesList.size()>1){
+
+        add_variety_cost(*this, cost_factors[5], size, splist, parts);
+        prefs.insert({importance_names[4], importance[4]});
+
+        add_succ_cost(*this, cost_factors[6], succ_cost.size(), succ_cost);
+        prefs.insert({importance_names[3], importance[3]});
+
+        add_triad_cost(*this, cost_factors[7], size, splist, triad_costs);
+        prefs.insert({importance_names[5], importance[5]});
+
+        add_direct_cost(*this, cost_factors[8], size, splist, parts);
+        prefs.insert({importance_names[8], importance[6]});
+    }
+
+    if(highest_species==2){
+        if(speciesList.size()==1){
+            add_penult_cost(*this, cost_factors[5], size, splist, parts);
+            prefs.insert({importance_names[9], importance[8]});
+        }
+        if(speciesList.size()==2){
+            add_penult_cost(*this, cost_factors[9], size, splist, parts);
+            prefs.insert({importance_names[9], importance[8]});
+        }
+    }  
+
+    if(highest_species==3){
+        if(speciesList.size()==1){
+            add_cambiatta_cost(*this, cost_factors[5], size, splist, parts);
+            prefs.insert({importance_names[10], importance[9]});
+
+            add_m2_cost(*this, cost_factors[6], size, splist, parts);
+            prefs.insert({importance_names[11], importance[10]}); //recheck importance here
+        }
+    }
+    
+    //ORDERING THE COSTS
+
+        //putting the name of the cost in the ordered costs list at the index of its importance
+        for(const auto& entry : prefs){ 
+            int val = entry.second-1;
+            ordered_costs[val].push_back(entry.first);
+        }
+
+        //creating the final ordered list
+        IntVarArray inversed_costs = IntVarArray(*this, 14, 0, 1000);
+        for(int i = 0; i < 14; i++){
+            if(!ordered_costs[i].empty()){
+                for(int k = 0; k < ordered_costs[i].size(); k++){
+                    IntVar to_add;
+                    for(int t = 0; t < cost_names.size(); t++){
+                        if(cost_names[t]==ordered_costs[i][k]){
+                            int idx = -1;
+                            if(speciesList.size()==1){
+                                if(speciesList[0]==1){
+                                    idx = getIndex(factors_order_1_1, cost_names[t]);
+                                } else if(speciesList[0]==2){
+                                    idx = getIndex(factors_order_2_1, cost_names[t]);
+                                } else if(speciesList[0]==3){
+                                    idx = getIndex(factors_order_3_1, cost_names[t]);
+                                }
+                            } else if(speciesList.size()==2){
+                                if(highest_species==1){
+                                    idx = getIndex(factors_order_1_2, cost_names[t]);
+                                } else if(highest_species==2){
+                                    idx = idx = getIndex(factors_order_2_2, cost_names[t]);
+                                }
+                            } else if(speciesList.size()==3){
+                                if(highest_species==1){
+                                    idx = getIndex(factors_order_1_3, cost_names[t]);
+                                }
+                            }
+                            // cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
+                            to_add = cost_factors[idx];
+                        }
+                    }
+                    ordered_factors[n_unique_costs] = to_add;
+                    n_unique_costs++;
+                }
+            }
+        }
+        //int idx = 0;
+        //for(int i = n_unique_costs-1; i >= 0; i--){
+        //    ordered_factors[idx] = inversed_costs[i];
+        //    idx++;
+        //}
+    set_global_cost(*this, ordered_factors, global_cost, cost_size);
+    //creating the solution array which will contain the notes of the counterpoint
 
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     
     create_solution_array(solution_array, parts);
+    /// branching
+    //branch(*this, global_cost, INT_VAL_RANGE_MIN());
     branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
@@ -158,7 +441,7 @@ Problem::Problem(Problem& s): IntMinimizeSpace(s){
     ordered_costs = s.ordered_costs;
     n_unique_costs = s.n_unique_costs;
     cost_size = s.cost_size;
-    highest_species = s.highest_species;
+    P_cons_cost.update(*this, s.P_cons_cost);
     vars.update(*this, s.vars);
     solution_array.update(*this, s.solution_array);
     ordered_factors.update(*this, s.ordered_factors);
@@ -178,6 +461,7 @@ Problem::Problem(Problem& s): IntMinimizeSpace(s){
     parts[0].isCFB = s.parts[0].isCFB;
     parts[0].penult_rule_check = s.parts[0].penult_rule_check;
 
+    parts[0].notes.update(*this, s.parts[0].notes);
     parts[0].is_not_lowest.update(*this, s.parts[0].is_not_lowest);
     parts[0].NINE.update(*this, s.parts[0].NINE);
     parts[0].THREE.update(*this, s.parts[0].THREE);
@@ -253,6 +537,7 @@ Problem::Problem(Problem& s): IntMinimizeSpace(s){
         
         parts[p].m2_intervals.update(*this, s.parts[p].m2_intervals);
         parts[p].m2_intervals_brut.update(*this, s.parts[p].m2_intervals_brut);
+        parts[p].notes.update(*this, s.parts[p].notes);
         parts[p].is_not_lowest.update(*this, s.parts[p].is_not_lowest);
         parts[p].hIntervalsAbs.update(*this, s.parts[p].hIntervalsAbs);
         parts[p].hIntervalsBrut.update(*this, s.parts[p].hIntervalsBrut);
@@ -299,6 +584,8 @@ Problem::Problem(Problem& s): IntMinimizeSpace(s){
             parts[p].m_succ_intervals[h].update(*this, s.parts[p].m_succ_intervals[h]);
             parts[p].m_succ_intervals_brut[h].update(*this, s.parts[p].m_succ_intervals_brut[h]);
         }
+        parts[p].P_cons_cost.update(*this, s.parts[p].P_cons_cost);
+        parts[p].M_deg_cost.update(*this, s.parts[p].M_deg_cost);
         parts[p].varietyArray.update(*this, s.parts[p].varietyArray);
         parts[p].direct_move_cost.update(*this, s.parts[p].direct_move_cost);
         parts[p].succ_cost.update(*this, s.parts[p].succ_cost);
@@ -702,7 +989,7 @@ void Problem::create_strata(){
             rel(*this, upper[j].notes[i], IRT_EQ, sorted_voices[i][j+1]); //the rest go in the upper strata
         }
 
-        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].vector_notes[0][i], Reify(parts[0].is_not_lowest[i])); //determmining if the cf is the lowest strata for each note
+        rel(*this, lowest[0].notes[i], IRT_NQ, parts[0].notes[i], Reify(parts[0].is_not_lowest[i])); //determmining if the cf is the lowest strata for each note
 
         if(parts.size()==2){
             rel(*this, parts[0].is_not_lowest[i], IRT_EQ, 0, Reify(parts[1].is_not_lowest[i]));
@@ -787,284 +1074,5 @@ void Problem::create_strata(){
             }
         }
 
-    }
-
-    if(parts.size()>2){
-        for(int p = 0; p < upper.size(); p++){
-            for(int i = 0; i < parts[0].size; i++){
-                rel(*this, expr(*this, (lowest[0].notes[i]-upper[p].notes[i])%12), IRT_EQ, upper[p].hIntervalsBrut[i]); //assigns the hIntervals between the lowest stratum
-                abs(*this, upper[p].hIntervalsBrut[i], upper[p].hIntervalsAbs[i]); //also creates the absolute hInterval
-            }
-        }
-    }
-}
-
-void Problem::init_costs(vector<int> general_params){
-    prefs = {};
-    
-    //the cost names in order of how they are added later to the cost factors list (order of the costs is very important)
-
-    cost_names = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult", "cambiatta", "m2"};
-
-    //initializing the ordered costs list, aka the list containing the costs according to their importance
-
-    ordered_factors = IntVarArray(*this, 14, 0, 1000);
-    for(int i = 0; i < 14; i++){
-        vector<string> tmp = {};
-        ordered_costs.push_back(tmp);
-    }
-
-    //initializing the cost_factors list
-
-    for(int s = 0; s < speciesList.size(); s++){
-        if(speciesList[s]>highest_species){
-            highest_species = speciesList[s];
-        }
-    }
-
-    if(speciesList.size()==1){ //si 2 voix
-        if(highest_species==2){
-            cost_size+=1;
-        } else if(highest_species==3){
-            cost_size+=2;
-        }
-    } else if(speciesList.size()==2){ //si 3 voix
-        if(highest_species==1){ //if the cp is of species 1
-            cost_size += 4;
-        } else if(highest_species==2){
-            cost_size += 5;
-        }
-    } else if(speciesList.size()==3){ // 4 voix; // add here any additional costs for 4 voices
-        if(highest_species==1){ //if the cp is of species 1
-            cost_size += 4;
-        } else if(highest_species==2){
-            cost_size += 5;
-        }
-    }
-    cost_factors = IntVarArray(*this, cost_size, 0, 1000);
-
-    int scc_cz = size-1;
-    if(speciesList.size()==2){
-        scc_cz += 2*(size-1);
-    } else if(speciesList.size()==3){
-        scc_cz += 5*(size-1);
-    }
-    succ_cost = IntVarArray(*this, scc_cz, IntSet({0, general_params[3]}));
-}
-
-void Problem::dispatch(){
-    if(speciesList.size()==1){
-        if(speciesList[0]==1){
-            first_species_2v(*this, parts, lowest, upper, 0); //dispatch 2 voices 1st species
-        }
-        else if(speciesList[0]==2){
-            IntVar NINE = IntVar(*this, 9,9);
-            IntVar THREE = IntVar(*this,3,3);
-            second_species_2v(*this, parts, lowest, upper, NINE, THREE, 1);
-        }
-        else if(speciesList[0]==3){
-            IntVar NINE = IntVar(*this, 9,9);
-            IntVar THREE = IntVar(*this,3,3);
-            IntVar ZERO = IntVar(*this, 0, 0);
-            third_species_2v(*this, parts, lowest, upper, NINE, THREE, ZERO, 1);
-        }
-    } else if(speciesList.size()==2){
-        for(int i = 0; i < parts.size(); i++){
-            if(parts[i].species==1 || parts[i].species==0){
-
-                first_species_3v(*this, parts[i], parts[0], lowest, upper, triad_costs, i); //dispatch 3 voices 1st species
-
-            }
-            else if(parts[i].species==2){
-                IntVar NINE = IntVar(*this, 9,9);
-                IntVar THREE = IntVar(*this,3,3);
-                second_species_3v(*this, parts, lowest, upper, NINE, THREE, i, triad_costs, succ_cost);
-            }
-        }
-        general_3v(*this, parts, lowest, succ_cost, triad_costs);      
-
-    } else if(speciesList.size()==3){
-        for(int i = 0; i < parts.size(); i++){
-            if(parts[i].species==1 || parts[i].species==0){
-            
-                first_species_4v(*this, parts[i], parts[0], lowest, upper, triad_costs, succ_cost, i); //dispatch 4 voices 1st species
- 
-            }
-        }
-        general_4v(*this, parts, lowest, upper, succ_cost, triad_costs);
-    }
-}
-
-void Problem::init_aux_vars(vector<int> specific){
-    //init arrays for second species, if ever they are called from a first species it won't pose an issue
-    for(int p = 1; p < parts.size(); p++){
-        if(parts[p].species==2){
-
-            parts[p].hIntervalsAbs = IntVarArray(*this, size, 0, 127);
-            parts[p].hIntervalsBrut = IntVarArray(*this, size, -127, 127);
-
-            parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
-            parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, -12, 12));
-
-            parts[p].m2_len = 2*(size-1)-1;
-            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
-            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
-
-            parts[p].total_m_len = 2*(size-1);
-            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
-            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
-
-            parts[p].real_motions = IntVarArray(*this, size-1, -1, 2);
-            parts[p].real_motions_cost = IntVarArray(*this, size-1, IntSet({0, parts[p].con_motion_cost, parts[p].dir_motion_cost, parts[p].obl_motion_cost}));
-
-            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
-
-            parts[p].is_neighbour = BoolVarArray(*this, parts[p].size-1, 0, 1);
-
-        }
-        if(parts[p].species==3){
-            for(int i = 0; i < 3; i++){
-                parts[p].m_succ_intervals.push_back(IntVarArray(*this, size-1, 0, 12));
-                parts[p].m_succ_intervals_brut.push_back(IntVarArray(*this, size-1, 12, 12));
-            }
-            
-            parts[p].m2_len = 4*(size-1)-1;
-            parts[p].m2_intervals = IntVarArray(*this, parts[p].m2_len, 0, 12);
-            parts[p].m2_intervals_brut = IntVarArray(*this, parts[p].m2_len, -12, 12);
-
-            parts[p].total_m_len = 4*(size-1);
-            parts[p].m_all_intervals = IntVarArray(*this, parts[p].total_m_len, 0, 12);
-            parts[p].m_all_intervals_brut = IntVarArray(*this, parts[p].total_m_len, -12, 12);
-
-            parts[p].is_qn_linked = BoolVarArray(*this, size-1, 0, 1);
-
-            parts[p].is_ta_dim = BoolVarArray(*this, size-1, 0, 1);
-
-            for(int i = 0; i < 4; i++){
-                if(i==0){
-                    parts[p].is_consonant.push_back(BoolVarArray(*this, size, 0, 1));
-                } else {
-                    parts[p].is_consonant.push_back(BoolVarArray(*this, size-1, 0, 1));
-                }
-            }
-
-            parts[p].is_not_ciambatta = BoolVarArray(*this, size-1, 0, 1);
-
-            parts[p].not_cambiatta_cost = IntVarArray(*this, size-1, IntSet({0, specific[1]}));
-
-            parts[p].m2_eq_zero_costs = IntVarArray(*this, parts[p].m2_len, IntSet({0, specific[4]}));
-        }
-    }
-}
-
-void Problem::order_costs(){
-    vector<string> factors_order_1_1 = {"fifth", "octave", "borrow", "melodic", "motion"};
-    vector<string> factors_order_2_1 = {"fifth", "octave", "borrow", "melodic", "motion", "penult"};
-    vector<string> factors_order_3_1 = {"fifth", "octave", "borrow", "melodic", "motion", "cambiatta", "m2"};
-
-    vector<string> factors_order_1_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct"};
-    vector<string> factors_order_2_2 = {"fifth", "octave", "borrow", "melodic", "motion", "variety", "succ", "triad", "direct", "penult"};
-    
-    vector<string> factors_order_1_3 = factors_order_1_2;
-    //putting the name of the cost in the ordered costs list at the index of its importance
-        for(const auto& entry : prefs){ 
-            int val = entry.second-1;
-            ordered_costs[val].push_back(entry.first);
-        }
-
-        //creating the final ordered list
-        for(int i = 0; i < 14; i++){
-            if(!ordered_costs[i].empty()){
-                for(int k = 0; k < ordered_costs[i].size(); k++){
-                    IntVar to_add;
-                    for(int t = 0; t < cost_names.size(); t++){
-                        if(cost_names[t]==ordered_costs[i][k]){
-                            int idx = -1;
-                            if(speciesList.size()==1){
-                                if(speciesList[0]==1){
-                                    idx = getIndex(factors_order_1_1, cost_names[t]);
-                                } else if(speciesList[0]==2){
-                                    idx = getIndex(factors_order_2_1, cost_names[t]);
-                                } else if(speciesList[0]==3){
-                                    idx = getIndex(factors_order_3_1, cost_names[t]);
-                                }
-                            } else if(speciesList.size()==2){
-                                if(highest_species==1){
-                                    idx = getIndex(factors_order_1_2, cost_names[t]);
-                                } else if(highest_species==2){
-                                    idx = idx = getIndex(factors_order_2_2, cost_names[t]);
-                                }
-                            } else if(speciesList.size()==3){
-                                if(highest_species==1){
-                                    cout << "HEREEEEEEEEEe" << endl;
-                                    idx = getIndex(factors_order_1_3, cost_names[t]);
-                                }
-                            }
-                            // cout << "Name : " + cost_names[t] + " - " + to_string(idx) << endl;
-                            to_add = cost_factors[idx];
-                        }
-                    }
-                    ordered_factors[n_unique_costs] = to_add;
-                    n_unique_costs++;
-                }
-            }
-        }
-}
-
-void Problem::add_costs(vector<int> importance){
-
-    vector<string> importance_names = {"borrow", "fifth", "octave", "succ", "variety", "triad", "motion", "melodic", "direct", "penult", "cambiatta", "m2"};
-
-    //following two costs are for the imperfect consonances are preferred clause
-    add_fifth_cost(*this, cost_factors[0], size, speciesList, parts);
-    prefs.insert({importance_names[1], importance[1]});
-    add_octave_cost(*this, cost_factors[1], size, speciesList, parts);
-    prefs.insert({importance_names[2], importance[2]});
-
-    //following two costs are equal to setting general costs in the lisp code
-    add_off_cost(*this, cost_factors[2], size, speciesList, parts);
-    prefs.insert({importance_names[0], importance[0]});
-
-    add_melodic_cost(*this, cost_factors[3], size, speciesList, parts);
-    prefs.insert({importance_names[7], importance[13]});
-    
-    //adding motion costs
-    add_motion_cost(*this, cost_factors[4], size, speciesList, parts);
-    prefs.insert({importance_names[6], importance[7]});
-
-    if(speciesList.size()>1){
-
-        add_variety_cost(*this, cost_factors[5], size, speciesList, parts);
-        prefs.insert({importance_names[4], importance[4]});
-
-        add_succ_cost(*this, cost_factors[6], succ_cost.size(), succ_cost);
-        prefs.insert({importance_names[3], importance[3]});
-
-        add_triad_cost(*this, cost_factors[7], size, speciesList, triad_costs);
-        prefs.insert({importance_names[5], importance[5]});
-
-        add_direct_cost(*this, cost_factors[8], size, speciesList, parts);
-        prefs.insert({importance_names[8], importance[6]});
-    }
-
-    if(highest_species==2){
-        if(speciesList.size()==1){
-            add_penult_cost(*this, cost_factors[5], size, speciesList, parts);
-            prefs.insert({importance_names[9], importance[8]});
-        }
-        if(speciesList.size()==2){
-            add_penult_cost(*this, cost_factors[9], size, speciesList, parts);
-            prefs.insert({importance_names[9], importance[8]});
-        }
-    }  
-
-    if(highest_species==3){
-        if(speciesList.size()==1){
-            add_cambiatta_cost(*this, cost_factors[5], size, speciesList, parts);
-            prefs.insert({importance_names[10], importance[9]});
-
-            add_m2_cost(*this, cost_factors[6], size, speciesList, parts);
-            prefs.insert({importance_names[11], importance[10]}); //recheck importance here
-        }
     }
 }

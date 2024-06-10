@@ -43,7 +43,6 @@ protected:
     int h_triad_cost;
     int n_unique_costs;
     int cost_size;
-    int highest_species;
 
     unordered_map<string, int> prefs;
     IntVar global_cost;
@@ -54,6 +53,11 @@ protected:
     vector<int> scale;
     vector<string> cost_names;
 
+    vector<IntVarArray> counterpoints;
+    vector<IntVarArray> hIntervals;
+    vector<IntVarArray> cp_m_intervals;
+    vector<IntVarArray> cp_m_intervals_brut;
+    vector<BoolVarArray> cp_is_P_cons;
     vector<IntVarArray> sorted_voices;
     IntVarArray cost_factors;
     IntVarArray ordered_factors;
@@ -64,6 +68,18 @@ protected:
 
     vector<vector<string>> ordered_costs;
  
+    /// variables
+    IntVarArray cp;                 // The variables for the counterpoint
+    IntVarArray hIntervalsCpCf;     // The intervals between the counterpoint and the cantus firmus
+    BoolVarArray isCFB;
+    IntVarArray m_intervals;
+    IntVarArray m_intervals_brut;
+    IntVarArray cf_m_intervals_brut;
+    IntVarArray P_cons_cost;
+    IntVarArray M_deg_cost;
+    IntVarArray motions;
+    IntVarArray motions_cost;
+    BoolVarArray is_P_cons;
     IntVarArray triad_costs;
     IntVarArray succ_cost;
 
@@ -134,16 +150,6 @@ public:
     string toString();
 
     void create_strata();
-
-    void init_costs(vector<int> general_params);
-
-    void dispatch();
-
-    void init_aux_vars(vector<int> specific);
-
-    void order_costs();
-
-    void add_costs(vector<int> importance);
 
 };
 
