@@ -88,7 +88,6 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
             tone_offset, scale, borrow, b_mode, general_params[5], melodic, general_params, chromatic, specific)); //adding the counterpoints
     }
 
-    // test_4v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -112,7 +111,9 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
 
     order_costs();
 
-    set_global_cost(*this, ordered_factors, global_cost, cost_size);
+    set_global_cost(*this, ordered_factors, global_cost, cost_size); // @damien global_cost is set here
+
+    // rel(*this, global_cost <= 213);
 
     int solution_len = 0;
     for(int p = 1; p < parts.size(); p++){
@@ -122,9 +123,21 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     
     create_solution_array(solution_array, parts);
-    // branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+
+    // test_4v_fux(*this, parts, solution_array);   // @damien 
+
+    // branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());   // @damien uncommenting this line gives solutions for 4v 2sp
+    // branch(*this, upper[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+    // branch(*this, upper[1].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+    // branch(*this, upper[2].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
-    writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
+
+    // for (int i = 0; i < parts.size(); i++)
+    // {
+    //     branch(*this, parts[i].vector_notes[0], INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+    // }
+    
+    // writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
     
 }
 
@@ -380,16 +393,16 @@ IntMinimizeSpace* Problem::copy(void) {
  * @todo modify this function if you want to use branch and bound
  * @param _b a solution to the problem from which we wish to add a constraint for the next solutions
  */
-void Problem::constrain(const IntMinimizeSpace& _b) {
-    const Problem &b = static_cast<const Problem &>(_b);
-    //IntVar current_sum = IntVar(*this, 0, 1000);
-    //max(*this, ordered_factors, current_sum);
-    rel(*this, global_cost, IRT_LQ, b.global_cost.val());
-    // for(int i = 0; i < cost_size; i++){
-    //     rel(*this, ordered_factors[i], IRT_LQ, b.ordered_factors[i].val());
-    // }
+// void Problem::constrain(const IntMinimizeSpace& _b) {
+//     const Problem &b = static_cast<const Problem &>(_b);
+//     //IntVar current_sum = IntVar(*this, 0, 1000);
+//     //max(*this, ordered_factors, current_sum);
+//     rel(*this, global_cost, IRT_LQ, b.global_cost.val());
+//     // for(int i = 0; i < cost_size; i++){
+//     //     rel(*this, ordered_factors[i], IRT_LQ, b.ordered_factors[i].val());
+//     // }
     
-}
+// }
 
 IntVar Problem::cost(void) const{
     return global_cost;
@@ -463,14 +476,16 @@ string Problem::toString(){
         }
         message += "]\n";
     }
-    // message += "SOLUTION ARRAY : [";
-    // for(int i = 0; i < solution_array.size(); i++){
-    //     if(solution_array[i].assigned()){
-    //         message += to_string(solution_array[i].val()) + " ";
-    //     }
-    // }
+    message += "SOLUTION ARRAY : [";
+    for(int i = 0; i < solution_array.size(); i++){
+        if(solution_array[i].assigned()){
+            message += to_string(solution_array[i].val()) + " ";
+        }else {
+            message += "... ";
+        }
+    }
     
-    // message += "]\n";
+    message += "]\n";
     message += "COST NAMES : [";
     for(int i = 0; i < 14; i++){
         if(!ordered_costs[i].empty()){
@@ -533,25 +548,25 @@ string Problem::toString(){
     //     message += "]\n";
     // }
     // message += "]\n";
-    message += "LOWEST NOTES : [";
-    for(int i = 0; i < size; i++){
-        if(lowest[0].notes[i].assigned()){
-            message += to_string(lowest[0].notes[i].val()) + " ";
-        } else {
-            message += "... ";
-        }
-    }
-    message += "]\n";
+    // message += "LOWEST NOTES : [";
+    // for(int i = 0; i < size; i++){
+    //     if(lowest[0].notes[i].assigned()){
+    //         message += to_string(lowest[0].notes[i].val()) + " ";
+    //     } else {
+    //         message += "... ";
+    //     }
+    // }
+    // message += "]\n";
 
-    message += "lowest.m_intervals_brut : [";
-    for(int i = 0; i < size-1; i++){
-        if(lowest[0].m_intervals_brut[i].assigned()){
-            message += to_string(lowest[0].m_intervals_brut[i].val()) + " ";
-        } else {
-            message += "... ";
-        }
-    }
-    message += "]\n";
+    // message += "lowest.m_intervals_brut : [";
+    // for(int i = 0; i < size-1; i++){
+    //     if(lowest[0].m_intervals_brut[i].assigned()){
+    //         message += to_string(lowest[0].m_intervals_brut[i].val()) + " ";
+    //     } else {
+    //         message += "... ";
+    //     }
+    // }
+    // message += "]\n";
     // message += "UPPER NOTES : [";
     // for(int p = 0; p < upper.size(); p++){
     //     message += " UPPER PART : [";
@@ -576,21 +591,21 @@ string Problem::toString(){
     //     }
     // }
     // message += "]\n";
-    message += "IS LOWEST : [";
-    for(int p = 0; p < parts.size(); p++){
-        message += "IS LOWEST PART : [";
-        for(int i = 0; i < size; i++){
-            if(parts[p].is_not_lowest[i].assigned()){
-                message += to_string(parts[p].is_not_lowest[i].val()) + " ";
-            } else {
-                message += "... ";
-            }
-        }
-        message += "]\n";
-    }
-    message += "]\n";
+    // message += "IS LOWEST : [";
+    // for(int p = 0; p < parts.size(); p++){
+    //     message += "IS LOWEST PART : [";
+    //     for(int i = 0; i < size; i++){
+    //         if(parts[p].is_not_lowest[i].assigned()){
+    //             message += to_string(parts[p].is_not_lowest[i].val()) + " ";
+    //         } else {
+    //             message += "... ";
+    //         }
+    //     }
+    //     message += "]\n";
+    // }
+    // message += "]\n";
     
-    writeToLogFile(message.c_str());
+    // writeToLogFile(message.c_str());
     return message;
 }
 

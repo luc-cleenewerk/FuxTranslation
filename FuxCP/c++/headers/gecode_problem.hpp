@@ -115,7 +115,7 @@ public:
      * @todo modify this function if you want to use branch and bound
      * @param _b a space to constrain the current instance of the Problem class with upon finding a solution
      */
-    virtual void constrain(const IntMinimizeSpace& _b);
+    // virtual void constrain(const IntMinimizeSpace& _b);
 
     virtual IntVar cost() const;
 

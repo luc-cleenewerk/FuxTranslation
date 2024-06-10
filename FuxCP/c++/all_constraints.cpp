@@ -823,7 +823,7 @@ void no_battuta_3rd_species(const Home &home, Part part){
 */
 
 // fig 160, page 110
-void test_4v_fux(const Home &home, vector<Part> parts){
+void test_4v_fux(const Home &home, vector<Part> parts, IntVarArray solutionArray){
 
     cout << "test 4v fux function" << endl;
 
@@ -840,14 +840,20 @@ void test_4v_fux(const Home &home, vector<Part> parts){
 
     vector<int> cp1 = {50, 50, 48, 55, 52, 50, 53, 48, 50, 45, 50};
     vector<int> cp2 = {57, 53, 55, 55, 55, 57, 57, 60, 57, 57, 57};
-    vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
+    vector<int> cp3 = {65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};    
+
+    // for (int i = 0; i < 11; i++)
+    // {
+    //     rel(home, parts[1].vector_notes[0][i] == cp1[i]);
+    //     rel(home, parts[2].vector_notes[0][i] == cp2[i]);
+    //     rel(home, parts[3].vector_notes[0][i] == cp3[i]);
+    // }
 
 
-    for (int i = 0; i < 11; i++)
+    vector<int> sol_arr = {50, 50, 48, 55, 52, 50, 53, 48, 50, 45, 50, 57, 53, 55, 55, 55, 57, 57, 60, 57, 57, 57, 65, 69, 72, 71, 71, 74, 72, 76, 74, 73, 74};
+    for (int i = 0; i < sol_arr.size(); i++)
     {
-        rel(home, parts[1].vector_notes[0][i] == cp1[i]);
-        rel(home, parts[2].vector_notes[0][i] == cp2[i]);
-        rel(home, parts[3].vector_notes[0][i] == cp3[i]);
+        rel(home, solutionArray[i] == sol_arr[i]);
     }
 }
 
