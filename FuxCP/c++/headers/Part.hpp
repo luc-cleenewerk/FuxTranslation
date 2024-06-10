@@ -56,7 +56,6 @@ public:
     vector<int> union_b_scale;
     vector<int> off_scale;
 
-    IntVarArray notes; 
     vector<IntVarArray> vector_notes;
     vector<IntVarArray> hIntervalsCpCf;
     vector<BoolVarArray> isCFB;
@@ -76,8 +75,6 @@ public:
 
     IntVarArray solution_array;
 
-    IntVarArray P_cons_cost;
-    IntVarArray M_deg_cost;
     vector<IntVarArray> motions;
     vector<IntVarArray> motions_cost;
     BoolVarArray is_P_cons;

@@ -11,12 +11,8 @@ Part::Part(const Home &hme, vector<int> cf_notes, int s, int succ_cst, vector<in
     penult_rule_check = general_parameters[7];
     NINE = IntVar(home, 9, 9);
     THREE = IntVar(home, 3, 3);
-    notes = IntVarArray(home, size, 0, 127);
     is_P_cons = BoolVarArray(home, size, 0, 1);
     is_not_lowest = BoolVarArray(home, size, 0, 1);
-    for(int i = 0; i < size; i++){
-        notes[i] = IntVar(home, cf_notes[i], cf_notes[i]);
-    }
     vector_notes = {IntVarArray(home, size, 0, 127), IntVarArray(home, size, 0, 127), IntVarArray(home, size-1, 0, 127), IntVarArray(home, size, 0, 127)};
     for(int i = 0; i < size; i++){
         vector_notes[0][i] = IntVar(home, cf_notes[i], cf_notes[i]);
@@ -121,15 +117,6 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
 
     off_scale = off_key;
 
-    /// variable initialization todo depends on the species
-    notes = IntVarArray(home, size, IntSet(extended));
-
-    if(species==1){
-        if(b_mode!=0){
-            notes[size-2] = IntVar(home, IntSet(chrom_scale));
-        }
-    }
-
     // last measure is a whole note, so size-1 for the three last IntVarArrays. 
     vector_notes = {IntVarArray(home, size, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended)),IntVarArray(home, size-1, IntSet(extended))};
 
@@ -153,8 +140,6 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
     isCFB = {BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1),BoolVarArray(home, size, 0, 1)};
     m_intervals = {IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12),IntVarArray(home, size-1, 0, 12)};
     m_intervals_brut = {IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12),IntVarArray(home, size-1, -12, 12)};
-    P_cons_cost = IntVarArray(home, size, 0, 64);
-    M_deg_cost = IntVarArray(home, size-1, 0, 64);
     motions = {IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2),IntVarArray(home, size-1, -1, 2)};
     motions_cost = {IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost})),
         IntVarArray(home, size-1, IntSet({0, con_motion_cost, obl_motion_cost, dir_motion_cost})),
@@ -182,10 +167,6 @@ Part::Part(const Home &hme, int s, int sp, vector<int> cf, vector<int> splist, i
         create_member_array(2);
         cout << sol_len << endl;
     }
-}
-
-IntVarArray Part::getNotes(){
-    return notes;
 }
 
 void Part::create_member_array(int idx){

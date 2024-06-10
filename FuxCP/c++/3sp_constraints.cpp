@@ -91,8 +91,6 @@ void third_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowe
         }
     }
 
-    set_off_costs(home, parts[list_index].size, parts); //check this again if it is done correctly
-
     set_step_costs(home, parts[list_index].size, parts[list_index], 3);
 
     set_cambiata(home, parts[list_index], ZERO); //this has to be changed once the m_succ works correctly
