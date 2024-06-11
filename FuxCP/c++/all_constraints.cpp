@@ -88,7 +88,8 @@ void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, in
 
 void link_p_cons_array(const Home &home, Part part){ //nothing to change here, it's fine
     for(int i = 0; i < part.size; i++){
-        rel(home, expr(home, part.hIntervalsCpCf[0][i]==0), BOT_OR, expr(home, part.hIntervalsCpCf[0][i]==7), part.is_P_cons[i]);
+        rel(home, (part.hIntervalsCpCf[0][i]==0 || part.hIntervalsCpCf[0][i]==7) >> (part.is_P_cons[i]==1));
+        rel(home, (part.hIntervalsCpCf[0][i]!=0 && part.hIntervalsCpCf[0][i]!=7) >> (part.is_P_cons[i]==0));
     }
 }
 
@@ -442,12 +443,8 @@ void last_chord_same_fundamental(const Home &home, vector<Stratum> lowest, vecto
 
 void link_harmonic_arrays_2nd_species(const Home &home, int size, Part part, vector<Stratum> lowest){
 
-    for(int i = 0; i < size; i++){
-        if(i!=size-1){ //butlast in lisp code of anton
-            rel(home, part.hIntervalsCpCf[2][i] == abs((part.vector_notes[2][i] - lowest[0].notes[i])%12)); //assigns the hIntervals
-        }     
-        rel(home, part.hIntervalsBrut[i] == lowest[0].notes[i]-part.vector_notes[0][i]);
-        abs(home, part.hIntervalsBrut[i], part.hIntervalsAbs[i]); 
+    for(int i = 0; i < part.size-1; i++){
+        rel(home, part.hIntervalsCpCf[2][i] == abs(part.vector_notes[2][i] - lowest[0].notes[i])%12); //assigns the hIntervals
     }
 
 }
@@ -853,4 +850,32 @@ void test_4v_fux(const Home &home, vector<Part> parts){
     //         }
     //     }
     // }
+}
+
+// fig 33, page 45
+void test_2sp_2v_fux(const Home &home, vector<Part> parts){
+
+    cout << "test 4v fux function" << endl;
+
+    // cf : re fa mi re so fa la so fa mi re
+    // cf : 62 65 64 62 67 65 69 67 65 64 62
+
+    // cp1[0]  la la do la si re do mi re si re 
+    // cp1[0]  69 69 72 69 71 74 72 76 74 71 74
+
+    // cp1[2]  re si so re do la re si la do# 
+    // cp1[2]  74 71 67 74 72 69 74 71 69 73 
+
+    vector<int> cp1_0 = {69,69,72,69,71,74,72,76,74,71,74};
+    vector<int> cp1_2 = {74,71,67,74,72,69,74,71,69,73};
+
+
+    for (int i = 0; i < 11; i++) //4th measure no more solutions
+    {
+        // cout << parts[1].vector_notes[0][i] << endl;
+        rel(home, parts[1].vector_notes[0][i] == cp1_0[i]);
+        if(i!=10){
+            rel(home, parts[1].vector_notes[2][i] == cp1_2[i]);
+        }
+    }
 }

@@ -89,6 +89,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
 
     //test_4v_fux(*this, parts);
+    test_2sp_2v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -480,20 +481,18 @@ string Problem::toString(){
         }
     }
     message += "]\n";
-    /*message += "PART DIRECT MOVE : ";
+    message += "PART DIRECT MOVE IS P CONS : ";
     for(int p = 0; p < parts.size(); p++){
         message += "[ ";
         for(int i = 0; i < size-1; i++){
-            message += "[ ";
                 if(parts[p].is_P_cons[i].assigned()){
                     message += to_string(parts[p].is_P_cons[i].val()) + " ";
                 } else {
                     message += "...";
                 }
-            message += "]";
         }
         message += "]\n";
-    }*/
+    }
     message += "COST FACTORS : [";
     for(int i = 0; i < cost_size; i++){
         if(ordered_factors[i].assigned()){
@@ -520,19 +519,19 @@ string Problem::toString(){
         }
     }
     message += "]\n";
-    // message += "UPPER H INTERVALS : [";
-    // for(int p = 0; p < upper.size(); p++){
-    //     message += "UPPER H INTERVALS PART : [";
-    //     for(int i = 0; i < size; i++){
-    //         if(upper[p].hIntervalsAbs[i].assigned()){
-    //             message += to_string(upper[p].hIntervalsAbs[i].val()) + " ";
-    //         } else {
-    //             message += "... ";
-    //         }
-    //     }
-    //     message += "]\n";
-    // }
-    // message += "]\n";
+    message += "PARTS H INTERVALS : [";
+    for(int p = 0; p < parts.size(); p++){
+        message += "PARTS H INTERVALS PART : [";
+        for(int i = 0; i < size; i++){
+            if(parts[p].hIntervalsCpCf[0][i].assigned()){
+                message += to_string(parts[p].hIntervalsCpCf[0][i].val()) + " ";
+            } else {
+                message += "... ";
+           }
+        }
+        message += "]\n";
+     }
+     message += "]\n";
     message += "LOWEST NOTES : [";
     for(int i = 0; i < size; i++){
         if(lowest[0].notes[i].assigned()){

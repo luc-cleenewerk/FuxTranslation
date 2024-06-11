@@ -243,4 +243,6 @@ void no_battuta_3rd_species(const Home &home, Part part);
 */
 void test_4v_fux(const Home &home, vector<Part> parts);
 
+void test_2sp_2v_fux(const Home &home, vector<Part> parts);
+
 #endif

@@ -4,6 +4,8 @@
 void second_species_2v(const Home &home, vector<Part> parts, vector<Stratum> lowest, vector<Stratum> upper, IntVar NINE, IntVar THREE, 
     int list_index, int for_species){
 
+    first_species_2v(home, parts, lowest, upper, list_index, for_species);
+
     link_harmonic_arrays_2nd_species(home, parts[list_index].size, parts[list_index], lowest);
 
     link_melodic_arrays_2nd_species_next_meas(home, parts[list_index].size, parts[list_index]);
@@ -23,8 +25,6 @@ void second_species_2v(const Home &home, vector<Part> parts, vector<Stratum> low
     link_cfb_array_2nd_species(home, parts[list_index].size-1, parts[list_index], parts[0]);
 
     link_is_neighbour_array_2nd_species(home, parts[list_index], lowest);
-
-    first_species_2v(home, parts, lowest, upper, for_species);
 
     h_cons_arsis(home, parts[list_index], PENULT_CONS);
 
