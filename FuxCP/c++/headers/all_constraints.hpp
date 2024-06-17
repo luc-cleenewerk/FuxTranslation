@@ -245,4 +245,6 @@ void test_4v_fux(const Home &home, vector<Part> parts);
 
 void test_2sp_2v_fux(const Home &home, vector<Part> parts);
 
+void test_2sp_3v_fux(const Home &home, vector<Part> parts);
+
 #endif

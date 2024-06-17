@@ -43,7 +43,7 @@ void link_harmonic_arrays_1st_species(const Home &home, Part part, vector<Stratu
 
 void link_cfb_arrays_1st_species(const Home &home, int size, Part part, Part cf, int idx){
     for(int i = 0; i < size; i++){
-        rel(home, part.vector_notes[idx][i], IRT_GQ, cf.vector_notes[0][i], Reify(part.isCFB[idx][i])); //links the CFB values in the array
+        rel(home, part.vector_notes[idx][i], IRT_GQ, cf.vector_notes[0][i], Reify(part.isCFB[idx][i], RM_PMI)); //links the CFB values in the array
     }
 }
 
@@ -79,7 +79,7 @@ void link_motions_arrays(const Home &home, Part part, vector<Stratum> lowest, in
                 rel(home, ((cpd_cfu || cpu_cfd)&& (part.is_not_lowest[i]==1)) >> (part.motions_cost[idx][i]==part.con_motion_cost));
                 //bass constraints
                 BoolVar is_lowest = expr(home, part.is_not_lowest[i]==0);
-                rel(home, part.motions[idx][i], IRT_EQ, -1, Reify(is_lowest));
+                rel(home, part.motions[idx][i], IRT_EQ, -1, Reify(is_lowest, RM_IMP));
                 rel(home, part.motions_cost[idx][i], IRT_EQ, 0, Reify(is_lowest, RM_IMP));
                 //rel(home, (part.is_not_lowest[i]==0) >> (part.motions[idx][i]==-1));
                 //rel(home, (part.is_not_lowest[i]==0) >> (part.motions_cost[idx][i]==0));
@@ -273,7 +273,7 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
             if(parts[p1].species!= 2 && parts[p2].species!=2){
                 for(int i = 0; i < parts[p1].is_P_cons.size()-1; i++){
                     // cout << "IDX : " + to_string(idx) << endl;
-                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1)));
+                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, parts[p1].is_P_cons[i]==1 && parts[p2].is_P_cons[i]==1), RM_IMP));
                     idx++;
                 }        
             }
@@ -284,7 +284,7 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
                     BoolVar case2 = expr(home, (parts[p1].m_succ_intervals[0][i]!=MINOR_THIRD && parts[p1].m_succ_intervals[0][i]!=MAJOR_THIRD) && 
                         (parts[p1].hIntervalsCpCf[0][i]==PERFECT_FIFTH && parts[p2].hIntervalsCpCf[0][i]==PERFECT_FIFTH));
                     //first expression states that the melodic succ interval is not a third, second that we have successive fifths
-                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, (case1==1 || case2==1))));
+                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, (case1==1 || case2==1)), RM_IMP));
                     idx++;
                 }
             }
@@ -298,7 +298,7 @@ void avoid_perfect_consonances(const Home &home, int size, vector<Part> parts, I
                     BoolVar case2 = expr(home, (parts[p2].m_succ_intervals[0][i]!=MINOR_THIRD && parts[p2].m_succ_intervals[0][i]!=MAJOR_THIRD) && 
                         (parts[p1].hIntervalsCpCf[0][i]==PERFECT_FIFTH && parts[p2].hIntervalsCpCf[0][i]==PERFECT_FIFTH));
                     //first expression states that the melodic succ interval is not a third, second that we have successive fifths
-                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, (case1==1 || case2==1))));
+                    rel(home, succ_cost[idx], IRT_EQ, parts[p2].succ, Reify(expr(home, (case1==1 || case2==1)), RM_IMP));
                     idx++;
                 }
             }
@@ -689,7 +689,7 @@ void link_is_qn_linked_3rd_species(const Home &home, Part part){
         if(i%4==0){
             rel(home, expr(home, (part.m_all_intervals[i]<=2 && part.m_all_intervals[i+1]<=2 && part.m_all_intervals[i+2]<=2 && part.m_all_intervals[i+3]<=2) && 
            (part.m_all_intervals_brut[i]>0 == part.m_all_intervals_brut[i+1]>0 == part.m_all_intervals_brut[i+2]>0 == part.m_all_intervals_brut[i+3]>0)), 
-           IRT_EQ, 1, Reify(part.is_qn_linked[i/4]));
+           IRT_EQ, 1, Reify(part.is_qn_linked[i/4], RM_PMI));
         }
     }
 }
@@ -878,4 +878,58 @@ void test_2sp_2v_fux(const Home &home, vector<Part> parts){
             rel(home, parts[1].vector_notes[2][i] == cp1_2[i]);
         }
     }
+}
+
+void test_2sp_3v_fux(const Home &home, vector<Part> parts){
+
+    // cf : mi do re do la la so mi fa mi
+    // cf : 52 48 50 48 45 57 55 52 53 52
+
+    // cp1_0 : .. do la so la do si mi do so
+    // cp1_0 : .. 72 69 67 69 72 71 76 72 67
+
+    // cp1_2 : si si fa mi si la re re la ..
+    // cp1_2 : 71 71 65 64 71 69 74 74 69 ..
+
+    //cp2 : mi mi fa mi fa mi so so la so#
+    //cp2 : 64 64 65 64 65 64 67 67 69 68
+
+    //has a small eight
+    vector<int> cp1_0 =    {60,57,55,57,60,59,54,60,55};
+    vector<int> cp1_2 = {59,59,53,52,59,57,62,62,57};
+
+    vector<int> cp2 = {64,64,65,64,65,64,67,67,69,68};
+
+    int measure = 0;
+
+    for (int i = 0; i < measure; i++) //fixes 2nd species, always do one measure less than size
+    {
+        if(i!=0){
+            rel(home, parts[2].vector_notes[0][i] == cp1_0[i-1]);
+        }
+        if(i!=cp2.size()-1){
+            rel(home, parts[2].vector_notes[2][i] == cp1_2[i]);
+        }
+    }
+
+    for(int i = 0; i < measure; i++){
+        rel(home, parts[1].vector_notes[0][i] == cp2[i]);
+    }
+
+    for(int i = 0; i < 10; i++){
+
+        cout << parts[1].vector_notes[0][i];
+        cout << " ";
+
+
+    }
+    cout << endl;
+    for(int i = 0; i < 9; i++){
+        
+        cout << parts[2].vector_notes[0][i];
+        //cout << parts[2].vector_notes[2][i];
+        cout << " ";
+
+    }
+    cout << endl;
 }

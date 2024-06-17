@@ -89,7 +89,8 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     }
 
     //test_4v_fux(*this, parts);
-    test_2sp_2v_fux(*this, parts);
+    //test_2sp_2v_fux(*this, parts);
+    test_2sp_3v_fux(*this, parts);
 
     //lowest is the lowest stratum for each note
     
@@ -103,7 +104,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
         upper[j].notes = IntVarArray(*this, size, lower_bound_domain, upper_bound_domain);
     }
 
-    create_strata();
+    //create_strata();
 
     init_aux_vars(specific);
 
@@ -123,7 +124,7 @@ Problem::Problem(vector<int> cf, int s, int n_cp, vector<int> splist, vector<int
     solution_array = IntVarArray(*this, solution_len, 0, 127);
     
     create_solution_array(solution_array, parts);
-    branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
+    //branch(*this, lowest[0].notes, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     branch(*this, solution_array, INT_VAR_DEGREE_MAX(), INT_VAL_SPLIT_MIN());
     writeToLogFile(message.c_str()); /// to debug when using in OM, otherwise just print it's easier
     
@@ -871,16 +872,21 @@ void Problem::dispatch(){
         for(int i = 0; i < parts.size(); i++){
             if(parts[i].species==1 || parts[i].species==0){
 
-                first_species_3v(*this, parts[i], parts[0], lowest, upper, triad_costs, i); //dispatch 3 voices 1st species
+                if(parts[i].species==0){
+                    //first_species_3v(*this, parts[i], parts[0], lowest, upper, triad_costs, i, 0); //dispatch 3 voices 1st species
+                }
+                else{
+                    //first_species_3v(*this, parts[i], parts[0], lowest, upper, triad_costs, i); //dispatch 3 voices 1st species
+                }
 
             }
             else if(parts[i].species==2){
                 IntVar NINE = IntVar(*this, 9,9);
                 IntVar THREE = IntVar(*this,3,3);
-                second_species_3v(*this, parts, lowest, upper, NINE, THREE, i, triad_costs, succ_cost);
+                //second_species_3v(*this, parts, lowest, upper, NINE, THREE, i, triad_costs, succ_cost);
             }
         }
-        general_3v(*this, parts, lowest, succ_cost, triad_costs);      
+        //general_3v(*this, parts, lowest, succ_cost, triad_costs);      
 
     } else if(speciesList.size()==3){
         for(int i = 0; i < parts.size(); i++){

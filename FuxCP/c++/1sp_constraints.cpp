@@ -75,50 +75,50 @@
 */
  void first_species_3v(const Home &home, Part part, Part cf, vector<Stratum> lowest, vector<Stratum> upper, IntVarArray triad_costs, int list_index, int for_species){
 
-    link_harmonic_arrays_1st_species(home, part, lowest, upper, list_index-1);
+    //link_harmonic_arrays_1st_species(home, part, lowest, upper, list_index-1);
 
-    link_melodic_arrays_1st_species(home, part);
+    //link_melodic_arrays_1st_species(home, part);
 
-    link_cfb_arrays_1st_species(home, part.size, part, cf, 0);
+    //link_cfb_arrays_1st_species(home, part.size, part, cf, 0);
 
-    link_motions_arrays(home, part, lowest, 0);
+    //link_motions_arrays(home, part, lowest, 0);
 
-    link_p_cons_array(home, part);
+    //link_p_cons_array(home, part);
 
     if(part.species!=0){
-        set_step_costs(home, part.size, part, 0); //cost
+        //set_step_costs(home, part.size, part, 0); //cost
 
-        set_off_costs(home, part);
+        //set_off_costs(home, part);
 
-        no_chromatic_melodies(home, part);
+        //no_chromatic_melodies(home, part);
 
-        last_chord_no_minor_third(home, part); //only cp
+        //last_chord_no_minor_third(home, part); //only cp
 
-        no_tenth_in_last_chord(home, upper, list_index-1); //only upper, so if we don't include the cantusFirmus we have the size of the upper vector
+        //no_tenth_in_last_chord(home, upper, list_index-1); //only upper, so if we don't include the cantusFirmus we have the size of the upper vector
     }
 
     if(for_species==1){
-        harmonic_intervals_consonance(home, part, PENULT_CONS);
+        //harmonic_intervals_consonance(home, part, PENULT_CONS);
     } else if(for_species == 2){
-        harmonic_intervals_consonance(home, part, PENULT_THESIS);
+        //harmonic_intervals_consonance(home, part, PENULT_THESIS);
     } else if(for_species==3){
         harmonic_intervals_consonance(home, part, PENULT_Q);
     }
 
     if(for_species==1){
 
-        penultimate_note_must_be_major_sixth_or_minor_third(home, part, cf.NINE, cf.THREE);
+        //penultimate_note_must_be_major_sixth_or_minor_third(home, part, cf.NINE, cf.THREE);
 
-        no_direct_perfect_consonance(home, part, part.speciesList.size());
+        //no_direct_perfect_consonance(home, part, part.speciesList.size());
     
         if(part.species!=0){
-            melodic_intervals_not_exceed_minor_sixth(home, part);
+            //melodic_intervals_not_exceed_minor_sixth(home, part);
 
-            no_battuta(home, part, cf);
+            //no_battuta(home, part, cf);
 
-            imperfect_consonances_are_preferred(home, part.size, part, 0);
+            //imperfect_consonances_are_preferred(home, part.size, part, 0);
 
-            variety_cost_constraint(home, part); //only cp
+            //variety_cost_constraint(home, part); //only cp
         }
     }
  }
